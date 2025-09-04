@@ -2,8 +2,8 @@
 
 <a href="https://pkg.go.dev/github.com/stainless-sdks/hello-world-testingggg-go"><img src="https://pkg.go.dev/badge/github.com/stainless-sdks/hello-world-testingggg-go.svg" alt="Go Reference"></a>
 
-The Hello World Testingggg Go library provides convenient access to [the Hello World Testingggg REST
-API](http://swagger.io) from applications written in Go. The full API of this library can be found in [api.md](api.md).
+The Hello World Testingggg Go library provides convenient access to the [Hello World Testingggg REST API](http://swagger.io)
+from applications written in Go.
 
 It is generated with [Stainless](https://www.stainless.com/).
 
@@ -37,13 +37,10 @@ import (
 	"fmt"
 
 	"github.com/stainless-sdks/hello-world-testingggg-go"
-	"github.com/stainless-sdks/hello-world-testingggg-go/option"
 )
 
 func main() {
-	client := helloworldtestingggg.NewClient(
-		option.WithAPIKey("My API Key"), // defaults to os.LookupEnv("API_KEY")
-	)
+	client := helloworldtestingggg.NewClient()
 	pet, err := client.Pet.Update(context.TODO(), helloworldtestingggg.PetUpdateParams{
 		Pet: helloworldtestingggg.PetParam{
 			Name:      helloworldtestingggg.F("doggie"),
@@ -226,24 +223,6 @@ file returned by `os.Open` will be sent with the file name on disk.
 
 We also provide a helper `helloworldtestingggg.FileParam(reader io.Reader, filename string, contentType string)`
 which can be used to wrap any `io.Reader` with the appropriate file name and content type.
-
-```go
-// A file from the file system
-file, err := os.Open("/path/to/file")
-helloworldtestingggg.PetUploadImageParams{
-	Body: helloworldtestingggg.F[io.Reader](file),
-}
-
-// A file from a string
-helloworldtestingggg.PetUploadImageParams{
-	Body: helloworldtestingggg.F[io.Reader](strings.NewReader("my file contents")),
-}
-
-// With a custom filename and contentType
-helloworldtestingggg.PetUploadImageParams{
-	Body: helloworldtestingggg.FileParam(strings.NewReader(`{"hello": "foo"}`), "file.go", "application/json"),
-}
-```
 
 ### Retries
 

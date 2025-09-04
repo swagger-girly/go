@@ -98,10 +98,10 @@ func (r *PetService) UpdateWithForm(ctx context.Context, petID int64, body PetUp
 }
 
 // uploads an image
-func (r *PetService) UploadImage(ctx context.Context, petID int64, params PetUploadImageParams, opts ...option.RequestOption) (res *PetUploadImageResponse, err error) {
+func (r *PetService) UploadImage(ctx context.Context, petID int64, Body io.Reader, body PetUploadImageParams, opts ...option.RequestOption) (res *PetUploadImageResponse, err error) {
 	opts = append(r.Options[:], opts...)
 	path := fmt.Sprintf("pet/%v/uploadImage", petID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return
 }
 
