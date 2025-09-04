@@ -16,7 +16,7 @@ import (
 )
 
 func TestPetNewWithOptionalParams(t *testing.T) {
-	t.Skip("skipped: tests are disabled for the time being")
+	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -54,7 +54,7 @@ func TestPetNewWithOptionalParams(t *testing.T) {
 }
 
 func TestPetGet(t *testing.T) {
-	t.Skip("skipped: tests are disabled for the time being")
+	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -77,7 +77,7 @@ func TestPetGet(t *testing.T) {
 }
 
 func TestPetUpdateWithOptionalParams(t *testing.T) {
-	t.Skip("skipped: tests are disabled for the time being")
+	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -115,7 +115,7 @@ func TestPetUpdateWithOptionalParams(t *testing.T) {
 }
 
 func TestPetDelete(t *testing.T) {
-	t.Skip("skipped: tests are disabled for the time being")
+	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -138,7 +138,7 @@ func TestPetDelete(t *testing.T) {
 }
 
 func TestPetFindByStatusWithOptionalParams(t *testing.T) {
-	t.Skip("skipped: tests are disabled for the time being")
+	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -163,7 +163,7 @@ func TestPetFindByStatusWithOptionalParams(t *testing.T) {
 }
 
 func TestPetFindByTagsWithOptionalParams(t *testing.T) {
-	t.Skip("skipped: tests are disabled for the time being")
+	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -188,7 +188,7 @@ func TestPetFindByTagsWithOptionalParams(t *testing.T) {
 }
 
 func TestPetUpdateWithFormWithOptionalParams(t *testing.T) {
-	t.Skip("skipped: tests are disabled for the time being")
+	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -218,7 +218,7 @@ func TestPetUpdateWithFormWithOptionalParams(t *testing.T) {
 }
 
 func TestPetUploadImageWithOptionalParams(t *testing.T) {
-	t.Skip("skipped: tests are disabled for the time being")
+	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -233,6 +233,7 @@ func TestPetUploadImageWithOptionalParams(t *testing.T) {
 	_, err := client.Pet.UploadImage(
 		context.TODO(),
 		int64(0),
+		io.Reader(bytes.NewBuffer([]byte("some file contents"))),
 		helloworldtestingggg.PetUploadImageParams{
 			AdditionalMetadata: helloworldtestingggg.F("additionalMetadata"),
 			Body:               io.Reader(bytes.NewBuffer([]byte("some file contents"))),

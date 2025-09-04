@@ -15,7 +15,7 @@ import (
 )
 
 func TestStoreOrderNewWithOptionalParams(t *testing.T) {
-	t.Skip("skipped: tests are disabled for the time being")
+	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -34,7 +34,7 @@ func TestStoreOrderNewWithOptionalParams(t *testing.T) {
 			PetID:    helloworldtestingggg.F(int64(198772)),
 			Quantity: helloworldtestingggg.F(int64(7)),
 			ShipDate: helloworldtestingggg.F(time.Now()),
-			Status:   helloworldtestingggg.F(helloworldtestingggg.OrderStatusPlaced),
+			Status:   helloworldtestingggg.F(helloworldtestingggg.OrderStatusApproved),
 		},
 	})
 	if err != nil {
@@ -47,7 +47,7 @@ func TestStoreOrderNewWithOptionalParams(t *testing.T) {
 }
 
 func TestStoreOrderGet(t *testing.T) {
-	t.Skip("skipped: tests are disabled for the time being")
+	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL
@@ -70,7 +70,7 @@ func TestStoreOrderGet(t *testing.T) {
 }
 
 func TestStoreOrderDelete(t *testing.T) {
-	t.Skip("skipped: tests are disabled for the time being")
+	t.Skip("Prism tests are disabled")
 	baseURL := "http://localhost:4010"
 	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
 		baseURL = envURL

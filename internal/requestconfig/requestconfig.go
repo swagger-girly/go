@@ -133,11 +133,13 @@ func NewRequestConfig(ctx context.Context, method string, u string, body interfa
 	// Fallback to json serialization if none of the serialization functions that we expect
 	// to see is present.
 	if body != nil && !hasSerializationFunc {
-		content, err := json.Marshal(body)
-		if err != nil {
+		buf := new(bytes.Buffer)
+		enc := json.NewEncoder(buf)
+		enc.SetEscapeHTML(true)
+		if err := enc.Encode(body); err != nil {
 			return nil, err
 		}
-		reader = bytes.NewBuffer(content)
+		reader = buf
 	}
 
 	req, err := http.NewRequestWithContext(ctx, method, u, nil)
@@ -192,6 +194,12 @@ func UseDefaultParam[T any](dst *param.Field[T], src *T) {
 	}
 }
 
+// This interface is primarily used to describe an [*http.Client], but also
+// supports custom HTTP implementations.
+type HTTPDoer interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
 // RequestConfig represents all the state related to one request.
 //
 // Editing the variables inside RequestConfig directly is unstable api. Prefer
@@ -202,9 +210,15 @@ type RequestConfig struct {
 	Context        context.Context
 	Request        *http.Request
 	BaseURL        *url.URL
+	// DefaultBaseURL will be used if BaseURL is not explicitly overridden using
+	// WithBaseURL.
+	DefaultBaseURL *url.URL
+	CustomHTTPDoer HTTPDoer
 	HTTPClient     *http.Client
 	Middlewares    []middleware
 	APIKey         string
+	// OAuth2State holds the OAuth2 provider configuration and cached token information
+	OAuth2State *OAuth2State
 	// If ResponseBodyInto not nil, then we will attempt to deserialize into
 	// ResponseBodyInto. If Destination is a []byte, then it will return the body as
 	// is.
@@ -241,7 +255,7 @@ func shouldRetry(req *http.Request, res *http.Response) bool {
 		return true
 	}
 
-	// If the header explictly wants a retry behavior, respect that over the
+	// If the header explicitly wants a retry behavior, respect that over the
 	// http status code.
 	if res.Header.Get("x-should-retry") == "true" {
 		return true
@@ -367,7 +381,11 @@ func retryDelay(res *http.Response, retryCount int) time.Duration {
 
 func (cfg *RequestConfig) Execute() (err error) {
 	if cfg.BaseURL == nil {
-		return fmt.Errorf("requestconfig: base url is not set")
+		if cfg.DefaultBaseURL != nil {
+			cfg.BaseURL = cfg.DefaultBaseURL
+		} else {
+			return fmt.Errorf("requestconfig: base url is not set")
+		}
 	}
 
 	cfg.Request.URL, err = cfg.BaseURL.Parse(strings.TrimLeft(cfg.Request.URL.String(), "/"))
@@ -398,7 +416,19 @@ func (cfg *RequestConfig) Execute() (err error) {
 		}
 	}
 
+	if cfg.OAuth2State != nil && cfg.Request.Header.Get("Authorization") == "" {
+		token, err := cfg.OAuth2State.GetToken(cfg)
+		if err != nil {
+			return err
+		}
+
+		cfg.Request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	}
+
 	handler := cfg.HTTPClient.Do
+	if cfg.CustomHTTPDoer != nil {
+		handler = cfg.CustomHTTPDoer.Do
+	}
 	for i := len(cfg.Middlewares) - 1; i >= 0; i -= 1 {
 		handler = applyMiddleware(cfg.Middlewares[i], handler)
 	}
@@ -444,6 +474,11 @@ func (cfg *RequestConfig) Execute() (err error) {
 		// Can't actually refresh the body, so we don't attempt to retry here
 		if cfg.Request.GetBody == nil && cfg.Request.Body != nil {
 			break
+		}
+
+		// Close the response body before retrying to prevent connection leaks
+		if res != nil && res.Body != nil {
+			res.Body.Close()
 		}
 
 		time.Sleep(retryDelay(res, retryCount))
@@ -498,6 +533,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 	}
 
 	contents, err := io.ReadAll(res.Body)
+	res.Body.Close()
 	if err != nil {
 		return fmt.Errorf("error reading response body: %w", err)
 	}
@@ -521,15 +557,15 @@ func (cfg *RequestConfig) Execute() (err error) {
 		return nil
 	}
 
-	// If the response happens to be a byte array, deserialize the body as-is.
 	switch dst := cfg.ResponseBodyInto.(type) {
+	// If the response happens to be a byte array, deserialize the body as-is.
 	case *[]byte:
 		*dst = contents
-	}
-
-	err = json.NewDecoder(bytes.NewReader(contents)).Decode(cfg.ResponseBodyInto)
-	if err != nil {
-		return fmt.Errorf("error parsing response json: %w", err)
+	default:
+		err = json.NewDecoder(bytes.NewReader(contents)).Decode(cfg.ResponseBodyInto)
+		if err != nil {
+			return fmt.Errorf("error parsing response json: %w", err)
+		}
 	}
 
 	return nil
@@ -579,17 +615,35 @@ func (cfg *RequestConfig) Apply(opts ...RequestOption) error {
 	return nil
 }
 
+// PreRequestOptions is used to collect all the options which need to be known before
+// a call to [RequestConfig.ExecuteNewRequest], such as path parameters
+// or global defaults.
+// PreRequestOptions will return a [RequestConfig] with the options applied.
+//
+// Only request option functions of type [PreRequestOptionFunc] are applied.
 func PreRequestOptions(opts ...RequestOption) (RequestConfig, error) {
 	cfg := RequestConfig{}
 	for _, opt := range opts {
-		if _, ok := opt.(PreRequestOptionFunc); !ok {
-			continue
-		}
-
-		err := opt.Apply(&cfg)
-		if err != nil {
-			return cfg, err
+		if opt, ok := opt.(PreRequestOptionFunc); ok {
+			err := opt.Apply(&cfg)
+			if err != nil {
+				return cfg, err
+			}
 		}
 	}
 	return cfg, nil
+}
+
+// WithDefaultBaseURL returns a RequestOption that sets the client's default Base URL.
+// This is always overridden by setting a base URL with WithBaseURL.
+// WithBaseURL should be used instead of WithDefaultBaseURL except in internal code.
+func WithDefaultBaseURL(baseURL string) RequestOption {
+	u, err := url.Parse(baseURL)
+	return RequestOptionFunc(func(r *RequestConfig) error {
+		if err != nil {
+			return err
+		}
+		r.DefaultBaseURL = u
+		return nil
+	})
 }
