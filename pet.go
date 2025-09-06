@@ -98,10 +98,11 @@ func (r *PetService) UpdateWithForm(ctx context.Context, petID int64, body PetUp
 }
 
 // uploads an image
-func (r *PetService) UploadImage(ctx context.Context, petID int64, Body io.Reader, body PetUploadImageParams, opts ...option.RequestOption) (res *PetUploadImageResponse, err error) {
+func (r *PetService) UploadImage(ctx context.Context, petID int64, body io.Reader, body PetUploadImageParams, opts ...option.RequestOption) (res *PetUploadImageResponse, err error) {
 	opts = append(r.Options[:], opts...)
+	opts = append([]option.RequestOption{option.WithRequestBody("application/octet-stream", body)}, opts...)
 	path := fmt.Sprintf("pet/%v/uploadImage", petID)
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
 	return
 }
 
@@ -332,7 +333,6 @@ func (r PetUpdateWithFormParams) URLQuery() (v url.Values) {
 type PetUploadImageParams struct {
 	// Additional Metadata
 	AdditionalMetadata param.Field[string] `query:"additionalMetadata"`
-	Body               io.Reader           `json:"body" format:"binary"`
 }
 
 func (r PetUploadImageParams) MarshalMultipart() (data []byte, contentType string, err error) {
