@@ -236,7 +236,6 @@ func TestPetUploadImageWithOptionalParams(t *testing.T) {
 		io.Reader(bytes.NewBuffer([]byte("some file contents"))),
 		helloworldtestingggg.PetUploadImageParams{
 			AdditionalMetadata: helloworldtestingggg.F("additionalMetadata"),
-			Body:               io.Reader(bytes.NewBuffer([]byte("some file contents"))),
 		},
 	)
 	if err != nil {
