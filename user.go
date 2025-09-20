@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 
 	"github.com/stainless-sdks/hello-world-testingggg-go/internal/apijson"
 	"github.com/stainless-sdks/hello-world-testingggg-go/internal/apiquery"
@@ -37,7 +38,7 @@ func NewUserService(opts ...option.RequestOption) (r *UserService) {
 
 // This can only be done by the logged in user.
 func (r *UserService) New(ctx context.Context, body UserNewParams, opts ...option.RequestOption) (res *User, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	path := "user"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return
@@ -45,7 +46,7 @@ func (r *UserService) New(ctx context.Context, body UserNewParams, opts ...optio
 
 // Get user by user name
 func (r *UserService) Get(ctx context.Context, username string, opts ...option.RequestOption) (res *User, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	if username == "" {
 		err = errors.New("missing required username parameter")
 		return
@@ -57,7 +58,7 @@ func (r *UserService) Get(ctx context.Context, username string, opts ...option.R
 
 // This can only be done by the logged in user.
 func (r *UserService) Update(ctx context.Context, username string, body UserUpdateParams, opts ...option.RequestOption) (err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "")}, opts...)
 	if username == "" {
 		err = errors.New("missing required username parameter")
@@ -70,7 +71,7 @@ func (r *UserService) Update(ctx context.Context, username string, body UserUpda
 
 // This can only be done by the logged in user.
 func (r *UserService) Delete(ctx context.Context, username string, opts ...option.RequestOption) (err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "")}, opts...)
 	if username == "" {
 		err = errors.New("missing required username parameter")
@@ -83,7 +84,7 @@ func (r *UserService) Delete(ctx context.Context, username string, opts ...optio
 
 // Creates list of users with given input array
 func (r *UserService) NewWithList(ctx context.Context, body UserNewWithListParams, opts ...option.RequestOption) (res *User, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	path := "user/createWithList"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return
@@ -91,7 +92,7 @@ func (r *UserService) NewWithList(ctx context.Context, body UserNewWithListParam
 
 // Logs user into the system
 func (r *UserService) Login(ctx context.Context, query UserLoginParams, opts ...option.RequestOption) (res *string, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	path := "user/login"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
 	return
@@ -99,7 +100,7 @@ func (r *UserService) Login(ctx context.Context, query UserLoginParams, opts ...
 
 // Logs out current logged in user session
 func (r *UserService) Logout(ctx context.Context, opts ...option.RequestOption) (err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "")}, opts...)
 	path := "user/logout"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, nil, opts...)

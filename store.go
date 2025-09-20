@@ -5,6 +5,7 @@ package helloworldtestingggg
 import (
 	"context"
 	"net/http"
+	"slices"
 
 	"github.com/stainless-sdks/hello-world-testingggg-go/internal/requestconfig"
 	"github.com/stainless-sdks/hello-world-testingggg-go/option"
@@ -33,7 +34,7 @@ func NewStoreService(opts ...option.RequestOption) (r *StoreService) {
 
 // Returns a map of status codes to quantities
 func (r *StoreService) ListInventory(ctx context.Context, opts ...option.RequestOption) (res *StoreListInventoryResponse, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	path := "store/inventory"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return

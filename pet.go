@@ -10,6 +10,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"slices"
 
 	"github.com/stainless-sdks/hello-world-testingggg-go/internal/apiform"
 	"github.com/stainless-sdks/hello-world-testingggg-go/internal/apijson"
@@ -40,7 +41,7 @@ func NewPetService(opts ...option.RequestOption) (r *PetService) {
 
 // Add a new pet to the store
 func (r *PetService) New(ctx context.Context, body PetNewParams, opts ...option.RequestOption) (res *Pet, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	path := "pet"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return
@@ -48,7 +49,7 @@ func (r *PetService) New(ctx context.Context, body PetNewParams, opts ...option.
 
 // Returns a single pet
 func (r *PetService) Get(ctx context.Context, petID int64, opts ...option.RequestOption) (res *Pet, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	path := fmt.Sprintf("pet/%v", petID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return
@@ -56,7 +57,7 @@ func (r *PetService) Get(ctx context.Context, petID int64, opts ...option.Reques
 
 // Update an existing pet by Id
 func (r *PetService) Update(ctx context.Context, body PetUpdateParams, opts ...option.RequestOption) (res *Pet, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	path := "pet"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPut, path, body, &res, opts...)
 	return
@@ -64,7 +65,7 @@ func (r *PetService) Update(ctx context.Context, body PetUpdateParams, opts ...o
 
 // Deletes a pet
 func (r *PetService) Delete(ctx context.Context, petID int64, opts ...option.RequestOption) (err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "")}, opts...)
 	path := fmt.Sprintf("pet/%v", petID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, nil, opts...)
@@ -73,7 +74,7 @@ func (r *PetService) Delete(ctx context.Context, petID int64, opts ...option.Req
 
 // Multiple status values can be provided with comma separated strings
 func (r *PetService) FindByStatus(ctx context.Context, query PetFindByStatusParams, opts ...option.RequestOption) (res *[]Pet, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	path := "pet/findByStatus"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
 	return
@@ -82,7 +83,7 @@ func (r *PetService) FindByStatus(ctx context.Context, query PetFindByStatusPara
 // Multiple tags can be provided with comma separated strings. Use tag1, tag2, tag3
 // for testing.
 func (r *PetService) FindByTags(ctx context.Context, query PetFindByTagsParams, opts ...option.RequestOption) (res *[]Pet, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	path := "pet/findByTags"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
 	return
@@ -90,7 +91,7 @@ func (r *PetService) FindByTags(ctx context.Context, query PetFindByTagsParams, 
 
 // Updates a pet in the store with form data
 func (r *PetService) UpdateWithForm(ctx context.Context, petID int64, body PetUpdateWithFormParams, opts ...option.RequestOption) (err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "")}, opts...)
 	path := fmt.Sprintf("pet/%v", petID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, nil, opts...)
@@ -99,7 +100,7 @@ func (r *PetService) UpdateWithForm(ctx context.Context, petID int64, body PetUp
 
 // uploads an image
 func (r *PetService) UploadImage(ctx context.Context, petID int64, body io.Reader, body PetUploadImageParams, opts ...option.RequestOption) (res *PetUploadImageResponse, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithRequestBody("application/octet-stream", body)}, opts...)
 	path := fmt.Sprintf("pet/%v/uploadImage", petID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
