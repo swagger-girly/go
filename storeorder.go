@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/stainless-sdks/hello-world-testingggg-go/internal/apijson"
@@ -35,7 +36,7 @@ func NewStoreOrderService(opts ...option.RequestOption) (r *StoreOrderService) {
 
 // Place a new order in the store
 func (r *StoreOrderService) New(ctx context.Context, body StoreOrderNewParams, opts ...option.RequestOption) (res *Order, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	path := "store/order"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return
@@ -44,7 +45,7 @@ func (r *StoreOrderService) New(ctx context.Context, body StoreOrderNewParams, o
 // For valid response try integer IDs with value <= 5 or > 10. Other values will
 // generate exceptions.
 func (r *StoreOrderService) Get(ctx context.Context, orderID int64, opts ...option.RequestOption) (res *Order, err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	path := fmt.Sprintf("store/order/%v", orderID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return
@@ -53,7 +54,7 @@ func (r *StoreOrderService) Get(ctx context.Context, orderID int64, opts ...opti
 // For valid response try integer IDs with value < 1000. Anything above 1000 or
 // nonintegers will generate API errors
 func (r *StoreOrderService) Delete(ctx context.Context, orderID int64, opts ...option.RequestOption) (err error) {
-	opts = append(r.Options[:], opts...)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "")}, opts...)
 	path := fmt.Sprintf("store/order/%v", orderID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, nil, opts...)
