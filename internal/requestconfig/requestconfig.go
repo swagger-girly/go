@@ -217,8 +217,6 @@ type RequestConfig struct {
 	HTTPClient     *http.Client
 	Middlewares    []middleware
 	APIKey         string
-	// OAuth2State holds the OAuth2 provider configuration and cached token information
-	OAuth2State *OAuth2State
 	// If ResponseBodyInto not nil, then we will attempt to deserialize into
 	// ResponseBodyInto. If Destination is a []byte, then it will return the body as
 	// is.
@@ -414,15 +412,6 @@ func (cfg *RequestConfig) Execute() (err error) {
 				cfg.Request.Body = io.NopCloser(body)
 			}
 		}
-	}
-
-	if cfg.OAuth2State != nil && cfg.Request.Header.Get("Authorization") == "" {
-		token, err := cfg.OAuth2State.GetToken(cfg)
-		if err != nil {
-			return err
-		}
-
-		cfg.Request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	}
 
 	handler := cfg.HTTPClient.Do
