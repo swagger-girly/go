@@ -15,6 +15,8 @@ import (
 	"github.com/stainless-sdks/hello-world-testingggg-go/option"
 )
 
+// Access to Petstore orders
+//
 // StoreOrderService contains methods and other services that help with interacting
 // with the hello-world-testingggg API.
 //
@@ -39,7 +41,7 @@ func (r *StoreOrderService) New(ctx context.Context, body StoreOrderNewParams, o
 	opts = slices.Concat(r.Options, opts)
 	path := "store/order"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // For valid response try integer IDs with value <= 5 or > 10. Other values will
@@ -48,17 +50,17 @@ func (r *StoreOrderService) Get(ctx context.Context, orderID int64, opts ...opti
 	opts = slices.Concat(r.Options, opts)
 	path := fmt.Sprintf("store/order/%v", orderID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // For valid response try integer IDs with value < 1000. Anything above 1000 or
 // nonintegers will generate API errors
 func (r *StoreOrderService) Delete(ctx context.Context, orderID int64, opts ...option.RequestOption) (err error) {
 	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("Accept", "")}, opts...)
+	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	path := fmt.Sprintf("store/order/%v", orderID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, nil, opts...)
-	return
+	return err
 }
 
 type Order struct {

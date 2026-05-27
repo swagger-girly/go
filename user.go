@@ -17,6 +17,8 @@ import (
 	"github.com/stainless-sdks/hello-world-testingggg-go/option"
 )
 
+// Operations about user
+//
 // UserService contains methods and other services that help with interacting with
 // the hello-world-testingggg API.
 //
@@ -41,7 +43,7 @@ func (r *UserService) New(ctx context.Context, body UserNewParams, opts ...optio
 	opts = slices.Concat(r.Options, opts)
 	path := "user"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Get user by user name
@@ -49,37 +51,37 @@ func (r *UserService) Get(ctx context.Context, username string, opts ...option.R
 	opts = slices.Concat(r.Options, opts)
 	if username == "" {
 		err = errors.New("missing required username parameter")
-		return
+		return nil, err
 	}
 	path := fmt.Sprintf("user/%s", username)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // This can only be done by the logged in user.
 func (r *UserService) Update(ctx context.Context, username string, body UserUpdateParams, opts ...option.RequestOption) (err error) {
 	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("Accept", "")}, opts...)
+	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if username == "" {
 		err = errors.New("missing required username parameter")
-		return
+		return err
 	}
 	path := fmt.Sprintf("user/%s", username)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPut, path, body, nil, opts...)
-	return
+	return err
 }
 
 // This can only be done by the logged in user.
 func (r *UserService) Delete(ctx context.Context, username string, opts ...option.RequestOption) (err error) {
 	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("Accept", "")}, opts...)
+	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	if username == "" {
 		err = errors.New("missing required username parameter")
-		return
+		return err
 	}
 	path := fmt.Sprintf("user/%s", username)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, nil, opts...)
-	return
+	return err
 }
 
 // Creates list of users with given input array
@@ -87,7 +89,7 @@ func (r *UserService) NewWithList(ctx context.Context, body UserNewWithListParam
 	opts = slices.Concat(r.Options, opts)
 	path := "user/createWithList"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Logs user into the system
@@ -95,16 +97,16 @@ func (r *UserService) Login(ctx context.Context, query UserLoginParams, opts ...
 	opts = slices.Concat(r.Options, opts)
 	path := "user/login"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
+	return res, err
 }
 
 // Logs out current logged in user session
 func (r *UserService) Logout(ctx context.Context, opts ...option.RequestOption) (err error) {
 	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("Accept", "")}, opts...)
+	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	path := "user/logout"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, nil, opts...)
-	return
+	return err
 }
 
 type User struct {

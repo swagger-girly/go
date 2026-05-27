@@ -20,6 +20,8 @@ import (
 	"github.com/stainless-sdks/hello-world-testingggg-go/option"
 )
 
+// Everything about your Pets
+//
 // PetService contains methods and other services that help with interacting with
 // the hello-world-testingggg API.
 //
@@ -44,7 +46,7 @@ func (r *PetService) New(ctx context.Context, body PetNewParams, opts ...option.
 	opts = slices.Concat(r.Options, opts)
 	path := "pet"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Returns a single pet
@@ -52,7 +54,7 @@ func (r *PetService) Get(ctx context.Context, petID int64, opts ...option.Reques
 	opts = slices.Concat(r.Options, opts)
 	path := fmt.Sprintf("pet/%v", petID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 // Update an existing pet by Id
@@ -60,16 +62,16 @@ func (r *PetService) Update(ctx context.Context, body PetUpdateParams, opts ...o
 	opts = slices.Concat(r.Options, opts)
 	path := "pet"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPut, path, body, &res, opts...)
-	return
+	return res, err
 }
 
 // Deletes a pet
 func (r *PetService) Delete(ctx context.Context, petID int64, opts ...option.RequestOption) (err error) {
 	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("Accept", "")}, opts...)
+	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	path := fmt.Sprintf("pet/%v", petID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, nil, opts...)
-	return
+	return err
 }
 
 // Multiple status values can be provided with comma separated strings
@@ -77,7 +79,7 @@ func (r *PetService) FindByStatus(ctx context.Context, query PetFindByStatusPara
 	opts = slices.Concat(r.Options, opts)
 	path := "pet/findByStatus"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
+	return res, err
 }
 
 // Multiple tags can be provided with comma separated strings. Use tag1, tag2, tag3
@@ -86,30 +88,30 @@ func (r *PetService) FindByTags(ctx context.Context, query PetFindByTagsParams, 
 	opts = slices.Concat(r.Options, opts)
 	path := "pet/findByTags"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
-	return
+	return res, err
 }
 
 // Updates a pet in the store with form data
 func (r *PetService) UpdateWithForm(ctx context.Context, petID int64, body PetUpdateWithFormParams, opts ...option.RequestOption) (err error) {
 	opts = slices.Concat(r.Options, opts)
-	opts = append([]option.RequestOption{option.WithHeader("Accept", "")}, opts...)
+	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	path := fmt.Sprintf("pet/%v", petID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, nil, opts...)
-	return
+	return err
 }
 
 // uploads an image
-func (r *PetService) UploadImage(ctx context.Context, petID int64, body io.Reader, body PetUploadImageParams, opts ...option.RequestOption) (res *PetUploadImageResponse, err error) {
+func (r *PetService) UploadImage(ctx context.Context, petID int64, body io.Reader, params PetUploadImageParams, opts ...option.RequestOption) (res *PetUploadImageResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithRequestBody("application/octet-stream", body)}, opts...)
 	path := fmt.Sprintf("pet/%v/uploadImage", petID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 type Pet struct {
-	Name      string      `json:"name,required"`
-	PhotoURLs []string    `json:"photoUrls,required"`
+	Name      string      `json:"name" api:"required"`
+	PhotoURLs []string    `json:"photoUrls" api:"required"`
 	ID        int64       `json:"id"`
 	Category  PetCategory `json:"category"`
 	// pet status in the store
@@ -200,8 +202,8 @@ func (r petTagJSON) RawJSON() string {
 }
 
 type PetParam struct {
-	Name      param.Field[string]           `json:"name,required"`
-	PhotoURLs param.Field[[]string]         `json:"photoUrls,required"`
+	Name      param.Field[string]           `json:"name" api:"required"`
+	PhotoURLs param.Field[[]string]         `json:"photoUrls" api:"required"`
 	ID        param.Field[int64]            `json:"id"`
 	Category  param.Field[PetCategoryParam] `json:"category"`
 	// pet status in the store
@@ -257,7 +259,7 @@ func (r petUploadImageResponseJSON) RawJSON() string {
 }
 
 type PetNewParams struct {
-	Pet PetParam `json:"pet,required"`
+	Pet PetParam `json:"pet" api:"required"`
 }
 
 func (r PetNewParams) MarshalJSON() (data []byte, err error) {
@@ -265,7 +267,7 @@ func (r PetNewParams) MarshalJSON() (data []byte, err error) {
 }
 
 type PetUpdateParams struct {
-	Pet PetParam `json:"pet,required"`
+	Pet PetParam `json:"pet" api:"required"`
 }
 
 func (r PetUpdateParams) MarshalJSON() (data []byte, err error) {
