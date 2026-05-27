@@ -38,7 +38,7 @@ func TestUserAgentHeader(t *testing.T) {
 			},
 		}),
 	)
-	client.Pet.Update(context.Background(), helloworldtestingggg.PetUpdateParams{
+	_, _ = client.Pet.Update(context.Background(), helloworldtestingggg.PetUpdateParams{
 		Pet: helloworldtestingggg.PetParam{
 			Name:      helloworldtestingggg.F("doggie"),
 			PhotoURLs: helloworldtestingggg.F([]string{"string"}),

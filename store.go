@@ -11,6 +11,8 @@ import (
 	"github.com/stainless-sdks/hello-world-testingggg-go/option"
 )
 
+// Access to Petstore orders
+//
 // StoreService contains methods and other services that help with interacting with
 // the hello-world-testingggg API.
 //
@@ -19,7 +21,8 @@ import (
 // the [NewStoreService] method instead.
 type StoreService struct {
 	Options []option.RequestOption
-	Order   *StoreOrderService
+	// Access to Petstore orders
+	Order *StoreOrderService
 }
 
 // NewStoreService generates a new service that applies the given options to each
@@ -37,7 +40,7 @@ func (r *StoreService) ListInventory(ctx context.Context, opts ...option.Request
 	opts = slices.Concat(r.Options, opts)
 	path := "store/inventory"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return
+	return res, err
 }
 
 type StoreListInventoryResponse map[string]int64
