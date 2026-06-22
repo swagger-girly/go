@@ -29,18 +29,20 @@ func TestPetNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Pet.New(context.TODO(), helloworldtestingggg.PetNewParams{
-		Name:      helloworldtestingggg.F("doggie"),
-		PhotoURLs: helloworldtestingggg.F([]string{"string"}),
-		ID:        helloworldtestingggg.F(int64(10)),
-		Category: helloworldtestingggg.F(helloworldtestingggg.PetNewParamsCategory{
-			ID:   helloworldtestingggg.F(int64(1)),
-			Name: helloworldtestingggg.F("Dogs"),
-		}),
-		Status: helloworldtestingggg.F(helloworldtestingggg.PetNewParamsStatusAvailable),
-		Tags: helloworldtestingggg.F([]helloworldtestingggg.PetNewParamsTag{{
-			ID:   helloworldtestingggg.F(int64(0)),
-			Name: helloworldtestingggg.F("name"),
-		}}),
+		Pet: helloworldtestingggg.PetParam{
+			Name:      helloworldtestingggg.F("doggie"),
+			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
+			ID:        helloworldtestingggg.F(int64(10)),
+			Category: helloworldtestingggg.F(helloworldtestingggg.CategoryParam{
+				ID:   helloworldtestingggg.F(int64(1)),
+				Name: helloworldtestingggg.F("Dogs"),
+			}),
+			Status: helloworldtestingggg.F(helloworldtestingggg.PetStatusAvailable),
+			Tags: helloworldtestingggg.F([]helloworldtestingggg.TagParam{{
+				ID:   helloworldtestingggg.F(int64(0)),
+				Name: helloworldtestingggg.F("name"),
+			}}),
+		},
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
@@ -88,18 +90,20 @@ func TestPetUpdateWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Pet.Update(context.TODO(), helloworldtestingggg.PetUpdateParams{
-		Name:      helloworldtestingggg.F("doggie"),
-		PhotoURLs: helloworldtestingggg.F([]string{"string"}),
-		ID:        helloworldtestingggg.F(int64(10)),
-		Category: helloworldtestingggg.F(helloworldtestingggg.PetUpdateParamsCategory{
-			ID:   helloworldtestingggg.F(int64(1)),
-			Name: helloworldtestingggg.F("Dogs"),
-		}),
-		Status: helloworldtestingggg.F(helloworldtestingggg.PetUpdateParamsStatusAvailable),
-		Tags: helloworldtestingggg.F([]helloworldtestingggg.PetUpdateParamsTag{{
-			ID:   helloworldtestingggg.F(int64(0)),
-			Name: helloworldtestingggg.F("name"),
-		}}),
+		Pet: helloworldtestingggg.PetParam{
+			Name:      helloworldtestingggg.F("doggie"),
+			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
+			ID:        helloworldtestingggg.F(int64(10)),
+			Category: helloworldtestingggg.F(helloworldtestingggg.CategoryParam{
+				ID:   helloworldtestingggg.F(int64(1)),
+				Name: helloworldtestingggg.F("Dogs"),
+			}),
+			Status: helloworldtestingggg.F(helloworldtestingggg.PetStatusAvailable),
+			Tags: helloworldtestingggg.F([]helloworldtestingggg.TagParam{{
+				ID:   helloworldtestingggg.F(int64(0)),
+				Name: helloworldtestingggg.F("name"),
+			}}),
+		},
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
