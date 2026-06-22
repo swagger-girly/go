@@ -28,14 +28,12 @@ func TestStoreOrderNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Store.Order.New(context.TODO(), helloworldtestingggg.StoreOrderNewParams{
-		Order: helloworldtestingggg.OrderParam{
-			ID:       helloworldtestingggg.F(int64(10)),
-			Complete: helloworldtestingggg.F(true),
-			PetID:    helloworldtestingggg.F(int64(198772)),
-			Quantity: helloworldtestingggg.F(int64(7)),
-			ShipDate: helloworldtestingggg.F(time.Now()),
-			Status:   helloworldtestingggg.F(helloworldtestingggg.OrderStatusApproved),
-		},
+		ID:       helloworldtestingggg.F(int64(10)),
+		Complete: helloworldtestingggg.F(true),
+		PetID:    helloworldtestingggg.F(int64(198772)),
+		Quantity: helloworldtestingggg.F(int64(7)),
+		ShipDate: helloworldtestingggg.F(time.Now()),
+		Status:   helloworldtestingggg.F(helloworldtestingggg.StoreOrderNewParamsStatusApproved),
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error

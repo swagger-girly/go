@@ -51,10 +51,8 @@ import (
 func main() {
 	client := helloworldtestingggg.NewClient()
 	pet, err := client.Pet.Update(context.TODO(), helloworldtestingggg.PetUpdateParams{
-		Pet: helloworldtestingggg.PetParam{
-			Name:      helloworldtestingggg.F("doggie"),
-			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
-		},
+		Name:      helloworldtestingggg.F("doggie"),
+		PhotoURLs: helloworldtestingggg.F([]string{"string"}),
 	})
 	if err != nil {
 		panic(err.Error())
@@ -178,10 +176,8 @@ To handle errors, we recommend that you use the `errors.As` pattern:
 
 ```go
 _, err := client.Pet.Update(context.TODO(), helloworldtestingggg.PetUpdateParams{
-	Pet: helloworldtestingggg.PetParam{
-		Name:      helloworldtestingggg.F("doggie"),
-		PhotoURLs: helloworldtestingggg.F([]string{"string"}),
-	},
+	Name:      helloworldtestingggg.F("doggie"),
+	PhotoURLs: helloworldtestingggg.F([]string{"string"}),
 })
 if err != nil {
 	var apierr *helloworldtestingggg.Error
@@ -210,10 +206,8 @@ defer cancel()
 client.Pet.Update(
 	ctx,
 	helloworldtestingggg.PetUpdateParams{
-		Pet: helloworldtestingggg.PetParam{
-			Name:      helloworldtestingggg.F("doggie"),
-			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
-		},
+		Name:      helloworldtestingggg.F("doggie"),
+		PhotoURLs: helloworldtestingggg.F([]string{"string"}),
 	},
 	// This sets the per-retry timeout
 	option.WithRequestTimeout(20*time.Second),
@@ -251,10 +245,8 @@ client := helloworldtestingggg.NewClient(
 client.Pet.Update(
 	context.TODO(),
 	helloworldtestingggg.PetUpdateParams{
-		Pet: helloworldtestingggg.PetParam{
-			Name:      helloworldtestingggg.F("doggie"),
-			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
-		},
+		Name:      helloworldtestingggg.F("doggie"),
+		PhotoURLs: helloworldtestingggg.F([]string{"string"}),
 	},
 	option.WithMaxRetries(5),
 )
@@ -271,10 +263,8 @@ var response *http.Response
 pet, err := client.Pet.Update(
 	context.TODO(),
 	helloworldtestingggg.PetUpdateParams{
-		Pet: helloworldtestingggg.PetParam{
-			Name:      helloworldtestingggg.F("doggie"),
-			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
-		},
+		Name:      helloworldtestingggg.F("doggie"),
+		PhotoURLs: helloworldtestingggg.F([]string{"string"}),
 	},
 	option.WithResponseInto(&response),
 )

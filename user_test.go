@@ -27,16 +27,14 @@ func TestUserNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.User.New(context.TODO(), helloworldtestingggg.UserNewParams{
-		User: helloworldtestingggg.UserParam{
-			ID:         helloworldtestingggg.F(int64(10)),
-			Email:      helloworldtestingggg.F("john@email.com"),
-			FirstName:  helloworldtestingggg.F("John"),
-			LastName:   helloworldtestingggg.F("James"),
-			Password:   helloworldtestingggg.F("12345"),
-			Phone:      helloworldtestingggg.F("12345"),
-			Username:   helloworldtestingggg.F("theUser"),
-			UserStatus: helloworldtestingggg.F(int64(1)),
-		},
+		ID:         helloworldtestingggg.F(int64(10)),
+		Email:      helloworldtestingggg.F("john@email.com"),
+		FirstName:  helloworldtestingggg.F("John"),
+		LastName:   helloworldtestingggg.F("James"),
+		Password:   helloworldtestingggg.F("12345"),
+		Phone:      helloworldtestingggg.F("12345"),
+		Username:   helloworldtestingggg.F("theUser"),
+		UserStatus: helloworldtestingggg.F(int64(1)),
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
@@ -87,16 +85,14 @@ func TestUserUpdateWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"username",
 		helloworldtestingggg.UserUpdateParams{
-			User: helloworldtestingggg.UserParam{
-				ID:         helloworldtestingggg.F(int64(10)),
-				Email:      helloworldtestingggg.F("john@email.com"),
-				FirstName:  helloworldtestingggg.F("John"),
-				LastName:   helloworldtestingggg.F("James"),
-				Password:   helloworldtestingggg.F("12345"),
-				Phone:      helloworldtestingggg.F("12345"),
-				Username:   helloworldtestingggg.F("theUser"),
-				UserStatus: helloworldtestingggg.F(int64(1)),
-			},
+			ID:         helloworldtestingggg.F(int64(10)),
+			Email:      helloworldtestingggg.F("john@email.com"),
+			FirstName:  helloworldtestingggg.F("John"),
+			LastName:   helloworldtestingggg.F("James"),
+			Password:   helloworldtestingggg.F("12345"),
+			Phone:      helloworldtestingggg.F("12345"),
+			Username:   helloworldtestingggg.F("theUser"),
+			UserStatus: helloworldtestingggg.F(int64(1)),
 		},
 	)
 	if err != nil {
@@ -145,7 +141,7 @@ func TestUserNewWithListWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.User.NewWithList(context.TODO(), helloworldtestingggg.UserNewWithListParams{
-		Body: []helloworldtestingggg.UserParam{{
+		Body: []helloworldtestingggg.UserNewWithListParamsBody{{
 			ID:         helloworldtestingggg.F(int64(10)),
 			Email:      helloworldtestingggg.F("john@email.com"),
 			FirstName:  helloworldtestingggg.F("John"),

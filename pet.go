@@ -42,7 +42,7 @@ func NewPetService(opts ...option.RequestOption) (r *PetService) {
 }
 
 // Add a new pet to the store
-func (r *PetService) New(ctx context.Context, body PetNewParams, opts ...option.RequestOption) (res *Pet, err error) {
+func (r *PetService) New(ctx context.Context, body PetNewParams, opts ...option.RequestOption) (res *PetNewResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	path := "pet"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
@@ -50,7 +50,7 @@ func (r *PetService) New(ctx context.Context, body PetNewParams, opts ...option.
 }
 
 // Returns a single pet
-func (r *PetService) Get(ctx context.Context, petID int64, opts ...option.RequestOption) (res *Pet, err error) {
+func (r *PetService) Get(ctx context.Context, petID int64, opts ...option.RequestOption) (res *PetGetResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	path := fmt.Sprintf("pet/%v", petID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
@@ -58,7 +58,7 @@ func (r *PetService) Get(ctx context.Context, petID int64, opts ...option.Reques
 }
 
 // Update an existing pet by Id
-func (r *PetService) Update(ctx context.Context, body PetUpdateParams, opts ...option.RequestOption) (res *Pet, err error) {
+func (r *PetService) Update(ctx context.Context, body PetUpdateParams, opts ...option.RequestOption) (res *PetUpdateResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	path := "pet"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPut, path, body, &res, opts...)
@@ -75,7 +75,7 @@ func (r *PetService) Delete(ctx context.Context, petID int64, opts ...option.Req
 }
 
 // Multiple status values can be provided with comma separated strings
-func (r *PetService) FindByStatus(ctx context.Context, query PetFindByStatusParams, opts ...option.RequestOption) (res *[]Pet, err error) {
+func (r *PetService) FindByStatus(ctx context.Context, query PetFindByStatusParams, opts ...option.RequestOption) (res *[]PetFindByStatusResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	path := "pet/findByStatus"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
@@ -84,7 +84,7 @@ func (r *PetService) FindByStatus(ctx context.Context, query PetFindByStatusPara
 
 // Multiple tags can be provided with comma separated strings. Use tag1, tag2, tag3
 // for testing.
-func (r *PetService) FindByTags(ctx context.Context, query PetFindByTagsParams, opts ...option.RequestOption) (res *[]Pet, err error) {
+func (r *PetService) FindByTags(ctx context.Context, query PetFindByTagsParams, opts ...option.RequestOption) (res *[]PetFindByTagsResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	path := "pet/findByTags"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
@@ -109,19 +109,19 @@ func (r *PetService) UploadImage(ctx context.Context, petID int64, body io.Reade
 	return res, err
 }
 
-type Pet struct {
-	Name      string      `json:"name" api:"required"`
-	PhotoURLs []string    `json:"photoUrls" api:"required"`
-	ID        int64       `json:"id"`
-	Category  PetCategory `json:"category"`
+type PetNewResponse struct {
+	Name      string                 `json:"name" api:"required"`
+	PhotoURLs []string               `json:"photoUrls" api:"required"`
+	ID        int64                  `json:"id"`
+	Category  PetNewResponseCategory `json:"category"`
 	// pet status in the store
-	Status PetStatus `json:"status"`
-	Tags   []PetTag  `json:"tags"`
-	JSON   petJSON   `json:"-"`
+	Status PetNewResponseStatus `json:"status"`
+	Tags   []PetNewResponseTag  `json:"tags"`
+	JSON   petNewResponseJSON   `json:"-"`
 }
 
-// petJSON contains the JSON metadata for the struct [Pet]
-type petJSON struct {
+// petNewResponseJSON contains the JSON metadata for the struct [PetNewResponse]
+type petNewResponseJSON struct {
 	Name        apijson.Field
 	PhotoURLs   apijson.Field
 	ID          apijson.Field
@@ -132,105 +132,454 @@ type petJSON struct {
 	ExtraFields map[string]apijson.Field
 }
 
-func (r *Pet) UnmarshalJSON(data []byte) (err error) {
+func (r *PetNewResponse) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r petJSON) RawJSON() string {
+func (r petNewResponseJSON) RawJSON() string {
 	return r.raw
 }
 
-type PetCategory struct {
-	ID   int64           `json:"id"`
-	Name string          `json:"name"`
-	JSON petCategoryJSON `json:"-"`
+type PetNewResponseCategory struct {
+	ID   int64                      `json:"id"`
+	Name string                     `json:"name"`
+	JSON petNewResponseCategoryJSON `json:"-"`
 }
 
-// petCategoryJSON contains the JSON metadata for the struct [PetCategory]
-type petCategoryJSON struct {
+// petNewResponseCategoryJSON contains the JSON metadata for the struct
+// [PetNewResponseCategory]
+type petNewResponseCategoryJSON struct {
 	ID          apijson.Field
 	Name        apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
 
-func (r *PetCategory) UnmarshalJSON(data []byte) (err error) {
+func (r *PetNewResponseCategory) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r petCategoryJSON) RawJSON() string {
+func (r petNewResponseCategoryJSON) RawJSON() string {
 	return r.raw
 }
 
 // pet status in the store
-type PetStatus string
+type PetNewResponseStatus string
 
 const (
-	PetStatusAvailable PetStatus = "available"
-	PetStatusPending   PetStatus = "pending"
-	PetStatusSold      PetStatus = "sold"
+	PetNewResponseStatusAvailable PetNewResponseStatus = "available"
+	PetNewResponseStatusPending   PetNewResponseStatus = "pending"
+	PetNewResponseStatusSold      PetNewResponseStatus = "sold"
 )
 
-func (r PetStatus) IsKnown() bool {
+func (r PetNewResponseStatus) IsKnown() bool {
 	switch r {
-	case PetStatusAvailable, PetStatusPending, PetStatusSold:
+	case PetNewResponseStatusAvailable, PetNewResponseStatusPending, PetNewResponseStatusSold:
 		return true
 	}
 	return false
 }
 
-type PetTag struct {
-	ID   int64      `json:"id"`
-	Name string     `json:"name"`
-	JSON petTagJSON `json:"-"`
+type PetNewResponseTag struct {
+	ID   int64                 `json:"id"`
+	Name string                `json:"name"`
+	JSON petNewResponseTagJSON `json:"-"`
 }
 
-// petTagJSON contains the JSON metadata for the struct [PetTag]
-type petTagJSON struct {
+// petNewResponseTagJSON contains the JSON metadata for the struct
+// [PetNewResponseTag]
+type petNewResponseTagJSON struct {
 	ID          apijson.Field
 	Name        apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
 
-func (r *PetTag) UnmarshalJSON(data []byte) (err error) {
+func (r *PetNewResponseTag) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r petTagJSON) RawJSON() string {
+func (r petNewResponseTagJSON) RawJSON() string {
 	return r.raw
 }
 
-type PetParam struct {
-	Name      param.Field[string]           `json:"name" api:"required"`
-	PhotoURLs param.Field[[]string]         `json:"photoUrls" api:"required"`
-	ID        param.Field[int64]            `json:"id"`
-	Category  param.Field[PetCategoryParam] `json:"category"`
+type PetGetResponse struct {
+	Name      string                 `json:"name" api:"required"`
+	PhotoURLs []string               `json:"photoUrls" api:"required"`
+	ID        int64                  `json:"id"`
+	Category  PetGetResponseCategory `json:"category"`
 	// pet status in the store
-	Status param.Field[PetStatus]     `json:"status"`
-	Tags   param.Field[[]PetTagParam] `json:"tags"`
+	Status PetGetResponseStatus `json:"status"`
+	Tags   []PetGetResponseTag  `json:"tags"`
+	JSON   petGetResponseJSON   `json:"-"`
 }
 
-func (r PetParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+// petGetResponseJSON contains the JSON metadata for the struct [PetGetResponse]
+type petGetResponseJSON struct {
+	Name        apijson.Field
+	PhotoURLs   apijson.Field
+	ID          apijson.Field
+	Category    apijson.Field
+	Status      apijson.Field
+	Tags        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
 }
 
-type PetCategoryParam struct {
-	ID   param.Field[int64]  `json:"id"`
-	Name param.Field[string] `json:"name"`
+func (r *PetGetResponse) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r PetCategoryParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+func (r petGetResponseJSON) RawJSON() string {
+	return r.raw
 }
 
-type PetTagParam struct {
-	ID   param.Field[int64]  `json:"id"`
-	Name param.Field[string] `json:"name"`
+type PetGetResponseCategory struct {
+	ID   int64                      `json:"id"`
+	Name string                     `json:"name"`
+	JSON petGetResponseCategoryJSON `json:"-"`
 }
 
-func (r PetTagParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+// petGetResponseCategoryJSON contains the JSON metadata for the struct
+// [PetGetResponseCategory]
+type petGetResponseCategoryJSON struct {
+	ID          apijson.Field
+	Name        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PetGetResponseCategory) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r petGetResponseCategoryJSON) RawJSON() string {
+	return r.raw
+}
+
+// pet status in the store
+type PetGetResponseStatus string
+
+const (
+	PetGetResponseStatusAvailable PetGetResponseStatus = "available"
+	PetGetResponseStatusPending   PetGetResponseStatus = "pending"
+	PetGetResponseStatusSold      PetGetResponseStatus = "sold"
+)
+
+func (r PetGetResponseStatus) IsKnown() bool {
+	switch r {
+	case PetGetResponseStatusAvailable, PetGetResponseStatusPending, PetGetResponseStatusSold:
+		return true
+	}
+	return false
+}
+
+type PetGetResponseTag struct {
+	ID   int64                 `json:"id"`
+	Name string                `json:"name"`
+	JSON petGetResponseTagJSON `json:"-"`
+}
+
+// petGetResponseTagJSON contains the JSON metadata for the struct
+// [PetGetResponseTag]
+type petGetResponseTagJSON struct {
+	ID          apijson.Field
+	Name        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PetGetResponseTag) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r petGetResponseTagJSON) RawJSON() string {
+	return r.raw
+}
+
+type PetUpdateResponse struct {
+	Name      string                    `json:"name" api:"required"`
+	PhotoURLs []string                  `json:"photoUrls" api:"required"`
+	ID        int64                     `json:"id"`
+	Category  PetUpdateResponseCategory `json:"category"`
+	// pet status in the store
+	Status PetUpdateResponseStatus `json:"status"`
+	Tags   []PetUpdateResponseTag  `json:"tags"`
+	JSON   petUpdateResponseJSON   `json:"-"`
+}
+
+// petUpdateResponseJSON contains the JSON metadata for the struct
+// [PetUpdateResponse]
+type petUpdateResponseJSON struct {
+	Name        apijson.Field
+	PhotoURLs   apijson.Field
+	ID          apijson.Field
+	Category    apijson.Field
+	Status      apijson.Field
+	Tags        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PetUpdateResponse) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r petUpdateResponseJSON) RawJSON() string {
+	return r.raw
+}
+
+type PetUpdateResponseCategory struct {
+	ID   int64                         `json:"id"`
+	Name string                        `json:"name"`
+	JSON petUpdateResponseCategoryJSON `json:"-"`
+}
+
+// petUpdateResponseCategoryJSON contains the JSON metadata for the struct
+// [PetUpdateResponseCategory]
+type petUpdateResponseCategoryJSON struct {
+	ID          apijson.Field
+	Name        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PetUpdateResponseCategory) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r petUpdateResponseCategoryJSON) RawJSON() string {
+	return r.raw
+}
+
+// pet status in the store
+type PetUpdateResponseStatus string
+
+const (
+	PetUpdateResponseStatusAvailable PetUpdateResponseStatus = "available"
+	PetUpdateResponseStatusPending   PetUpdateResponseStatus = "pending"
+	PetUpdateResponseStatusSold      PetUpdateResponseStatus = "sold"
+)
+
+func (r PetUpdateResponseStatus) IsKnown() bool {
+	switch r {
+	case PetUpdateResponseStatusAvailable, PetUpdateResponseStatusPending, PetUpdateResponseStatusSold:
+		return true
+	}
+	return false
+}
+
+type PetUpdateResponseTag struct {
+	ID   int64                    `json:"id"`
+	Name string                   `json:"name"`
+	JSON petUpdateResponseTagJSON `json:"-"`
+}
+
+// petUpdateResponseTagJSON contains the JSON metadata for the struct
+// [PetUpdateResponseTag]
+type petUpdateResponseTagJSON struct {
+	ID          apijson.Field
+	Name        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PetUpdateResponseTag) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r petUpdateResponseTagJSON) RawJSON() string {
+	return r.raw
+}
+
+type PetFindByStatusResponse struct {
+	Name      string                          `json:"name" api:"required"`
+	PhotoURLs []string                        `json:"photoUrls" api:"required"`
+	ID        int64                           `json:"id"`
+	Category  PetFindByStatusResponseCategory `json:"category"`
+	// pet status in the store
+	Status PetFindByStatusResponseStatus `json:"status"`
+	Tags   []PetFindByStatusResponseTag  `json:"tags"`
+	JSON   petFindByStatusResponseJSON   `json:"-"`
+}
+
+// petFindByStatusResponseJSON contains the JSON metadata for the struct
+// [PetFindByStatusResponse]
+type petFindByStatusResponseJSON struct {
+	Name        apijson.Field
+	PhotoURLs   apijson.Field
+	ID          apijson.Field
+	Category    apijson.Field
+	Status      apijson.Field
+	Tags        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PetFindByStatusResponse) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r petFindByStatusResponseJSON) RawJSON() string {
+	return r.raw
+}
+
+type PetFindByStatusResponseCategory struct {
+	ID   int64                               `json:"id"`
+	Name string                              `json:"name"`
+	JSON petFindByStatusResponseCategoryJSON `json:"-"`
+}
+
+// petFindByStatusResponseCategoryJSON contains the JSON metadata for the struct
+// [PetFindByStatusResponseCategory]
+type petFindByStatusResponseCategoryJSON struct {
+	ID          apijson.Field
+	Name        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PetFindByStatusResponseCategory) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r petFindByStatusResponseCategoryJSON) RawJSON() string {
+	return r.raw
+}
+
+// pet status in the store
+type PetFindByStatusResponseStatus string
+
+const (
+	PetFindByStatusResponseStatusAvailable PetFindByStatusResponseStatus = "available"
+	PetFindByStatusResponseStatusPending   PetFindByStatusResponseStatus = "pending"
+	PetFindByStatusResponseStatusSold      PetFindByStatusResponseStatus = "sold"
+)
+
+func (r PetFindByStatusResponseStatus) IsKnown() bool {
+	switch r {
+	case PetFindByStatusResponseStatusAvailable, PetFindByStatusResponseStatusPending, PetFindByStatusResponseStatusSold:
+		return true
+	}
+	return false
+}
+
+type PetFindByStatusResponseTag struct {
+	ID   int64                          `json:"id"`
+	Name string                         `json:"name"`
+	JSON petFindByStatusResponseTagJSON `json:"-"`
+}
+
+// petFindByStatusResponseTagJSON contains the JSON metadata for the struct
+// [PetFindByStatusResponseTag]
+type petFindByStatusResponseTagJSON struct {
+	ID          apijson.Field
+	Name        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PetFindByStatusResponseTag) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r petFindByStatusResponseTagJSON) RawJSON() string {
+	return r.raw
+}
+
+type PetFindByTagsResponse struct {
+	Name      string                        `json:"name" api:"required"`
+	PhotoURLs []string                      `json:"photoUrls" api:"required"`
+	ID        int64                         `json:"id"`
+	Category  PetFindByTagsResponseCategory `json:"category"`
+	// pet status in the store
+	Status PetFindByTagsResponseStatus `json:"status"`
+	Tags   []PetFindByTagsResponseTag  `json:"tags"`
+	JSON   petFindByTagsResponseJSON   `json:"-"`
+}
+
+// petFindByTagsResponseJSON contains the JSON metadata for the struct
+// [PetFindByTagsResponse]
+type petFindByTagsResponseJSON struct {
+	Name        apijson.Field
+	PhotoURLs   apijson.Field
+	ID          apijson.Field
+	Category    apijson.Field
+	Status      apijson.Field
+	Tags        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PetFindByTagsResponse) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r petFindByTagsResponseJSON) RawJSON() string {
+	return r.raw
+}
+
+type PetFindByTagsResponseCategory struct {
+	ID   int64                             `json:"id"`
+	Name string                            `json:"name"`
+	JSON petFindByTagsResponseCategoryJSON `json:"-"`
+}
+
+// petFindByTagsResponseCategoryJSON contains the JSON metadata for the struct
+// [PetFindByTagsResponseCategory]
+type petFindByTagsResponseCategoryJSON struct {
+	ID          apijson.Field
+	Name        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PetFindByTagsResponseCategory) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r petFindByTagsResponseCategoryJSON) RawJSON() string {
+	return r.raw
+}
+
+// pet status in the store
+type PetFindByTagsResponseStatus string
+
+const (
+	PetFindByTagsResponseStatusAvailable PetFindByTagsResponseStatus = "available"
+	PetFindByTagsResponseStatusPending   PetFindByTagsResponseStatus = "pending"
+	PetFindByTagsResponseStatusSold      PetFindByTagsResponseStatus = "sold"
+)
+
+func (r PetFindByTagsResponseStatus) IsKnown() bool {
+	switch r {
+	case PetFindByTagsResponseStatusAvailable, PetFindByTagsResponseStatusPending, PetFindByTagsResponseStatusSold:
+		return true
+	}
+	return false
+}
+
+type PetFindByTagsResponseTag struct {
+	ID   int64                        `json:"id"`
+	Name string                       `json:"name"`
+	JSON petFindByTagsResponseTagJSON `json:"-"`
+}
+
+// petFindByTagsResponseTagJSON contains the JSON metadata for the struct
+// [PetFindByTagsResponseTag]
+type petFindByTagsResponseTagJSON struct {
+	ID          apijson.Field
+	Name        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PetFindByTagsResponseTag) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r petFindByTagsResponseTagJSON) RawJSON() string {
+	return r.raw
 }
 
 type PetUploadImageResponse struct {
@@ -259,19 +608,101 @@ func (r petUploadImageResponseJSON) RawJSON() string {
 }
 
 type PetNewParams struct {
-	Pet PetParam `json:"pet" api:"required"`
+	Name      param.Field[string]               `json:"name" api:"required"`
+	PhotoURLs param.Field[[]string]             `json:"photoUrls" api:"required"`
+	ID        param.Field[int64]                `json:"id"`
+	Category  param.Field[PetNewParamsCategory] `json:"category"`
+	// pet status in the store
+	Status param.Field[PetNewParamsStatus] `json:"status"`
+	Tags   param.Field[[]PetNewParamsTag]  `json:"tags"`
 }
 
 func (r PetNewParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r.Pet)
+	return apijson.MarshalRoot(r)
+}
+
+type PetNewParamsCategory struct {
+	ID   param.Field[int64]  `json:"id"`
+	Name param.Field[string] `json:"name"`
+}
+
+func (r PetNewParamsCategory) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// pet status in the store
+type PetNewParamsStatus string
+
+const (
+	PetNewParamsStatusAvailable PetNewParamsStatus = "available"
+	PetNewParamsStatusPending   PetNewParamsStatus = "pending"
+	PetNewParamsStatusSold      PetNewParamsStatus = "sold"
+)
+
+func (r PetNewParamsStatus) IsKnown() bool {
+	switch r {
+	case PetNewParamsStatusAvailable, PetNewParamsStatusPending, PetNewParamsStatusSold:
+		return true
+	}
+	return false
+}
+
+type PetNewParamsTag struct {
+	ID   param.Field[int64]  `json:"id"`
+	Name param.Field[string] `json:"name"`
+}
+
+func (r PetNewParamsTag) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
 }
 
 type PetUpdateParams struct {
-	Pet PetParam `json:"pet" api:"required"`
+	Name      param.Field[string]                  `json:"name" api:"required"`
+	PhotoURLs param.Field[[]string]                `json:"photoUrls" api:"required"`
+	ID        param.Field[int64]                   `json:"id"`
+	Category  param.Field[PetUpdateParamsCategory] `json:"category"`
+	// pet status in the store
+	Status param.Field[PetUpdateParamsStatus] `json:"status"`
+	Tags   param.Field[[]PetUpdateParamsTag]  `json:"tags"`
 }
 
 func (r PetUpdateParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r.Pet)
+	return apijson.MarshalRoot(r)
+}
+
+type PetUpdateParamsCategory struct {
+	ID   param.Field[int64]  `json:"id"`
+	Name param.Field[string] `json:"name"`
+}
+
+func (r PetUpdateParamsCategory) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+// pet status in the store
+type PetUpdateParamsStatus string
+
+const (
+	PetUpdateParamsStatusAvailable PetUpdateParamsStatus = "available"
+	PetUpdateParamsStatusPending   PetUpdateParamsStatus = "pending"
+	PetUpdateParamsStatusSold      PetUpdateParamsStatus = "sold"
+)
+
+func (r PetUpdateParamsStatus) IsKnown() bool {
+	switch r {
+	case PetUpdateParamsStatusAvailable, PetUpdateParamsStatusPending, PetUpdateParamsStatusSold:
+		return true
+	}
+	return false
+}
+
+type PetUpdateParamsTag struct {
+	ID   param.Field[int64]  `json:"id"`
+	Name param.Field[string] `json:"name"`
+}
+
+func (r PetUpdateParamsTag) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
 }
 
 type PetFindByStatusParams struct {
