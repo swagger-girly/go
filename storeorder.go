@@ -37,7 +37,7 @@ func NewStoreOrderService(opts ...option.RequestOption) (r *StoreOrderService) {
 }
 
 // Place a new order in the store
-func (r *StoreOrderService) New(ctx context.Context, body StoreOrderNewParams, opts ...option.RequestOption) (res *Order, err error) {
+func (r *StoreOrderService) New(ctx context.Context, body StoreOrderNewParams, opts ...option.RequestOption) (res *StoreOrderNewResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	path := "store/order"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
@@ -46,7 +46,7 @@ func (r *StoreOrderService) New(ctx context.Context, body StoreOrderNewParams, o
 
 // For valid response try integer IDs with value <= 5 or > 10. Other values will
 // generate exceptions.
-func (r *StoreOrderService) Get(ctx context.Context, orderID int64, opts ...option.RequestOption) (res *Order, err error) {
+func (r *StoreOrderService) Get(ctx context.Context, orderID int64, opts ...option.RequestOption) (res *StoreOrderGetResponse, err error) {
 	opts = slices.Concat(r.Options, opts)
 	path := fmt.Sprintf("store/order/%v", orderID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
@@ -63,19 +63,20 @@ func (r *StoreOrderService) Delete(ctx context.Context, orderID int64, opts ...o
 	return err
 }
 
-type Order struct {
+type StoreOrderNewResponse struct {
 	ID       int64     `json:"id"`
 	Complete bool      `json:"complete"`
 	PetID    int64     `json:"petId"`
 	Quantity int64     `json:"quantity"`
 	ShipDate time.Time `json:"shipDate" format:"date-time"`
 	// Order Status
-	Status OrderStatus `json:"status"`
-	JSON   orderJSON   `json:"-"`
+	Status StoreOrderNewResponseStatus `json:"status"`
+	JSON   storeOrderNewResponseJSON   `json:"-"`
 }
 
-// orderJSON contains the JSON metadata for the struct [Order]
-type orderJSON struct {
+// storeOrderNewResponseJSON contains the JSON metadata for the struct
+// [StoreOrderNewResponse]
+type storeOrderNewResponseJSON struct {
 	ID          apijson.Field
 	Complete    apijson.Field
 	PetID       apijson.Field
@@ -86,49 +87,107 @@ type orderJSON struct {
 	ExtraFields map[string]apijson.Field
 }
 
-func (r *Order) UnmarshalJSON(data []byte) (err error) {
+func (r *StoreOrderNewResponse) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r orderJSON) RawJSON() string {
+func (r storeOrderNewResponseJSON) RawJSON() string {
 	return r.raw
 }
 
 // Order Status
-type OrderStatus string
+type StoreOrderNewResponseStatus string
 
 const (
-	OrderStatusPlaced    OrderStatus = "placed"
-	OrderStatusApproved  OrderStatus = "approved"
-	OrderStatusDelivered OrderStatus = "delivered"
+	StoreOrderNewResponseStatusPlaced    StoreOrderNewResponseStatus = "placed"
+	StoreOrderNewResponseStatusApproved  StoreOrderNewResponseStatus = "approved"
+	StoreOrderNewResponseStatusDelivered StoreOrderNewResponseStatus = "delivered"
 )
 
-func (r OrderStatus) IsKnown() bool {
+func (r StoreOrderNewResponseStatus) IsKnown() bool {
 	switch r {
-	case OrderStatusPlaced, OrderStatusApproved, OrderStatusDelivered:
+	case StoreOrderNewResponseStatusPlaced, StoreOrderNewResponseStatusApproved, StoreOrderNewResponseStatusDelivered:
 		return true
 	}
 	return false
 }
 
-type OrderParam struct {
+type StoreOrderGetResponse struct {
+	ID       int64     `json:"id"`
+	Complete bool      `json:"complete"`
+	PetID    int64     `json:"petId"`
+	Quantity int64     `json:"quantity"`
+	ShipDate time.Time `json:"shipDate" format:"date-time"`
+	// Order Status
+	Status StoreOrderGetResponseStatus `json:"status"`
+	JSON   storeOrderGetResponseJSON   `json:"-"`
+}
+
+// storeOrderGetResponseJSON contains the JSON metadata for the struct
+// [StoreOrderGetResponse]
+type storeOrderGetResponseJSON struct {
+	ID          apijson.Field
+	Complete    apijson.Field
+	PetID       apijson.Field
+	Quantity    apijson.Field
+	ShipDate    apijson.Field
+	Status      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *StoreOrderGetResponse) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r storeOrderGetResponseJSON) RawJSON() string {
+	return r.raw
+}
+
+// Order Status
+type StoreOrderGetResponseStatus string
+
+const (
+	StoreOrderGetResponseStatusPlaced    StoreOrderGetResponseStatus = "placed"
+	StoreOrderGetResponseStatusApproved  StoreOrderGetResponseStatus = "approved"
+	StoreOrderGetResponseStatusDelivered StoreOrderGetResponseStatus = "delivered"
+)
+
+func (r StoreOrderGetResponseStatus) IsKnown() bool {
+	switch r {
+	case StoreOrderGetResponseStatusPlaced, StoreOrderGetResponseStatusApproved, StoreOrderGetResponseStatusDelivered:
+		return true
+	}
+	return false
+}
+
+type StoreOrderNewParams struct {
 	ID       param.Field[int64]     `json:"id"`
 	Complete param.Field[bool]      `json:"complete"`
 	PetID    param.Field[int64]     `json:"petId"`
 	Quantity param.Field[int64]     `json:"quantity"`
 	ShipDate param.Field[time.Time] `json:"shipDate" format:"date-time"`
 	// Order Status
-	Status param.Field[OrderStatus] `json:"status"`
-}
-
-func (r OrderParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-type StoreOrderNewParams struct {
-	Order OrderParam `json:"order"`
+	Status param.Field[StoreOrderNewParamsStatus] `json:"status"`
 }
 
 func (r StoreOrderNewParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r.Order)
+	return apijson.MarshalRoot(r)
+}
+
+// Order Status
+type StoreOrderNewParamsStatus string
+
+const (
+	StoreOrderNewParamsStatusPlaced    StoreOrderNewParamsStatus = "placed"
+	StoreOrderNewParamsStatusApproved  StoreOrderNewParamsStatus = "approved"
+	StoreOrderNewParamsStatusDelivered StoreOrderNewParamsStatus = "delivered"
+)
+
+func (r StoreOrderNewParamsStatus) IsKnown() bool {
+	switch r {
+	case StoreOrderNewParamsStatusPlaced, StoreOrderNewParamsStatusApproved, StoreOrderNewParamsStatusDelivered:
+		return true
+	}
+	return false
 }

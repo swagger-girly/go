@@ -26,10 +26,8 @@ func TestUsage(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	pet, err := client.Pet.Update(context.TODO(), helloworldtestingggg.PetUpdateParams{
-		Pet: helloworldtestingggg.PetParam{
-			Name:      helloworldtestingggg.F("doggie"),
-			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
-		},
+		Name:      helloworldtestingggg.F("doggie"),
+		PhotoURLs: helloworldtestingggg.F([]string{"string"}),
 	})
 	if err != nil {
 		t.Error(err)
