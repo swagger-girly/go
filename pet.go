@@ -109,45 +109,14 @@ func (r *PetService) UploadImage(ctx context.Context, petID int64, body io.Reade
 	return res, err
 }
 
-type Category struct {
-	ID   int64        `json:"id"`
-	Name string       `json:"name"`
-	JSON categoryJSON `json:"-"`
-}
-
-// categoryJSON contains the JSON metadata for the struct [Category]
-type categoryJSON struct {
-	ID          apijson.Field
-	Name        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *Category) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r categoryJSON) RawJSON() string {
-	return r.raw
-}
-
-type CategoryParam struct {
-	ID   param.Field[int64]  `json:"id"`
-	Name param.Field[string] `json:"name"`
-}
-
-func (r CategoryParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
 type Pet struct {
-	Name      string   `json:"name" api:"required"`
-	PhotoURLs []string `json:"photoUrls" api:"required"`
-	ID        int64    `json:"id"`
-	Category  Category `json:"category"`
+	Name      string      `json:"name" api:"required"`
+	PhotoURLs []string    `json:"photoUrls" api:"required"`
+	ID        int64       `json:"id"`
+	Category  PetCategory `json:"category"`
 	// pet status in the store
 	Status PetStatus `json:"status"`
-	Tags   []Tag     `json:"tags"`
+	Tags   []PetTag  `json:"tags"`
 	JSON   petJSON   `json:"-"`
 }
 
@@ -171,6 +140,28 @@ func (r petJSON) RawJSON() string {
 	return r.raw
 }
 
+type PetCategory struct {
+	ID   int64           `json:"id"`
+	Name string          `json:"name"`
+	JSON petCategoryJSON `json:"-"`
+}
+
+// petCategoryJSON contains the JSON metadata for the struct [PetCategory]
+type petCategoryJSON struct {
+	ID          apijson.Field
+	Name        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PetCategory) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r petCategoryJSON) RawJSON() string {
+	return r.raw
+}
+
 // pet status in the store
 type PetStatus string
 
@@ -188,48 +179,57 @@ func (r PetStatus) IsKnown() bool {
 	return false
 }
 
-type PetParam struct {
-	Name      param.Field[string]        `json:"name" api:"required"`
-	PhotoURLs param.Field[[]string]      `json:"photoUrls" api:"required"`
-	ID        param.Field[int64]         `json:"id"`
-	Category  param.Field[CategoryParam] `json:"category"`
-	// pet status in the store
-	Status param.Field[PetStatus]  `json:"status"`
-	Tags   param.Field[[]TagParam] `json:"tags"`
+type PetTag struct {
+	ID   int64      `json:"id"`
+	Name string     `json:"name"`
+	JSON petTagJSON `json:"-"`
 }
 
-func (r PetParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-type Tag struct {
-	ID   int64   `json:"id"`
-	Name string  `json:"name"`
-	JSON tagJSON `json:"-"`
-}
-
-// tagJSON contains the JSON metadata for the struct [Tag]
-type tagJSON struct {
+// petTagJSON contains the JSON metadata for the struct [PetTag]
+type petTagJSON struct {
 	ID          apijson.Field
 	Name        apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
 
-func (r *Tag) UnmarshalJSON(data []byte) (err error) {
+func (r *PetTag) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r tagJSON) RawJSON() string {
+func (r petTagJSON) RawJSON() string {
 	return r.raw
 }
 
-type TagParam struct {
+type PetParam struct {
+	Name      param.Field[string]           `json:"name" api:"required"`
+	PhotoURLs param.Field[[]string]         `json:"photoUrls" api:"required"`
+	ID        param.Field[int64]            `json:"id"`
+	Category  param.Field[PetCategoryParam] `json:"category"`
+	// pet status in the store
+	Status param.Field[PetStatus]     `json:"status"`
+	Tags   param.Field[[]PetTagParam] `json:"tags"`
+}
+
+func (r PetParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type PetCategoryParam struct {
 	ID   param.Field[int64]  `json:"id"`
 	Name param.Field[string] `json:"name"`
 }
 
-func (r TagParam) MarshalJSON() (data []byte, err error) {
+func (r PetCategoryParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type PetTagParam struct {
+	ID   param.Field[int64]  `json:"id"`
+	Name param.Field[string] `json:"name"`
+}
+
+func (r PetTagParam) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 

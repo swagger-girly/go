@@ -33,12 +33,12 @@ func TestPetNewWithOptionalParams(t *testing.T) {
 			Name:      helloworldtestingggg.F("doggie"),
 			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
 			ID:        helloworldtestingggg.F(int64(10)),
-			Category: helloworldtestingggg.F(helloworldtestingggg.CategoryParam{
+			Category: helloworldtestingggg.F(helloworldtestingggg.PetCategoryParam{
 				ID:   helloworldtestingggg.F(int64(1)),
 				Name: helloworldtestingggg.F("Dogs"),
 			}),
 			Status: helloworldtestingggg.F(helloworldtestingggg.PetStatusAvailable),
-			Tags: helloworldtestingggg.F([]helloworldtestingggg.TagParam{{
+			Tags: helloworldtestingggg.F([]helloworldtestingggg.PetTagParam{{
 				ID:   helloworldtestingggg.F(int64(0)),
 				Name: helloworldtestingggg.F("name"),
 			}}),
@@ -94,12 +94,12 @@ func TestPetUpdateWithOptionalParams(t *testing.T) {
 			Name:      helloworldtestingggg.F("doggie"),
 			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
 			ID:        helloworldtestingggg.F(int64(10)),
-			Category: helloworldtestingggg.F(helloworldtestingggg.CategoryParam{
+			Category: helloworldtestingggg.F(helloworldtestingggg.PetCategoryParam{
 				ID:   helloworldtestingggg.F(int64(1)),
 				Name: helloworldtestingggg.F("Dogs"),
 			}),
 			Status: helloworldtestingggg.F(helloworldtestingggg.PetStatusAvailable),
-			Tags: helloworldtestingggg.F([]helloworldtestingggg.TagParam{{
+			Tags: helloworldtestingggg.F([]helloworldtestingggg.PetTagParam{{
 				ID:   helloworldtestingggg.F(int64(0)),
 				Name: helloworldtestingggg.F("name"),
 			}}),
