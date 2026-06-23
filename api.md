@@ -2,15 +2,11 @@
 
 Params Types:
 
-- <a href="https://pkg.go.dev/github.com/stainless-sdks/hello-world-testingggg-go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/stainless-sdks/hello-world-testingggg-go#CategoryParam">CategoryParam</a>
 - <a href="https://pkg.go.dev/github.com/stainless-sdks/hello-world-testingggg-go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/stainless-sdks/hello-world-testingggg-go#PetParam">PetParam</a>
-- <a href="https://pkg.go.dev/github.com/stainless-sdks/hello-world-testingggg-go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/stainless-sdks/hello-world-testingggg-go#TagParam">TagParam</a>
 
 Response Types:
 
-- <a href="https://pkg.go.dev/github.com/stainless-sdks/hello-world-testingggg-go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/stainless-sdks/hello-world-testingggg-go#Category">Category</a>
 - <a href="https://pkg.go.dev/github.com/stainless-sdks/hello-world-testingggg-go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/stainless-sdks/hello-world-testingggg-go#Pet">Pet</a>
-- <a href="https://pkg.go.dev/github.com/stainless-sdks/hello-world-testingggg-go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/stainless-sdks/hello-world-testingggg-go#Tag">Tag</a>
 - <a href="https://pkg.go.dev/github.com/stainless-sdks/hello-world-testingggg-go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/stainless-sdks/hello-world-testingggg-go#PetUploadImageResponse">PetUploadImageResponse</a>
 
 Methods:
