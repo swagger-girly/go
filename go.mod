@@ -1,4 +1,4 @@
-module github.com/stainless-sdks/hello-world-testingggg-go
+module github.com/swagger-girly/go
 
 go 1.22
 

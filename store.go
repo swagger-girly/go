@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/stainless-sdks/hello-world-testingggg-go/internal/requestconfig"
-	"github.com/stainless-sdks/hello-world-testingggg-go/option"
+	"github.com/swagger-girly/go/internal/requestconfig"
+	"github.com/swagger-girly/go/option"
 )
 
 // Access to Petstore orders

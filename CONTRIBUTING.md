@@ -41,7 +41,7 @@ To use a local version of this library from source in another project, edit the 
 directive. This can be done through the CLI with the following:
 
 ```sh
-$ go mod edit -replace github.com/stainless-sdks/hello-world-testingggg-go=/path/to/hello-world-testingggg-go
+$ go mod edit -replace github.com/swagger-girly/go=/path/to/go
 ```
 
 ## Running tests

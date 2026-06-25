@@ -12,12 +12,12 @@ import (
 	"net/url"
 	"slices"
 
-	"github.com/stainless-sdks/hello-world-testingggg-go/internal/apiform"
-	"github.com/stainless-sdks/hello-world-testingggg-go/internal/apijson"
-	"github.com/stainless-sdks/hello-world-testingggg-go/internal/apiquery"
-	"github.com/stainless-sdks/hello-world-testingggg-go/internal/param"
-	"github.com/stainless-sdks/hello-world-testingggg-go/internal/requestconfig"
-	"github.com/stainless-sdks/hello-world-testingggg-go/option"
+	"github.com/swagger-girly/go/internal/apiform"
+	"github.com/swagger-girly/go/internal/apijson"
+	"github.com/swagger-girly/go/internal/apiquery"
+	"github.com/swagger-girly/go/internal/param"
+	"github.com/swagger-girly/go/internal/requestconfig"
+	"github.com/swagger-girly/go/option"
 )
 
 // Everything about your Pets
