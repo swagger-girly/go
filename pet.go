@@ -5,6 +5,7 @@ package helloworldtestingggg
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -15,9 +16,11 @@ import (
 	"github.com/swagger-girly/go/internal/apiform"
 	"github.com/swagger-girly/go/internal/apijson"
 	"github.com/swagger-girly/go/internal/apiquery"
-	"github.com/swagger-girly/go/internal/param"
+	shimjson "github.com/swagger-girly/go/internal/encoding/json"
 	"github.com/swagger-girly/go/internal/requestconfig"
 	"github.com/swagger-girly/go/option"
+	"github.com/swagger-girly/go/packages/param"
+	"github.com/swagger-girly/go/packages/respjson"
 )
 
 // Everything about your Pets
@@ -35,8 +38,8 @@ type PetService struct {
 // NewPetService generates a new service that applies the given options to each
 // request. These options are applied after the parent client's options (if there
 // is one), and before any request-specific options.
-func NewPetService(opts ...option.RequestOption) (r *PetService) {
-	r = &PetService{}
+func NewPetService(opts ...option.RequestOption) (r PetService) {
+	r = PetService{}
 	r.Options = opts
 	return
 }
@@ -115,51 +118,54 @@ type Pet struct {
 	ID        int64       `json:"id"`
 	Category  PetCategory `json:"category"`
 	// pet status in the store
+	//
+	// Any of "available", "pending", "sold".
 	Status PetStatus `json:"status"`
 	Tags   []PetTag  `json:"tags"`
-	JSON   petJSON   `json:"-"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Name        respjson.Field
+		PhotoURLs   respjson.Field
+		ID          respjson.Field
+		Category    respjson.Field
+		Status      respjson.Field
+		Tags        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-// petJSON contains the JSON metadata for the struct [Pet]
-type petJSON struct {
-	Name        apijson.Field
-	PhotoURLs   apijson.Field
-	ID          apijson.Field
-	Category    apijson.Field
-	Status      apijson.Field
-	Tags        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *Pet) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r Pet) RawJSON() string { return r.JSON.raw }
+func (r *Pet) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r petJSON) RawJSON() string {
-	return r.raw
+// ToParam converts this Pet to a PetParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// PetParam.Overrides()
+func (r Pet) ToParam() PetParam {
+	return param.Override[PetParam](json.RawMessage(r.RawJSON()))
 }
 
 type PetCategory struct {
-	ID   int64           `json:"id"`
-	Name string          `json:"name"`
-	JSON petCategoryJSON `json:"-"`
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Name        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-// petCategoryJSON contains the JSON metadata for the struct [PetCategory]
-type petCategoryJSON struct {
-	ID          apijson.Field
-	Name        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *PetCategory) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r PetCategory) RawJSON() string { return r.JSON.raw }
+func (r *PetCategory) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r petCategoryJSON) RawJSON() string {
-	return r.raw
 }
 
 // pet status in the store
@@ -171,116 +177,128 @@ const (
 	PetStatusSold      PetStatus = "sold"
 )
 
-func (r PetStatus) IsKnown() bool {
-	switch r {
-	case PetStatusAvailable, PetStatusPending, PetStatusSold:
-		return true
-	}
-	return false
-}
-
 type PetTag struct {
-	ID   int64      `json:"id"`
-	Name string     `json:"name"`
-	JSON petTagJSON `json:"-"`
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Name        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-// petTagJSON contains the JSON metadata for the struct [PetTag]
-type petTagJSON struct {
-	ID          apijson.Field
-	Name        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *PetTag) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r PetTag) RawJSON() string { return r.JSON.raw }
+func (r *PetTag) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r petTagJSON) RawJSON() string {
-	return r.raw
-}
-
+// The properties Name, PhotoURLs are required.
 type PetParam struct {
-	Name      param.Field[string]           `json:"name" api:"required"`
-	PhotoURLs param.Field[[]string]         `json:"photoUrls" api:"required"`
-	ID        param.Field[int64]            `json:"id"`
-	Category  param.Field[PetCategoryParam] `json:"category"`
+	Name      string           `json:"name" api:"required"`
+	PhotoURLs []string         `json:"photoUrls,omitzero" api:"required"`
+	ID        param.Opt[int64] `json:"id,omitzero"`
+	Category  PetCategoryParam `json:"category,omitzero"`
 	// pet status in the store
-	Status param.Field[PetStatus]     `json:"status"`
-	Tags   param.Field[[]PetTagParam] `json:"tags"`
+	//
+	// Any of "available", "pending", "sold".
+	Status PetStatus     `json:"status,omitzero"`
+	Tags   []PetTagParam `json:"tags,omitzero"`
+	paramObj
 }
 
 func (r PetParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow PetParam
+	return param.MarshalObject(r, (*shadow)(&r))
 }
-
-type PetCategoryParam struct {
-	ID   param.Field[int64]  `json:"id"`
-	Name param.Field[string] `json:"name"`
-}
-
-func (r PetCategoryParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-type PetTagParam struct {
-	ID   param.Field[int64]  `json:"id"`
-	Name param.Field[string] `json:"name"`
-}
-
-func (r PetTagParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-type PetUploadImageResponse struct {
-	Code    int64                      `json:"code"`
-	Message string                     `json:"message"`
-	Type    string                     `json:"type"`
-	JSON    petUploadImageResponseJSON `json:"-"`
-}
-
-// petUploadImageResponseJSON contains the JSON metadata for the struct
-// [PetUploadImageResponse]
-type petUploadImageResponseJSON struct {
-	Code        apijson.Field
-	Message     apijson.Field
-	Type        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *PetUploadImageResponse) UnmarshalJSON(data []byte) (err error) {
+func (r *PetParam) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r petUploadImageResponseJSON) RawJSON() string {
-	return r.raw
+type PetCategoryParam struct {
+	ID   param.Opt[int64]  `json:"id,omitzero"`
+	Name param.Opt[string] `json:"name,omitzero"`
+	paramObj
+}
+
+func (r PetCategoryParam) MarshalJSON() (data []byte, err error) {
+	type shadow PetCategoryParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *PetCategoryParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type PetTagParam struct {
+	ID   param.Opt[int64]  `json:"id,omitzero"`
+	Name param.Opt[string] `json:"name,omitzero"`
+	paramObj
+}
+
+func (r PetTagParam) MarshalJSON() (data []byte, err error) {
+	type shadow PetTagParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *PetTagParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+type PetUploadImageResponse struct {
+	Code    int64  `json:"code"`
+	Message string `json:"message"`
+	Type    string `json:"type"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Code        respjson.Field
+		Message     respjson.Field
+		Type        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
+
+// Returns the unmodified JSON received from the API
+func (r PetUploadImageResponse) RawJSON() string { return r.JSON.raw }
+func (r *PetUploadImageResponse) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type PetNewParams struct {
-	Pet PetParam `json:"pet" api:"required"`
+	Pet PetParam
+	paramObj
 }
 
 func (r PetNewParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r.Pet)
+	return shimjson.Marshal(r.Pet)
+}
+func (r *PetNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type PetUpdateParams struct {
-	Pet PetParam `json:"pet" api:"required"`
+	Pet PetParam
+	paramObj
 }
 
 func (r PetUpdateParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r.Pet)
+	return shimjson.Marshal(r.Pet)
+}
+func (r *PetUpdateParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type PetFindByStatusParams struct {
 	// Status values that need to be considered for filter
-	Status param.Field[PetFindByStatusParamsStatus] `query:"status"`
+	//
+	// Any of "available", "pending", "sold".
+	Status PetFindByStatusParamsStatus `query:"status,omitzero" json:"-"`
+	paramObj
 }
 
 // URLQuery serializes [PetFindByStatusParams]'s query parameters as `url.Values`.
-func (r PetFindByStatusParams) URLQuery() (v url.Values) {
+func (r PetFindByStatusParams) URLQuery() (v url.Values, err error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -296,21 +314,14 @@ const (
 	PetFindByStatusParamsStatusSold      PetFindByStatusParamsStatus = "sold"
 )
 
-func (r PetFindByStatusParamsStatus) IsKnown() bool {
-	switch r {
-	case PetFindByStatusParamsStatusAvailable, PetFindByStatusParamsStatusPending, PetFindByStatusParamsStatusSold:
-		return true
-	}
-	return false
-}
-
 type PetFindByTagsParams struct {
 	// Tags to filter by
-	Tags param.Field[[]string] `query:"tags"`
+	Tags []string `query:"tags,omitzero" json:"-"`
+	paramObj
 }
 
 // URLQuery serializes [PetFindByTagsParams]'s query parameters as `url.Values`.
-func (r PetFindByTagsParams) URLQuery() (v url.Values) {
+func (r PetFindByTagsParams) URLQuery() (v url.Values, err error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -319,14 +330,15 @@ func (r PetFindByTagsParams) URLQuery() (v url.Values) {
 
 type PetUpdateWithFormParams struct {
 	// Name of pet that needs to be updated
-	Name param.Field[string] `query:"name"`
+	Name param.Opt[string] `query:"name,omitzero" json:"-"`
 	// Status of pet that needs to be updated
-	Status param.Field[string] `query:"status"`
+	Status param.Opt[string] `query:"status,omitzero" json:"-"`
+	paramObj
 }
 
 // URLQuery serializes [PetUpdateWithFormParams]'s query parameters as
 // `url.Values`.
-func (r PetUpdateWithFormParams) URLQuery() (v url.Values) {
+func (r PetUpdateWithFormParams) URLQuery() (v url.Values, err error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -335,13 +347,17 @@ func (r PetUpdateWithFormParams) URLQuery() (v url.Values) {
 
 type PetUploadImageParams struct {
 	// Additional Metadata
-	AdditionalMetadata param.Field[string] `query:"additionalMetadata"`
+	AdditionalMetadata param.Opt[string] `query:"additionalMetadata,omitzero" json:"-"`
+	paramObj
 }
 
 func (r PetUploadImageParams) MarshalMultipart() (data []byte, contentType string, err error) {
 	buf := bytes.NewBuffer(nil)
 	writer := multipart.NewWriter(buf)
 	err = apiform.MarshalRoot(r, writer)
+	if err == nil {
+		err = apiform.WriteExtras(writer, r.ExtraFields())
+	}
 	if err != nil {
 		writer.Close()
 		return nil, "", err
@@ -354,7 +370,7 @@ func (r PetUploadImageParams) MarshalMultipart() (data []byte, contentType strin
 }
 
 // URLQuery serializes [PetUploadImageParams]'s query parameters as `url.Values`.
-func (r PetUploadImageParams) URLQuery() (v url.Values) {
+func (r PetUploadImageParams) URLQuery() (v url.Values, err error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,

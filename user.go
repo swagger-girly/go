@@ -12,9 +12,11 @@ import (
 
 	"github.com/swagger-girly/go/internal/apijson"
 	"github.com/swagger-girly/go/internal/apiquery"
-	"github.com/swagger-girly/go/internal/param"
+	shimjson "github.com/swagger-girly/go/internal/encoding/json"
 	"github.com/swagger-girly/go/internal/requestconfig"
 	"github.com/swagger-girly/go/option"
+	"github.com/swagger-girly/go/packages/param"
+	"github.com/swagger-girly/go/packages/respjson"
 )
 
 // Operations about user
@@ -32,8 +34,8 @@ type UserService struct {
 // NewUserService generates a new service that applies the given options to each
 // request. These options are applied after the parent client's options (if there
 // is one), and before any request-specific options.
-func NewUserService(opts ...option.RequestOption) (r *UserService) {
-	r = &UserService{}
+func NewUserService(opts ...option.RequestOption) (r UserService) {
+	r = UserService{}
 	r.Options = opts
 	return
 }
@@ -119,30 +121,26 @@ type UserNewResponse struct {
 	Phone     string `json:"phone"`
 	Username  string `json:"username"`
 	// User Status
-	UserStatus int64               `json:"userStatus"`
-	JSON       userNewResponseJSON `json:"-"`
+	UserStatus int64 `json:"userStatus"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Email       respjson.Field
+		FirstName   respjson.Field
+		LastName    respjson.Field
+		Password    respjson.Field
+		Phone       respjson.Field
+		Username    respjson.Field
+		UserStatus  respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-// userNewResponseJSON contains the JSON metadata for the struct [UserNewResponse]
-type userNewResponseJSON struct {
-	ID          apijson.Field
-	Email       apijson.Field
-	FirstName   apijson.Field
-	LastName    apijson.Field
-	Password    apijson.Field
-	Phone       apijson.Field
-	Username    apijson.Field
-	UserStatus  apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *UserNewResponse) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r UserNewResponse) RawJSON() string { return r.JSON.raw }
+func (r *UserNewResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r userNewResponseJSON) RawJSON() string {
-	return r.raw
 }
 
 type UserGetResponse struct {
@@ -154,30 +152,26 @@ type UserGetResponse struct {
 	Phone     string `json:"phone"`
 	Username  string `json:"username"`
 	// User Status
-	UserStatus int64               `json:"userStatus"`
-	JSON       userGetResponseJSON `json:"-"`
+	UserStatus int64 `json:"userStatus"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Email       respjson.Field
+		FirstName   respjson.Field
+		LastName    respjson.Field
+		Password    respjson.Field
+		Phone       respjson.Field
+		Username    respjson.Field
+		UserStatus  respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-// userGetResponseJSON contains the JSON metadata for the struct [UserGetResponse]
-type userGetResponseJSON struct {
-	ID          apijson.Field
-	Email       apijson.Field
-	FirstName   apijson.Field
-	LastName    apijson.Field
-	Password    apijson.Field
-	Phone       apijson.Field
-	Username    apijson.Field
-	UserStatus  apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *UserGetResponse) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r UserGetResponse) RawJSON() string { return r.JSON.raw }
+func (r *UserGetResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r userGetResponseJSON) RawJSON() string {
-	return r.raw
 }
 
 type UserNewWithListResponse struct {
@@ -189,98 +183,113 @@ type UserNewWithListResponse struct {
 	Phone     string `json:"phone"`
 	Username  string `json:"username"`
 	// User Status
-	UserStatus int64                       `json:"userStatus"`
-	JSON       userNewWithListResponseJSON `json:"-"`
+	UserStatus int64 `json:"userStatus"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID          respjson.Field
+		Email       respjson.Field
+		FirstName   respjson.Field
+		LastName    respjson.Field
+		Password    respjson.Field
+		Phone       respjson.Field
+		Username    respjson.Field
+		UserStatus  respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-// userNewWithListResponseJSON contains the JSON metadata for the struct
-// [UserNewWithListResponse]
-type userNewWithListResponseJSON struct {
-	ID          apijson.Field
-	Email       apijson.Field
-	FirstName   apijson.Field
-	LastName    apijson.Field
-	Password    apijson.Field
-	Phone       apijson.Field
-	Username    apijson.Field
-	UserStatus  apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *UserNewWithListResponse) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r UserNewWithListResponse) RawJSON() string { return r.JSON.raw }
+func (r *UserNewWithListResponse) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r userNewWithListResponseJSON) RawJSON() string {
-	return r.raw
-}
-
 type UserNewParams struct {
-	ID        param.Field[int64]  `json:"id"`
-	Email     param.Field[string] `json:"email"`
-	FirstName param.Field[string] `json:"firstName"`
-	LastName  param.Field[string] `json:"lastName"`
-	Password  param.Field[string] `json:"password"`
-	Phone     param.Field[string] `json:"phone"`
-	Username  param.Field[string] `json:"username"`
+	ID        param.Opt[int64]  `json:"id,omitzero"`
+	Email     param.Opt[string] `json:"email,omitzero"`
+	FirstName param.Opt[string] `json:"firstName,omitzero"`
+	LastName  param.Opt[string] `json:"lastName,omitzero"`
+	Password  param.Opt[string] `json:"password,omitzero"`
+	Phone     param.Opt[string] `json:"phone,omitzero"`
+	Username  param.Opt[string] `json:"username,omitzero"`
 	// User Status
-	UserStatus param.Field[int64] `json:"userStatus"`
+	UserStatus param.Opt[int64] `json:"userStatus,omitzero"`
+	paramObj
 }
 
 func (r UserNewParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow UserNewParams
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *UserNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type UserUpdateParams struct {
-	ID        param.Field[int64]  `json:"id"`
-	Email     param.Field[string] `json:"email"`
-	FirstName param.Field[string] `json:"firstName"`
-	LastName  param.Field[string] `json:"lastName"`
-	Password  param.Field[string] `json:"password"`
-	Phone     param.Field[string] `json:"phone"`
-	Username  param.Field[string] `json:"username"`
+	ID        param.Opt[int64]  `json:"id,omitzero"`
+	Email     param.Opt[string] `json:"email,omitzero"`
+	FirstName param.Opt[string] `json:"firstName,omitzero"`
+	LastName  param.Opt[string] `json:"lastName,omitzero"`
+	Password  param.Opt[string] `json:"password,omitzero"`
+	Phone     param.Opt[string] `json:"phone,omitzero"`
+	Username  param.Opt[string] `json:"username,omitzero"`
 	// User Status
-	UserStatus param.Field[int64] `json:"userStatus"`
+	UserStatus param.Opt[int64] `json:"userStatus,omitzero"`
+	paramObj
 }
 
 func (r UserUpdateParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow UserUpdateParams
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *UserUpdateParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type UserNewWithListParams struct {
-	Body []UserNewWithListParamsBody `json:"body"`
+	Body []UserNewWithListParamsBody
+	paramObj
 }
 
 func (r UserNewWithListParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r.Body)
+	return shimjson.Marshal(r.Body)
+}
+func (r *UserNewWithListParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type UserNewWithListParamsBody struct {
-	ID        param.Field[int64]  `json:"id"`
-	Email     param.Field[string] `json:"email"`
-	FirstName param.Field[string] `json:"firstName"`
-	LastName  param.Field[string] `json:"lastName"`
-	Password  param.Field[string] `json:"password"`
-	Phone     param.Field[string] `json:"phone"`
-	Username  param.Field[string] `json:"username"`
+	ID        param.Opt[int64]  `json:"id,omitzero"`
+	Email     param.Opt[string] `json:"email,omitzero"`
+	FirstName param.Opt[string] `json:"firstName,omitzero"`
+	LastName  param.Opt[string] `json:"lastName,omitzero"`
+	Password  param.Opt[string] `json:"password,omitzero"`
+	Phone     param.Opt[string] `json:"phone,omitzero"`
+	Username  param.Opt[string] `json:"username,omitzero"`
 	// User Status
-	UserStatus param.Field[int64] `json:"userStatus"`
+	UserStatus param.Opt[int64] `json:"userStatus,omitzero"`
+	paramObj
 }
 
 func (r UserNewWithListParamsBody) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow UserNewWithListParamsBody
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *UserNewWithListParamsBody) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type UserLoginParams struct {
 	// The password for login in clear text
-	Password param.Field[string] `query:"password"`
+	Password param.Opt[string] `query:"password,omitzero" json:"-"`
 	// The user name for login
-	Username param.Field[string] `query:"username"`
+	Username param.Opt[string] `query:"username,omitzero" json:"-"`
+	paramObj
 }
 
 // URLQuery serializes [UserLoginParams]'s query parameters as `url.Values`.
-func (r UserLoginParams) URLQuery() (v url.Values) {
+func (r UserLoginParams) URLQuery() (v url.Values, err error) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
