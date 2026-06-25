@@ -18,11 +18,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/stainless-sdks/hello-world-testingggg-go/internal"
-	"github.com/stainless-sdks/hello-world-testingggg-go/internal/apierror"
-	"github.com/stainless-sdks/hello-world-testingggg-go/internal/apiform"
-	"github.com/stainless-sdks/hello-world-testingggg-go/internal/apiquery"
-	"github.com/stainless-sdks/hello-world-testingggg-go/internal/param"
+	"github.com/swagger-girly/go/internal"
+	"github.com/swagger-girly/go/internal/apierror"
+	"github.com/swagger-girly/go/internal/apiform"
+	"github.com/swagger-girly/go/internal/apiquery"
+	"github.com/swagger-girly/go/internal/param"
 )
 
 func getDefaultHeaders() map[string]string {

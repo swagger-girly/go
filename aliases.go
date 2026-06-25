@@ -3,7 +3,7 @@
 package helloworldtestingggg
 
 import (
-	"github.com/stainless-sdks/hello-world-testingggg-go/internal/apierror"
+	"github.com/swagger-girly/go/internal/apierror"
 )
 
 type Error = apierror.Error
