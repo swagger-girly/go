@@ -22,14 +22,14 @@ import (
 type StoreService struct {
 	Options []option.RequestOption
 	// Access to Petstore orders
-	Order *StoreOrderService
+	Order StoreOrderService
 }
 
 // NewStoreService generates a new service that applies the given options to each
 // request. These options are applied after the parent client's options (if there
 // is one), and before any request-specific options.
-func NewStoreService(opts ...option.RequestOption) (r *StoreService) {
-	r = &StoreService{}
+func NewStoreService(opts ...option.RequestOption) (r StoreService) {
+	r = StoreService{}
 	r.Options = opts
 	r.Order = NewStoreOrderService(opts...)
 	return
