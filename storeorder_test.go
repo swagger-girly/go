@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stainless-sdks/hello-world-testingggg-go"
-	"github.com/stainless-sdks/hello-world-testingggg-go/internal/testutil"
-	"github.com/stainless-sdks/hello-world-testingggg-go/option"
+	"github.com/swagger-girly/go"
+	"github.com/swagger-girly/go/internal/testutil"
+	"github.com/swagger-girly/go/option"
 )
 
 func TestStoreOrderNewWithOptionalParams(t *testing.T) {

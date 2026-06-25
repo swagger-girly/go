@@ -13,7 +13,7 @@ import (
 
 	"github.com/tidwall/sjson"
 
-	"github.com/stainless-sdks/hello-world-testingggg-go/internal/param"
+	"github.com/swagger-girly/go/internal/param"
 )
 
 var encoders sync.Map // map[encoderEntry]encoderFunc

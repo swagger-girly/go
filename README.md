@@ -1,6 +1,6 @@
 # Hello World Testingggg Go API Library
 
-<a href="https://pkg.go.dev/github.com/stainless-sdks/hello-world-testingggg-go"><img src="https://pkg.go.dev/badge/github.com/stainless-sdks/hello-world-testingggg-go.svg" alt="Go Reference"></a>
+<a href="https://pkg.go.dev/github.com/swagger-girly/go"><img src="https://pkg.go.dev/badge/github.com/swagger-girly/go.svg" alt="Go Reference"></a>
 
 The Hello World Testingggg Go library provides convenient access to the [Hello World Testingggg REST API](http://swagger.io)
 from applications written in Go.
@@ -18,17 +18,25 @@ Use the Hello World Testingggg MCP Server to enable AI assistants to interact wi
 
 ## Installation
 
+<!-- x-release-please-start-version -->
+
 ```go
 import (
-	"github.com/stainless-sdks/hello-world-testingggg-go" // imported as helloworldtestingggg
+	"github.com/swagger-girly/go" // imported as helloworldtestingggg
 )
 ```
 
+<!-- x-release-please-end -->
+
 Or to pin the version:
 
+<!-- x-release-please-start-version -->
+
 ```sh
-go get -u 'github.com/stainless-sdks/hello-world-testingggg-go@v0.0.1-alpha.0'
+go get -u 'github.com/swagger-girly/go@v0.1.0-alpha.1'
 ```
+
+<!-- x-release-please-end -->
 
 ## Requirements
 
@@ -45,7 +53,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/stainless-sdks/hello-world-testingggg-go"
+	"github.com/swagger-girly/go"
 )
 
 func main() {
@@ -156,7 +164,7 @@ client.Pet.Update(context.TODO(), ...,
 )
 ```
 
-See the [full list of request options](https://pkg.go.dev/github.com/stainless-sdks/hello-world-testingggg-go/option).
+See the [full list of request options](https://pkg.go.dev/github.com/swagger-girly/go/option).
 
 ### Pagination
 
@@ -382,7 +390,7 @@ This package generally follows [SemVer](https://semver.org/spec/v2.0.0.html) con
 
 We take backwards-compatibility seriously and work hard to ensure you can rely on a smooth upgrade experience.
 
-We are keen for your feedback; please open an [issue](https://www.github.com/stainless-sdks/hello-world-testingggg-go/issues) with questions, bugs, or suggestions.
+We are keen for your feedback; please open an [issue](https://www.github.com/swagger-girly/go/issues) with questions, bugs, or suggestions.
 
 ## Contributing
 

@@ -9,8 +9,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/stainless-sdks/hello-world-testingggg-go/internal/requestconfig"
-	"github.com/stainless-sdks/hello-world-testingggg-go/option"
+	"github.com/swagger-girly/go/internal/requestconfig"
+	"github.com/swagger-girly/go/option"
 )
 
 // Client creates a struct with services and top level methods that help with
