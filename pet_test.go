@@ -114,6 +114,32 @@ func TestPetUpdateWithOptionalParams(t *testing.T) {
 	}
 }
 
+func TestPetListWithOptionalParams(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := helloworldtestingggg.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+	)
+	_, err := client.Pet.List(context.TODO(), helloworldtestingggg.PetListParams{
+		Cursor: helloworldtestingggg.F("cursor"),
+		Limit:  helloworldtestingggg.F(int64(0)),
+	})
+	if err != nil {
+		var apierr *helloworldtestingggg.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
 func TestPetDelete(t *testing.T) {
 	t.Skip("Mock server tests are disabled")
 	baseURL := "http://localhost:4010"
@@ -177,6 +203,78 @@ func TestPetFindByTagsWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Pet.FindByTags(context.TODO(), helloworldtestingggg.PetFindByTagsParams{
 		Tags: helloworldtestingggg.F([]string{"string"}),
+	})
+	if err != nil {
+		var apierr *helloworldtestingggg.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestPetListFakePage(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := helloworldtestingggg.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+	)
+	_, err := client.Pet.ListFakePage(context.TODO())
+	if err != nil {
+		var apierr *helloworldtestingggg.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestPetListFakePageInferred(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := helloworldtestingggg.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+	)
+	_, err := client.Pet.ListFakePageInferred(context.TODO())
+	if err != nil {
+		var apierr *helloworldtestingggg.Error
+		if errors.As(err, &apierr) {
+			t.Log(string(apierr.DumpRequest(true)))
+		}
+		t.Fatalf("err should be nil: %s", err.Error())
+	}
+}
+
+func TestPetListUnpaginatedWithOptionalParams(t *testing.T) {
+	t.Skip("Mock server tests are disabled")
+	baseURL := "http://localhost:4010"
+	if envURL, ok := os.LookupEnv("TEST_API_BASE_URL"); ok {
+		baseURL = envURL
+	}
+	if !testutil.CheckTestServer(t, baseURL) {
+		return
+	}
+	client := helloworldtestingggg.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey("My API Key"),
+	)
+	_, err := client.Pet.ListUnpaginated(context.TODO(), helloworldtestingggg.PetListUnpaginatedParams{
+		Cursor: helloworldtestingggg.F("cursor"),
+		Limit:  helloworldtestingggg.F(int64(0)),
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error

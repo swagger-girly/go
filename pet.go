@@ -19,6 +19,7 @@ import (
 	"github.com/swagger-girly/go/internal/param"
 	"github.com/swagger-girly/go/internal/requestconfig"
 	"github.com/swagger-girly/go/option"
+	"github.com/swagger-girly/go/packages/pagination"
 	"github.com/swagger-girly/go/packages/ssestream"
 	"github.com/tidwall/gjson"
 )
@@ -68,6 +69,29 @@ func (r *PetService) Update(ctx context.Context, body PetUpdateParams, opts ...o
 	return res, err
 }
 
+// Returns a cursor-paginated list of pets.
+func (r *PetService) List(ctx context.Context, query PetListParams, opts ...option.RequestOption) (res *pagination.CursorPage[Pet], err error) {
+	var raw *http.Response
+	opts = slices.Concat(r.Options, opts)
+	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
+	path := "pet"
+	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
+	if err != nil {
+		return nil, err
+	}
+	err = cfg.Execute()
+	if err != nil {
+		return nil, err
+	}
+	res.SetPageConfig(cfg, raw)
+	return res, nil
+}
+
+// Returns a cursor-paginated list of pets.
+func (r *PetService) ListAutoPaging(ctx context.Context, query PetListParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[Pet] {
+	return pagination.NewCursorPageAutoPager(r.List(ctx, query, opts...))
+}
+
 // Deletes a pet
 func (r *PetService) Delete(ctx context.Context, petID int64, opts ...option.RequestOption) (err error) {
 	opts = slices.Concat(r.Options, opts)
@@ -90,6 +114,48 @@ func (r *PetService) FindByStatus(ctx context.Context, query PetFindByStatusPara
 func (r *PetService) FindByTags(ctx context.Context, query PetFindByTagsParams, opts ...option.RequestOption) (res *[]Pet, err error) {
 	opts = slices.Concat(r.Options, opts)
 	path := "pet/findByTags"
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
+	return res, err
+}
+
+// Returns a single page-shaped pet response without SDK pagination helpers.
+func (r *PetService) ListFakePage(ctx context.Context, opts ...option.RequestOption) (res *PetListFakePageResponse, err error) {
+	opts = slices.Concat(r.Options, opts)
+	path := "pet/fake-page"
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
+	return res, err
+}
+
+// Returns a single page-shaped pet response whose fake pagination behavior is
+// inferred from the Stainless config scheme.
+func (r *PetService) ListFakePageInferred(ctx context.Context, opts ...option.RequestOption) (res *pagination.SinglePage[Pet], err error) {
+	var raw *http.Response
+	opts = slices.Concat(r.Options, opts)
+	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
+	path := "pet/fake-page-inferred"
+	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, nil, &res, opts...)
+	if err != nil {
+		return nil, err
+	}
+	err = cfg.Execute()
+	if err != nil {
+		return nil, err
+	}
+	res.SetPageConfig(cfg, raw)
+	return res, nil
+}
+
+// Returns a single page-shaped pet response whose fake pagination behavior is
+// inferred from the Stainless config scheme.
+func (r *PetService) ListFakePageInferredAutoPaging(ctx context.Context, opts ...option.RequestOption) *pagination.SinglePageAutoPager[Pet] {
+	return pagination.NewSinglePageAutoPager(r.ListFakePageInferred(ctx, opts...))
+}
+
+// Returns the same cursor-shaped pet list response without enabling SDK pagination
+// helpers.
+func (r *PetService) ListUnpaginated(ctx context.Context, query PetListUnpaginatedParams, opts ...option.RequestOption) (res *PetListUnpaginatedResponse, err error) {
+	opts = slices.Concat(r.Options, opts)
+	path := "pet/unpaginated"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
 	return res, err
 }
@@ -251,6 +317,52 @@ type PetTagParam struct {
 
 func (r PetTagParam) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
+}
+
+type PetListFakePageResponse struct {
+	Data    []Pet                       `json:"data" api:"required"`
+	HasMore bool                        `json:"has_more" api:"required"`
+	JSON    petListFakePageResponseJSON `json:"-"`
+}
+
+// petListFakePageResponseJSON contains the JSON metadata for the struct
+// [PetListFakePageResponse]
+type petListFakePageResponseJSON struct {
+	Data        apijson.Field
+	HasMore     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PetListFakePageResponse) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r petListFakePageResponseJSON) RawJSON() string {
+	return r.raw
+}
+
+type PetListUnpaginatedResponse struct {
+	Items      []Pet                          `json:"items" api:"required"`
+	NextCursor string                         `json:"next_cursor" api:"nullable"`
+	JSON       petListUnpaginatedResponseJSON `json:"-"`
+}
+
+// petListUnpaginatedResponseJSON contains the JSON metadata for the struct
+// [PetListUnpaginatedResponse]
+type petListUnpaginatedResponseJSON struct {
+	Items       apijson.Field
+	NextCursor  apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PetListUnpaginatedResponse) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r petListUnpaginatedResponseJSON) RawJSON() string {
+	return r.raw
 }
 
 type PetUploadImageResponse struct {
@@ -668,6 +780,21 @@ func (r PetUpdateParams) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r.Pet)
 }
 
+type PetListParams struct {
+	// Cursor from a previous response used to fetch the next page.
+	Cursor param.Field[string] `query:"cursor"`
+	// Maximum number of pets to return.
+	Limit param.Field[int64] `query:"limit"`
+}
+
+// URLQuery serializes [PetListParams]'s query parameters as `url.Values`.
+func (r PetListParams) URLQuery() (v url.Values) {
+	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
+		ArrayFormat:  apiquery.ArrayQueryFormatComma,
+		NestedFormat: apiquery.NestedQueryFormatBrackets,
+	})
+}
+
 type PetFindByStatusParams struct {
 	// Status values that need to be considered for filter
 	Status param.Field[PetFindByStatusParamsStatus] `query:"status"`
@@ -705,6 +832,22 @@ type PetFindByTagsParams struct {
 
 // URLQuery serializes [PetFindByTagsParams]'s query parameters as `url.Values`.
 func (r PetFindByTagsParams) URLQuery() (v url.Values) {
+	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
+		ArrayFormat:  apiquery.ArrayQueryFormatComma,
+		NestedFormat: apiquery.NestedQueryFormatBrackets,
+	})
+}
+
+type PetListUnpaginatedParams struct {
+	// Cursor from a previous response used to fetch the next page.
+	Cursor param.Field[string] `query:"cursor"`
+	// Maximum number of pets to return.
+	Limit param.Field[int64] `query:"limit"`
+}
+
+// URLQuery serializes [PetListUnpaginatedParams]'s query parameters as
+// `url.Values`.
+func (r PetListUnpaginatedParams) URLQuery() (v url.Values) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
