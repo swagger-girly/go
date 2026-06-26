@@ -18,6 +18,7 @@ import (
 	"github.com/swagger-girly/go/internal/param"
 	"github.com/swagger-girly/go/internal/requestconfig"
 	"github.com/swagger-girly/go/option"
+	"github.com/swagger-girly/go/packages/ssestream"
 )
 
 // Everything about your Pets
@@ -107,6 +108,23 @@ func (r *PetService) UploadImage(ctx context.Context, petID int64, body io.Reade
 	path := fmt.Sprintf("pet/%v/uploadImage", petID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
 	return res, err
+}
+
+// Streams pet status updates over Server-Sent Events. Each `status` event contains
+// a full `Pet` payload.
+func (r *PetService) WatchStatusStreaming(ctx context.Context, petID int64, query PetWatchStatusParams, opts ...option.RequestOption) (stream *ssestream.Stream[interface{}]) {
+	var (
+		raw *http.Response
+		err error
+	)
+	if query.LastEventID.Present {
+		opts = append(opts, option.WithHeader("Last-Event-ID", fmt.Sprintf("%v", query.LastEventID)))
+	}
+	opts = slices.Concat(r.Options, opts)
+	opts = append([]option.RequestOption{option.WithHeader("Accept", "text/event-stream")}, opts...)
+	path := fmt.Sprintf("pet/%v/status/stream", petID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &raw, opts...)
+	return ssestream.NewStream[interface{}](ssestream.NewDecoder(raw), err)
 }
 
 type Pet struct {
@@ -359,4 +377,8 @@ func (r PetUploadImageParams) URLQuery() (v url.Values) {
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
 	})
+}
+
+type PetWatchStatusParams struct {
+	LastEventID param.Field[string] `header:"Last-Event-ID"`
 }
