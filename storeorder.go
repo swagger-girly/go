@@ -10,10 +10,9 @@ import (
 	"time"
 
 	"github.com/swagger-girly/go/internal/apijson"
+	"github.com/swagger-girly/go/internal/param"
 	"github.com/swagger-girly/go/internal/requestconfig"
 	"github.com/swagger-girly/go/option"
-	"github.com/swagger-girly/go/packages/param"
-	"github.com/swagger-girly/go/packages/respjson"
 )
 
 // Access to Petstore orders
@@ -31,8 +30,8 @@ type StoreOrderService struct {
 // NewStoreOrderService generates a new service that applies the given options to
 // each request. These options are applied after the parent client's options (if
 // there is one), and before any request-specific options.
-func NewStoreOrderService(opts ...option.RequestOption) (r StoreOrderService) {
-	r = StoreOrderService{}
+func NewStoreOrderService(opts ...option.RequestOption) (r *StoreOrderService) {
+	r = &StoreOrderService{}
 	r.Options = opts
 	return
 }
@@ -71,26 +70,29 @@ type StoreOrderNewResponse struct {
 	Quantity int64     `json:"quantity"`
 	ShipDate time.Time `json:"shipDate" format:"date-time"`
 	// Order Status
-	//
-	// Any of "placed", "approved", "delivered".
 	Status StoreOrderNewResponseStatus `json:"status"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		ID          respjson.Field
-		Complete    respjson.Field
-		PetID       respjson.Field
-		Quantity    respjson.Field
-		ShipDate    respjson.Field
-		Status      respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+	JSON   storeOrderNewResponseJSON   `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r StoreOrderNewResponse) RawJSON() string { return r.JSON.raw }
-func (r *StoreOrderNewResponse) UnmarshalJSON(data []byte) error {
+// storeOrderNewResponseJSON contains the JSON metadata for the struct
+// [StoreOrderNewResponse]
+type storeOrderNewResponseJSON struct {
+	ID          apijson.Field
+	Complete    apijson.Field
+	PetID       apijson.Field
+	Quantity    apijson.Field
+	ShipDate    apijson.Field
+	Status      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *StoreOrderNewResponse) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r storeOrderNewResponseJSON) RawJSON() string {
+	return r.raw
 }
 
 // Order Status
@@ -102,6 +104,14 @@ const (
 	StoreOrderNewResponseStatusDelivered StoreOrderNewResponseStatus = "delivered"
 )
 
+func (r StoreOrderNewResponseStatus) IsKnown() bool {
+	switch r {
+	case StoreOrderNewResponseStatusPlaced, StoreOrderNewResponseStatusApproved, StoreOrderNewResponseStatusDelivered:
+		return true
+	}
+	return false
+}
+
 type StoreOrderGetResponse struct {
 	ID       int64     `json:"id"`
 	Complete bool      `json:"complete"`
@@ -109,26 +119,29 @@ type StoreOrderGetResponse struct {
 	Quantity int64     `json:"quantity"`
 	ShipDate time.Time `json:"shipDate" format:"date-time"`
 	// Order Status
-	//
-	// Any of "placed", "approved", "delivered".
 	Status StoreOrderGetResponseStatus `json:"status"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		ID          respjson.Field
-		Complete    respjson.Field
-		PetID       respjson.Field
-		Quantity    respjson.Field
-		ShipDate    respjson.Field
-		Status      respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+	JSON   storeOrderGetResponseJSON   `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r StoreOrderGetResponse) RawJSON() string { return r.JSON.raw }
-func (r *StoreOrderGetResponse) UnmarshalJSON(data []byte) error {
+// storeOrderGetResponseJSON contains the JSON metadata for the struct
+// [StoreOrderGetResponse]
+type storeOrderGetResponseJSON struct {
+	ID          apijson.Field
+	Complete    apijson.Field
+	PetID       apijson.Field
+	Quantity    apijson.Field
+	ShipDate    apijson.Field
+	Status      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *StoreOrderGetResponse) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r storeOrderGetResponseJSON) RawJSON() string {
+	return r.raw
 }
 
 // Order Status
@@ -140,25 +153,26 @@ const (
 	StoreOrderGetResponseStatusDelivered StoreOrderGetResponseStatus = "delivered"
 )
 
+func (r StoreOrderGetResponseStatus) IsKnown() bool {
+	switch r {
+	case StoreOrderGetResponseStatusPlaced, StoreOrderGetResponseStatusApproved, StoreOrderGetResponseStatusDelivered:
+		return true
+	}
+	return false
+}
+
 type StoreOrderNewParams struct {
-	ID       param.Opt[int64]     `json:"id,omitzero"`
-	Complete param.Opt[bool]      `json:"complete,omitzero"`
-	PetID    param.Opt[int64]     `json:"petId,omitzero"`
-	Quantity param.Opt[int64]     `json:"quantity,omitzero"`
-	ShipDate param.Opt[time.Time] `json:"shipDate,omitzero" format:"date-time"`
+	ID       param.Field[int64]     `json:"id"`
+	Complete param.Field[bool]      `json:"complete"`
+	PetID    param.Field[int64]     `json:"petId"`
+	Quantity param.Field[int64]     `json:"quantity"`
+	ShipDate param.Field[time.Time] `json:"shipDate" format:"date-time"`
 	// Order Status
-	//
-	// Any of "placed", "approved", "delivered".
-	Status StoreOrderNewParamsStatus `json:"status,omitzero"`
-	paramObj
+	Status param.Field[StoreOrderNewParamsStatus] `json:"status"`
 }
 
 func (r StoreOrderNewParams) MarshalJSON() (data []byte, err error) {
-	type shadow StoreOrderNewParams
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *StoreOrderNewParams) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return apijson.MarshalRoot(r)
 }
 
 // Order Status
@@ -169,3 +183,11 @@ const (
 	StoreOrderNewParamsStatusApproved  StoreOrderNewParamsStatus = "approved"
 	StoreOrderNewParamsStatusDelivered StoreOrderNewParamsStatus = "delivered"
 )
+
+func (r StoreOrderNewParamsStatus) IsKnown() bool {
+	switch r {
+	case StoreOrderNewParamsStatusPlaced, StoreOrderNewParamsStatusApproved, StoreOrderNewParamsStatusDelivered:
+		return true
+	}
+	return false
+}

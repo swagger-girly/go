@@ -27,12 +27,13 @@ func TestUsage(t *testing.T) {
 	)
 	pet, err := client.Pet.Update(context.TODO(), helloworldtestingggg.PetUpdateParams{
 		Pet: helloworldtestingggg.PetParam{
-			Name:      "doggie",
-			PhotoURLs: []string{"string"},
+			Name:      helloworldtestingggg.F("doggie"),
+			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
 		},
 	})
 	if err != nil {
-		t.Fatalf("err should be nil: %s", err.Error())
+		t.Error(err)
+		return
 	}
 	t.Logf("%+v\n", pet.ID)
 }

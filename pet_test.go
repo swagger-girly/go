@@ -30,18 +30,18 @@ func TestPetNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Pet.New(context.TODO(), helloworldtestingggg.PetNewParams{
 		Pet: helloworldtestingggg.PetParam{
-			Name:      "doggie",
-			PhotoURLs: []string{"string"},
-			ID:        helloworldtestingggg.Int(10),
-			Category: helloworldtestingggg.PetCategoryParam{
-				ID:   helloworldtestingggg.Int(1),
-				Name: helloworldtestingggg.String("Dogs"),
-			},
-			Status: helloworldtestingggg.PetStatusAvailable,
-			Tags: []helloworldtestingggg.PetTagParam{{
-				ID:   helloworldtestingggg.Int(0),
-				Name: helloworldtestingggg.String("name"),
-			}},
+			Name:      helloworldtestingggg.F("doggie"),
+			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
+			ID:        helloworldtestingggg.F(int64(10)),
+			Category: helloworldtestingggg.F(helloworldtestingggg.PetCategoryParam{
+				ID:   helloworldtestingggg.F(int64(1)),
+				Name: helloworldtestingggg.F("Dogs"),
+			}),
+			Status: helloworldtestingggg.F(helloworldtestingggg.PetStatusAvailable),
+			Tags: helloworldtestingggg.F([]helloworldtestingggg.PetTagParam{{
+				ID:   helloworldtestingggg.F(int64(0)),
+				Name: helloworldtestingggg.F("name"),
+			}}),
 		},
 	})
 	if err != nil {
@@ -66,7 +66,7 @@ func TestPetGet(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.Pet.Get(context.TODO(), 0)
+	_, err := client.Pet.Get(context.TODO(), int64(0))
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
 		if errors.As(err, &apierr) {
@@ -91,18 +91,18 @@ func TestPetUpdateWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Pet.Update(context.TODO(), helloworldtestingggg.PetUpdateParams{
 		Pet: helloworldtestingggg.PetParam{
-			Name:      "doggie",
-			PhotoURLs: []string{"string"},
-			ID:        helloworldtestingggg.Int(10),
-			Category: helloworldtestingggg.PetCategoryParam{
-				ID:   helloworldtestingggg.Int(1),
-				Name: helloworldtestingggg.String("Dogs"),
-			},
-			Status: helloworldtestingggg.PetStatusAvailable,
-			Tags: []helloworldtestingggg.PetTagParam{{
-				ID:   helloworldtestingggg.Int(0),
-				Name: helloworldtestingggg.String("name"),
-			}},
+			Name:      helloworldtestingggg.F("doggie"),
+			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
+			ID:        helloworldtestingggg.F(int64(10)),
+			Category: helloworldtestingggg.F(helloworldtestingggg.PetCategoryParam{
+				ID:   helloworldtestingggg.F(int64(1)),
+				Name: helloworldtestingggg.F("Dogs"),
+			}),
+			Status: helloworldtestingggg.F(helloworldtestingggg.PetStatusAvailable),
+			Tags: helloworldtestingggg.F([]helloworldtestingggg.PetTagParam{{
+				ID:   helloworldtestingggg.F(int64(0)),
+				Name: helloworldtestingggg.F("name"),
+			}}),
 		},
 	})
 	if err != nil {
@@ -127,7 +127,7 @@ func TestPetDelete(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	err := client.Pet.Delete(context.TODO(), 0)
+	err := client.Pet.Delete(context.TODO(), int64(0))
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
 		if errors.As(err, &apierr) {
@@ -151,7 +151,7 @@ func TestPetFindByStatusWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Pet.FindByStatus(context.TODO(), helloworldtestingggg.PetFindByStatusParams{
-		Status: helloworldtestingggg.PetFindByStatusParamsStatusAvailable,
+		Status: helloworldtestingggg.F(helloworldtestingggg.PetFindByStatusParamsStatusAvailable),
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
@@ -176,7 +176,7 @@ func TestPetFindByTagsWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Pet.FindByTags(context.TODO(), helloworldtestingggg.PetFindByTagsParams{
-		Tags: []string{"string"},
+		Tags: helloworldtestingggg.F([]string{"string"}),
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
@@ -202,10 +202,10 @@ func TestPetUpdateWithFormWithOptionalParams(t *testing.T) {
 	)
 	err := client.Pet.UpdateWithForm(
 		context.TODO(),
-		0,
+		int64(0),
 		helloworldtestingggg.PetUpdateWithFormParams{
-			Name:   helloworldtestingggg.String("name"),
-			Status: helloworldtestingggg.String("status"),
+			Name:   helloworldtestingggg.F("name"),
+			Status: helloworldtestingggg.F("status"),
 		},
 	)
 	if err != nil {
@@ -232,10 +232,10 @@ func TestPetUploadImageWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Pet.UploadImage(
 		context.TODO(),
-		0,
+		int64(0),
 		io.Reader(bytes.NewBuffer([]byte("Example data"))),
 		helloworldtestingggg.PetUploadImageParams{
-			AdditionalMetadata: helloworldtestingggg.String("additionalMetadata"),
+			AdditionalMetadata: helloworldtestingggg.F("additionalMetadata"),
 		},
 	)
 	if err != nil {
