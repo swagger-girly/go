@@ -3,11 +3,14 @@
 Params Types:
 
 - <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetParam">PetParam</a>
+- <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#ConnectClientEventUnionParam">ConnectClientEventUnionParam</a>
 
 Response Types:
 
 - <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#Pet">Pet</a>
 - <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetUploadImageResponse">PetUploadImageResponse</a>
+- <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#ConnectClientEvent">ConnectClientEvent</a>
+- <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#ConnectServerEvent">ConnectServerEvent</a>
 
 Methods:
 

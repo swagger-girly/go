@@ -10,6 +10,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"reflect"
 	"slices"
 
 	"github.com/swagger-girly/go/internal/apiform"
@@ -19,6 +20,7 @@ import (
 	"github.com/swagger-girly/go/internal/requestconfig"
 	"github.com/swagger-girly/go/option"
 	"github.com/swagger-girly/go/packages/ssestream"
+	"github.com/tidwall/gjson"
 )
 
 // Everything about your Pets
@@ -274,6 +276,380 @@ func (r *PetUploadImageResponse) UnmarshalJSON(data []byte) (err error) {
 
 func (r petUploadImageResponseJSON) RawJSON() string {
 	return r.raw
+}
+
+type ConnectClientEvent struct {
+	Type   ConnectClientEventType   `json:"type" api:"required"`
+	Status ConnectClientEventStatus `json:"status"`
+	JSON   connectClientEventJSON   `json:"-"`
+	union  ConnectClientEventUnion
+}
+
+// connectClientEventJSON contains the JSON metadata for the struct
+// [ConnectClientEvent]
+type connectClientEventJSON struct {
+	Type        apijson.Field
+	Status      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r connectClientEventJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r *ConnectClientEvent) UnmarshalJSON(data []byte) (err error) {
+	*r = ConnectClientEvent{}
+	err = apijson.UnmarshalRoot(data, &r.union)
+	if err != nil {
+		return err
+	}
+	return apijson.Port(r.union, &r)
+}
+
+// AsUnion returns a [ConnectClientEventUnion] interface which you can cast to the
+// specific types for more type safety.
+//
+// Possible runtime types of the union are [ConnectClientEventPetClientPingEvent],
+// [ConnectClientEventPetClientSubscribeEvent].
+func (r ConnectClientEvent) AsUnion() ConnectClientEventUnion {
+	return r.union
+}
+
+// Union satisfied by [ConnectClientEventPetClientPingEvent] or
+// [ConnectClientEventPetClientSubscribeEvent].
+type ConnectClientEventUnion interface {
+	implementsConnectClientEvent()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*ConnectClientEventUnion)(nil)).Elem(),
+		"type",
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ConnectClientEventPetClientPingEvent{}),
+			DiscriminatorValue: "ping",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ConnectClientEventPetClientSubscribeEvent{}),
+			DiscriminatorValue: "subscribe",
+		},
+	)
+}
+
+type ConnectClientEventPetClientPingEvent struct {
+	Type ConnectClientEventPetClientPingEventType `json:"type" api:"required"`
+	JSON connectClientEventPetClientPingEventJSON `json:"-"`
+}
+
+// connectClientEventPetClientPingEventJSON contains the JSON metadata for the
+// struct [ConnectClientEventPetClientPingEvent]
+type connectClientEventPetClientPingEventJSON struct {
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConnectClientEventPetClientPingEvent) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r connectClientEventPetClientPingEventJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r ConnectClientEventPetClientPingEvent) implementsConnectClientEvent() {}
+
+type ConnectClientEventPetClientPingEventType string
+
+const (
+	ConnectClientEventPetClientPingEventTypePing ConnectClientEventPetClientPingEventType = "ping"
+)
+
+func (r ConnectClientEventPetClientPingEventType) IsKnown() bool {
+	switch r {
+	case ConnectClientEventPetClientPingEventTypePing:
+		return true
+	}
+	return false
+}
+
+type ConnectClientEventPetClientSubscribeEvent struct {
+	Status ConnectClientEventPetClientSubscribeEventStatus `json:"status" api:"required"`
+	Type   ConnectClientEventPetClientSubscribeEventType   `json:"type" api:"required"`
+	JSON   connectClientEventPetClientSubscribeEventJSON   `json:"-"`
+}
+
+// connectClientEventPetClientSubscribeEventJSON contains the JSON metadata for the
+// struct [ConnectClientEventPetClientSubscribeEvent]
+type connectClientEventPetClientSubscribeEventJSON struct {
+	Status      apijson.Field
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConnectClientEventPetClientSubscribeEvent) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r connectClientEventPetClientSubscribeEventJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r ConnectClientEventPetClientSubscribeEvent) implementsConnectClientEvent() {}
+
+type ConnectClientEventPetClientSubscribeEventStatus string
+
+const (
+	ConnectClientEventPetClientSubscribeEventStatusAvailable ConnectClientEventPetClientSubscribeEventStatus = "available"
+	ConnectClientEventPetClientSubscribeEventStatusPending   ConnectClientEventPetClientSubscribeEventStatus = "pending"
+	ConnectClientEventPetClientSubscribeEventStatusSold      ConnectClientEventPetClientSubscribeEventStatus = "sold"
+)
+
+func (r ConnectClientEventPetClientSubscribeEventStatus) IsKnown() bool {
+	switch r {
+	case ConnectClientEventPetClientSubscribeEventStatusAvailable, ConnectClientEventPetClientSubscribeEventStatusPending, ConnectClientEventPetClientSubscribeEventStatusSold:
+		return true
+	}
+	return false
+}
+
+type ConnectClientEventPetClientSubscribeEventType string
+
+const (
+	ConnectClientEventPetClientSubscribeEventTypeSubscribe ConnectClientEventPetClientSubscribeEventType = "subscribe"
+)
+
+func (r ConnectClientEventPetClientSubscribeEventType) IsKnown() bool {
+	switch r {
+	case ConnectClientEventPetClientSubscribeEventTypeSubscribe:
+		return true
+	}
+	return false
+}
+
+type ConnectClientEventType string
+
+const (
+	ConnectClientEventTypePing      ConnectClientEventType = "ping"
+	ConnectClientEventTypeSubscribe ConnectClientEventType = "subscribe"
+)
+
+func (r ConnectClientEventType) IsKnown() bool {
+	switch r {
+	case ConnectClientEventTypePing, ConnectClientEventTypeSubscribe:
+		return true
+	}
+	return false
+}
+
+type ConnectClientEventStatus string
+
+const (
+	ConnectClientEventStatusAvailable ConnectClientEventStatus = "available"
+	ConnectClientEventStatusPending   ConnectClientEventStatus = "pending"
+	ConnectClientEventStatusSold      ConnectClientEventStatus = "sold"
+)
+
+func (r ConnectClientEventStatus) IsKnown() bool {
+	switch r {
+	case ConnectClientEventStatusAvailable, ConnectClientEventStatusPending, ConnectClientEventStatusSold:
+		return true
+	}
+	return false
+}
+
+type ConnectClientEventParam struct {
+	Type   param.Field[ConnectClientEventType]   `json:"type" api:"required"`
+	Status param.Field[ConnectClientEventStatus] `json:"status"`
+}
+
+func (r ConnectClientEventParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r ConnectClientEventParam) implementsConnectClientEventUnionParam() {}
+
+// Satisfied by [ConnectClientEventPetClientPingEventParam],
+// [ConnectClientEventPetClientSubscribeEventParam], [ConnectClientEventParam].
+type ConnectClientEventUnionParam interface {
+	implementsConnectClientEventUnionParam()
+}
+
+type ConnectClientEventPetClientPingEventParam struct {
+	Type param.Field[ConnectClientEventPetClientPingEventType] `json:"type" api:"required"`
+}
+
+func (r ConnectClientEventPetClientPingEventParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r ConnectClientEventPetClientPingEventParam) implementsConnectClientEventUnionParam() {}
+
+type ConnectClientEventPetClientSubscribeEventParam struct {
+	Status param.Field[ConnectClientEventPetClientSubscribeEventStatus] `json:"status" api:"required"`
+	Type   param.Field[ConnectClientEventPetClientSubscribeEventType]   `json:"type" api:"required"`
+}
+
+func (r ConnectClientEventPetClientSubscribeEventParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r ConnectClientEventPetClientSubscribeEventParam) implementsConnectClientEventUnionParam() {}
+
+type ConnectServerEvent struct {
+	Type  ConnectServerEventType `json:"type" api:"required"`
+	Pet   Pet                    `json:"pet"`
+	JSON  connectServerEventJSON `json:"-"`
+	union ConnectServerEventUnion
+}
+
+// connectServerEventJSON contains the JSON metadata for the struct
+// [ConnectServerEvent]
+type connectServerEventJSON struct {
+	Type        apijson.Field
+	Pet         apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r connectServerEventJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r *ConnectServerEvent) UnmarshalJSON(data []byte) (err error) {
+	*r = ConnectServerEvent{}
+	err = apijson.UnmarshalRoot(data, &r.union)
+	if err != nil {
+		return err
+	}
+	return apijson.Port(r.union, &r)
+}
+
+// AsUnion returns a [ConnectServerEventUnion] interface which you can cast to the
+// specific types for more type safety.
+//
+// Possible runtime types of the union are [ConnectServerEventPetServerPongEvent],
+// [ConnectServerEventPetServerStatusEvent].
+func (r ConnectServerEvent) AsUnion() ConnectServerEventUnion {
+	return r.union
+}
+
+// Union satisfied by [ConnectServerEventPetServerPongEvent] or
+// [ConnectServerEventPetServerStatusEvent].
+type ConnectServerEventUnion interface {
+	implementsConnectServerEvent()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*ConnectServerEventUnion)(nil)).Elem(),
+		"type",
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ConnectServerEventPetServerPongEvent{}),
+			DiscriminatorValue: "pong",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ConnectServerEventPetServerStatusEvent{}),
+			DiscriminatorValue: "status",
+		},
+	)
+}
+
+type ConnectServerEventPetServerPongEvent struct {
+	Type ConnectServerEventPetServerPongEventType `json:"type" api:"required"`
+	JSON connectServerEventPetServerPongEventJSON `json:"-"`
+}
+
+// connectServerEventPetServerPongEventJSON contains the JSON metadata for the
+// struct [ConnectServerEventPetServerPongEvent]
+type connectServerEventPetServerPongEventJSON struct {
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConnectServerEventPetServerPongEvent) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r connectServerEventPetServerPongEventJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r ConnectServerEventPetServerPongEvent) implementsConnectServerEvent() {}
+
+type ConnectServerEventPetServerPongEventType string
+
+const (
+	ConnectServerEventPetServerPongEventTypePong ConnectServerEventPetServerPongEventType = "pong"
+)
+
+func (r ConnectServerEventPetServerPongEventType) IsKnown() bool {
+	switch r {
+	case ConnectServerEventPetServerPongEventTypePong:
+		return true
+	}
+	return false
+}
+
+type ConnectServerEventPetServerStatusEvent struct {
+	Pet  Pet                                        `json:"pet" api:"required"`
+	Type ConnectServerEventPetServerStatusEventType `json:"type" api:"required"`
+	JSON connectServerEventPetServerStatusEventJSON `json:"-"`
+}
+
+// connectServerEventPetServerStatusEventJSON contains the JSON metadata for the
+// struct [ConnectServerEventPetServerStatusEvent]
+type connectServerEventPetServerStatusEventJSON struct {
+	Pet         apijson.Field
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConnectServerEventPetServerStatusEvent) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r connectServerEventPetServerStatusEventJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r ConnectServerEventPetServerStatusEvent) implementsConnectServerEvent() {}
+
+type ConnectServerEventPetServerStatusEventType string
+
+const (
+	ConnectServerEventPetServerStatusEventTypeStatus ConnectServerEventPetServerStatusEventType = "status"
+)
+
+func (r ConnectServerEventPetServerStatusEventType) IsKnown() bool {
+	switch r {
+	case ConnectServerEventPetServerStatusEventTypeStatus:
+		return true
+	}
+	return false
+}
+
+type ConnectServerEventType string
+
+const (
+	ConnectServerEventTypePong   ConnectServerEventType = "pong"
+	ConnectServerEventTypeStatus ConnectServerEventType = "status"
+)
+
+func (r ConnectServerEventType) IsKnown() bool {
+	switch r {
+	case ConnectServerEventTypePong, ConnectServerEventTypeStatus:
+		return true
+	}
+	return false
 }
 
 type PetNewParams struct {
