@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-alpha.2 (2026-06-26)
+
+Full Changelog: [v0.1.0-alpha.1...v0.1.0-alpha.2](https://github.com/swagger-girly/go/compare/v0.1.0-alpha.1...v0.1.0-alpha.2)
+
+### Features
+
+* **api:** manual updates ([281a06f](https://github.com/swagger-girly/go/commit/281a06f30b009920f5f6fe4e0eb0f47cfc89ca58))
+
 ## 0.1.0-alpha.1 (2026-06-25)
 
 Full Changelog: [v0.0.1-alpha.0...v0.1.0-alpha.1](https://github.com/swagger-girly/go/compare/v0.0.1-alpha.0...v0.1.0-alpha.1)
