@@ -19,7 +19,8 @@ import (
 type Client struct {
 	Options []option.RequestOption
 	// Everything about your Pets
-	Pet *PetService
+	Pet      *PetService
+	Webhooks *WebhookService
 	// Access to Petstore orders
 	Store *StoreService
 	// Operations about user
@@ -27,7 +28,8 @@ type Client struct {
 }
 
 // DefaultClientOptions read from the environment (API_KEY,
-// HELLO_WORLD_TESTINGGGG_BASE_URL). This should be used to initialize new clients.
+// PETSTORE_WEBHOOK_SECRET, HELLO_WORLD_TESTINGGGG_BASE_URL). This should be used
+// to initialize new clients.
 func DefaultClientOptions() []option.RequestOption {
 	defaults := []option.RequestOption{option.WithHTTPClient(defaultHTTPClient()), option.WithEnvironmentProduction()}
 	if o, ok := os.LookupEnv("HELLO_WORLD_TESTINGGGG_BASE_URL"); ok {
@@ -35,6 +37,9 @@ func DefaultClientOptions() []option.RequestOption {
 	}
 	if o, ok := os.LookupEnv("API_KEY"); ok {
 		defaults = append(defaults, option.WithAPIKey(o))
+	}
+	if o, ok := os.LookupEnv("PETSTORE_WEBHOOK_SECRET"); ok {
+		defaults = append(defaults, option.WithWebhookSecret(o))
 	}
 	if o, ok := os.LookupEnv("HELLO_WORLD_TESTINGGGG_CUSTOM_HEADERS"); ok {
 		for _, line := range strings.Split(o, "\n") {
@@ -48,15 +53,17 @@ func DefaultClientOptions() []option.RequestOption {
 }
 
 // NewClient generates a new client with the default option read from the
-// environment (API_KEY, HELLO_WORLD_TESTINGGGG_BASE_URL). The option passed in as
-// arguments are applied after these default arguments, and all option will be
-// passed down to the services and requests that this client makes.
+// environment (API_KEY, PETSTORE_WEBHOOK_SECRET, HELLO_WORLD_TESTINGGGG_BASE_URL).
+// The option passed in as arguments are applied after these default arguments, and
+// all option will be passed down to the services and requests that this client
+// makes.
 func NewClient(opts ...option.RequestOption) (r *Client) {
 	opts = append(DefaultClientOptions(), opts...)
 
 	r = &Client{Options: opts}
 
 	r.Pet = NewPetService(opts...)
+	r.Webhooks = NewWebhookService(opts...)
 	r.Store = NewStoreService(opts...)
 	r.User = NewUserService(opts...)
 

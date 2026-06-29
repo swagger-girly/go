@@ -30,6 +30,13 @@ Methods:
 - <code title="post /pet/{petId}/uploadImage">client.Pet.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetService.UploadImage">UploadImage</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, petID <a href="https://pkg.go.dev/builtin#int64">int64</a>, body <a href="https://pkg.go.dev/builtin#io.Reader">io.Reader</a>, params <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetUploadImageParams">PetUploadImageParams</a>) (\*<a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetUploadImageResponse">PetUploadImageResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="get /pet/{petId}/status/stream">client.Pet.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetService.WatchStatus">WatchStatus</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, petID <a href="https://pkg.go.dev/builtin#int64">int64</a>, query <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetWatchStatusParams">PetWatchStatusParams</a>) (\*<a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#Pet">Pet</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
+# Webhooks
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetCreatedWebhookEvent">PetCreatedWebhookEvent</a>
+- <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#ParsedWebhookEvent">ParsedWebhookEvent</a>
+
 # Store
 
 Response Types:
