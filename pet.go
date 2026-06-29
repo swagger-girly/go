@@ -70,7 +70,7 @@ func (r *PetService) Update(ctx context.Context, body PetUpdateParams, opts ...o
 }
 
 // Returns a cursor-paginated list of pets.
-func (r *PetService) List(ctx context.Context, query PetListParams, opts ...option.RequestOption) (res *pagination.CursorPage[Pet], err error) {
+func (r *PetService) List(ctx context.Context, query PetListParams, opts ...option.RequestOption) (res *pagination.CustomCursorPage[Pet], err error) {
 	var raw *http.Response
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
@@ -88,8 +88,8 @@ func (r *PetService) List(ctx context.Context, query PetListParams, opts ...opti
 }
 
 // Returns a cursor-paginated list of pets.
-func (r *PetService) ListAutoPaging(ctx context.Context, query PetListParams, opts ...option.RequestOption) *pagination.CursorPageAutoPager[Pet] {
-	return pagination.NewCursorPageAutoPager(r.List(ctx, query, opts...))
+func (r *PetService) ListAutoPaging(ctx context.Context, query PetListParams, opts ...option.RequestOption) *pagination.CustomCursorPageAutoPager[Pet] {
+	return pagination.NewCustomCursorPageAutoPager(r.List(ctx, query, opts...))
 }
 
 // Deletes a pet
@@ -128,7 +128,7 @@ func (r *PetService) ListFakePage(ctx context.Context, opts ...option.RequestOpt
 
 // Returns a single page-shaped pet response whose fake pagination behavior is
 // inferred from the Stainless config scheme.
-func (r *PetService) ListFakePageInferred(ctx context.Context, opts ...option.RequestOption) (res *pagination.SinglePage[Pet], err error) {
+func (r *PetService) ListFakePageInferred(ctx context.Context, opts ...option.RequestOption) (res *pagination.XFakeSinglePage[Pet], err error) {
 	var raw *http.Response
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
@@ -147,8 +147,8 @@ func (r *PetService) ListFakePageInferred(ctx context.Context, opts ...option.Re
 
 // Returns a single page-shaped pet response whose fake pagination behavior is
 // inferred from the Stainless config scheme.
-func (r *PetService) ListFakePageInferredAutoPaging(ctx context.Context, opts ...option.RequestOption) *pagination.SinglePageAutoPager[Pet] {
-	return pagination.NewSinglePageAutoPager(r.ListFakePageInferred(ctx, opts...))
+func (r *PetService) ListFakePageInferredAutoPaging(ctx context.Context, opts ...option.RequestOption) *pagination.XFakeSinglePageAutoPager[Pet] {
+	return pagination.NewXFakeSinglePageAutoPager(r.ListFakePageInferred(ctx, opts...))
 }
 
 // Returns the same cursor-shaped pet list response without enabling SDK pagination
