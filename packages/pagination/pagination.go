@@ -10,34 +10,35 @@ import (
 	"github.com/swagger-girly/go/option"
 )
 
-type CursorPage[T any] struct {
-	Items      []T            `json:"items"`
-	NextCursor string         `json:"next_cursor" api:"nullable"`
-	JSON       cursorPageJSON `json:"-"`
+type CustomCursorPage[T any] struct {
+	Items      []T                  `json:"items"`
+	NextCursor string               `json:"next_cursor" api:"nullable"`
+	JSON       customCursorPageJSON `json:"-"`
 	cfg        *requestconfig.RequestConfig
 	res        *http.Response
 }
 
-// cursorPageJSON contains the JSON metadata for the struct [CursorPage[T]]
-type cursorPageJSON struct {
+// customCursorPageJSON contains the JSON metadata for the struct
+// [CustomCursorPage[T]]
+type customCursorPageJSON struct {
 	Items       apijson.Field
 	NextCursor  apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
 
-func (r *CursorPage[T]) UnmarshalJSON(data []byte) (err error) {
+func (r *CustomCursorPage[T]) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r cursorPageJSON) RawJSON() string {
+func (r customCursorPageJSON) RawJSON() string {
 	return r.raw
 }
 
 // GetNextPage returns the next page as defined by this pagination style. When
 // there is no next page, this function will return a 'nil' for the page value, but
 // will not return an error
-func (r *CursorPage[T]) GetNextPage() (res *CursorPage[T], err error) {
+func (r *CustomCursorPage[T]) GetNextPage() (res *CustomCursorPage[T], err error) {
 	if len(r.Items) == 0 {
 		return nil, nil
 	}
@@ -61,30 +62,30 @@ func (r *CursorPage[T]) GetNextPage() (res *CursorPage[T], err error) {
 	return res, nil
 }
 
-func (r *CursorPage[T]) SetPageConfig(cfg *requestconfig.RequestConfig, res *http.Response) {
+func (r *CustomCursorPage[T]) SetPageConfig(cfg *requestconfig.RequestConfig, res *http.Response) {
 	if r == nil {
-		r = &CursorPage[T]{}
+		r = &CustomCursorPage[T]{}
 	}
 	r.cfg = cfg
 	r.res = res
 }
 
-type CursorPageAutoPager[T any] struct {
-	page *CursorPage[T]
+type CustomCursorPageAutoPager[T any] struct {
+	page *CustomCursorPage[T]
 	cur  T
 	idx  int
 	run  int
 	err  error
 }
 
-func NewCursorPageAutoPager[T any](page *CursorPage[T], err error) *CursorPageAutoPager[T] {
-	return &CursorPageAutoPager[T]{
+func NewCustomCursorPageAutoPager[T any](page *CustomCursorPage[T], err error) *CustomCursorPageAutoPager[T] {
+	return &CustomCursorPageAutoPager[T]{
 		page: page,
 		err:  err,
 	}
 }
 
-func (r *CursorPageAutoPager[T]) Next() bool {
+func (r *CustomCursorPageAutoPager[T]) Next() bool {
 	if r.page == nil || len(r.page.Items) == 0 {
 		return false
 	}
@@ -101,46 +102,47 @@ func (r *CursorPageAutoPager[T]) Next() bool {
 	return true
 }
 
-func (r *CursorPageAutoPager[T]) Current() T {
+func (r *CustomCursorPageAutoPager[T]) Current() T {
 	return r.cur
 }
 
-func (r *CursorPageAutoPager[T]) Err() error {
+func (r *CustomCursorPageAutoPager[T]) Err() error {
 	return r.err
 }
 
-func (r *CursorPageAutoPager[T]) Index() int {
+func (r *CustomCursorPageAutoPager[T]) Index() int {
 	return r.run
 }
 
-type SinglePage[T any] struct {
-	Data    []T            `json:"data"`
-	HasMore bool           `json:"has_more" api:"required"`
-	JSON    singlePageJSON `json:"-"`
+type XFakeSinglePage[T any] struct {
+	Data    []T                 `json:"data"`
+	HasMore bool                `json:"has_more" api:"required"`
+	JSON    xFakeSinglePageJSON `json:"-"`
 	cfg     *requestconfig.RequestConfig
 	res     *http.Response
 }
 
-// singlePageJSON contains the JSON metadata for the struct [SinglePage[T]]
-type singlePageJSON struct {
+// xFakeSinglePageJSON contains the JSON metadata for the struct
+// [XFakeSinglePage[T]]
+type xFakeSinglePageJSON struct {
 	Data        apijson.Field
 	HasMore     apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
 
-func (r *SinglePage[T]) UnmarshalJSON(data []byte) (err error) {
+func (r *XFakeSinglePage[T]) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r singlePageJSON) RawJSON() string {
+func (r xFakeSinglePageJSON) RawJSON() string {
 	return r.raw
 }
 
 // GetNextPage returns the next page as defined by this pagination style. When
 // there is no next page, this function will return a 'nil' for the page value, but
 // will not return an error
-func (r *SinglePage[T]) GetNextPage() (res *SinglePage[T], err error) {
+func (r *XFakeSinglePage[T]) GetNextPage() (res *XFakeSinglePage[T], err error) {
 	if len(r.Data) == 0 {
 		return nil, nil
 	}
@@ -165,30 +167,30 @@ func (r *SinglePage[T]) GetNextPage() (res *SinglePage[T], err error) {
 	return res, nil
 }
 
-func (r *SinglePage[T]) SetPageConfig(cfg *requestconfig.RequestConfig, res *http.Response) {
+func (r *XFakeSinglePage[T]) SetPageConfig(cfg *requestconfig.RequestConfig, res *http.Response) {
 	if r == nil {
-		r = &SinglePage[T]{}
+		r = &XFakeSinglePage[T]{}
 	}
 	r.cfg = cfg
 	r.res = res
 }
 
-type SinglePageAutoPager[T any] struct {
-	page *SinglePage[T]
+type XFakeSinglePageAutoPager[T any] struct {
+	page *XFakeSinglePage[T]
 	cur  T
 	idx  int
 	run  int
 	err  error
 }
 
-func NewSinglePageAutoPager[T any](page *SinglePage[T], err error) *SinglePageAutoPager[T] {
-	return &SinglePageAutoPager[T]{
+func NewXFakeSinglePageAutoPager[T any](page *XFakeSinglePage[T], err error) *XFakeSinglePageAutoPager[T] {
+	return &XFakeSinglePageAutoPager[T]{
 		page: page,
 		err:  err,
 	}
 }
 
-func (r *SinglePageAutoPager[T]) Next() bool {
+func (r *XFakeSinglePageAutoPager[T]) Next() bool {
 	if r.page == nil || len(r.page.Data) == 0 {
 		return false
 	}
@@ -205,14 +207,14 @@ func (r *SinglePageAutoPager[T]) Next() bool {
 	return true
 }
 
-func (r *SinglePageAutoPager[T]) Current() T {
+func (r *XFakeSinglePageAutoPager[T]) Current() T {
 	return r.cur
 }
 
-func (r *SinglePageAutoPager[T]) Err() error {
+func (r *XFakeSinglePageAutoPager[T]) Err() error {
 	return r.err
 }
 
-func (r *SinglePageAutoPager[T]) Index() int {
+func (r *XFakeSinglePageAutoPager[T]) Index() int {
 	return r.run
 }
