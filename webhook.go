@@ -563,21 +563,71 @@ func (r PetModerationWebhookEventReason) IsKnown() bool {
 	return false
 }
 
+type StoreReportGeneratedWebhookEvent struct {
+	ID        string                               `json:"id" api:"required"`
+	CreatedAt time.Time                            `json:"created_at" api:"required" format:"date-time"`
+	Metrics   interface{}                          `json:"metrics" api:"required"`
+	Report    Report                               `json:"report" api:"required"`
+	Type      StoreReportGeneratedWebhookEventType `json:"type" api:"required"`
+	JSON      storeReportGeneratedWebhookEventJSON `json:"-"`
+}
+
+// storeReportGeneratedWebhookEventJSON contains the JSON metadata for the struct
+// [StoreReportGeneratedWebhookEvent]
+type storeReportGeneratedWebhookEventJSON struct {
+	ID          apijson.Field
+	CreatedAt   apijson.Field
+	Metrics     apijson.Field
+	Report      apijson.Field
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *StoreReportGeneratedWebhookEvent) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r storeReportGeneratedWebhookEventJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r StoreReportGeneratedWebhookEvent) implementsParsedWebhookEvent() {}
+
+type StoreReportGeneratedWebhookEventType string
+
+const (
+	StoreReportGeneratedWebhookEventTypeStoreReportGenerated StoreReportGeneratedWebhookEventType = "store.report.generated"
+)
+
+func (r StoreReportGeneratedWebhookEventType) IsKnown() bool {
+	switch r {
+	case StoreReportGeneratedWebhookEventTypeStoreReportGenerated:
+		return true
+	}
+	return false
+}
+
 type ParsedWebhookEvent struct {
-	Pet        Pet                    `json:"pet" api:"required"`
 	Type       ParsedWebhookEventType `json:"type" api:"required"`
+	ID         string                 `json:"id"`
 	ApprovedAt time.Time              `json:"approved_at" format:"date-time"`
 	// This field can have the runtime type of [[]PetUpdatedWebhookEventChangedField].
 	ChangedFields interface{} `json:"changed_fields"`
+	CreatedAt     time.Time   `json:"created_at" format:"date-time"`
 	// This field can have the runtime type of [PetInventoryLowWebhookEventLastOrder].
 	LastOrder interface{} `json:"last_order"`
 	// This field can have the runtime type of [[]PetInventoryLowWebhookEventLocation].
 	Locations interface{} `json:"locations"`
 	// This field can have the runtime type of [map[string]string].
-	Metadata       interface{}                      `json:"metadata"`
+	Metadata interface{} `json:"metadata"`
+	// This field can have the runtime type of [interface{}].
+	Metrics        interface{}                      `json:"metrics"`
+	Pet            Pet                              `json:"pet"`
 	PreviousStatus ParsedWebhookEventPreviousStatus `json:"previous_status" api:"nullable"`
 	Quantity       int64                            `json:"quantity"`
 	Reason         ParsedWebhookEventReason         `json:"reason"`
+	Report         Report                           `json:"report"`
 	// This field can have the runtime type of
 	// [[]ParsedWebhookEventPetModerationRejectedEventReviewNote].
 	ReviewNotes interface{}            `json:"review_notes"`
@@ -589,16 +639,20 @@ type ParsedWebhookEvent struct {
 // parsedWebhookEventJSON contains the JSON metadata for the struct
 // [ParsedWebhookEvent]
 type parsedWebhookEventJSON struct {
-	Pet            apijson.Field
 	Type           apijson.Field
+	ID             apijson.Field
 	ApprovedAt     apijson.Field
 	ChangedFields  apijson.Field
+	CreatedAt      apijson.Field
 	LastOrder      apijson.Field
 	Locations      apijson.Field
 	Metadata       apijson.Field
+	Metrics        apijson.Field
+	Pet            apijson.Field
 	PreviousStatus apijson.Field
 	Quantity       apijson.Field
 	Reason         apijson.Field
+	Report         apijson.Field
 	ReviewNotes    apijson.Field
 	Threshold      apijson.Field
 	raw            string
@@ -624,14 +678,16 @@ func (r *ParsedWebhookEvent) UnmarshalJSON(data []byte) (err error) {
 // Possible runtime types of the union are [PetCreatedWebhookEvent],
 // [PetUpdatedWebhookEvent], [PetInventoryLowWebhookEvent],
 // [ParsedWebhookEventPetModerationApprovedEvent],
-// [ParsedWebhookEventPetModerationRejectedEvent].
+// [ParsedWebhookEventPetModerationRejectedEvent],
+// [StoreReportGeneratedWebhookEvent].
 func (r ParsedWebhookEvent) AsUnion() ParsedWebhookEventUnion {
 	return r.union
 }
 
 // Union satisfied by [PetCreatedWebhookEvent], [PetUpdatedWebhookEvent],
-// [PetInventoryLowWebhookEvent], [ParsedWebhookEventPetModerationApprovedEvent] or
-// [ParsedWebhookEventPetModerationRejectedEvent].
+// [PetInventoryLowWebhookEvent], [ParsedWebhookEventPetModerationApprovedEvent],
+// [ParsedWebhookEventPetModerationRejectedEvent] or
+// [StoreReportGeneratedWebhookEvent].
 type ParsedWebhookEventUnion interface {
 	implementsParsedWebhookEvent()
 }
@@ -659,6 +715,10 @@ func init() {
 		apijson.UnionVariant{
 			TypeFilter: gjson.JSON,
 			Type:       reflect.TypeOf(ParsedWebhookEventPetModerationRejectedEvent{}),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(StoreReportGeneratedWebhookEvent{}),
 		},
 	)
 }
@@ -831,11 +891,12 @@ const (
 	ParsedWebhookEventTypePetInventoryLow       ParsedWebhookEventType = "pet.inventory-low"
 	ParsedWebhookEventTypePetModerationApproved ParsedWebhookEventType = "pet.moderation.approved"
 	ParsedWebhookEventTypePetModerationRejected ParsedWebhookEventType = "pet.moderation.rejected"
+	ParsedWebhookEventTypeStoreReportGenerated  ParsedWebhookEventType = "store.report.generated"
 )
 
 func (r ParsedWebhookEventType) IsKnown() bool {
 	switch r {
-	case ParsedWebhookEventTypePetCreated, ParsedWebhookEventTypePetUpdated, ParsedWebhookEventTypePetInventoryLow, ParsedWebhookEventTypePetModerationApproved, ParsedWebhookEventTypePetModerationRejected:
+	case ParsedWebhookEventTypePetCreated, ParsedWebhookEventTypePetUpdated, ParsedWebhookEventTypePetInventoryLow, ParsedWebhookEventTypePetModerationApproved, ParsedWebhookEventTypePetModerationRejected, ParsedWebhookEventTypeStoreReportGenerated:
 		return true
 	}
 	return false

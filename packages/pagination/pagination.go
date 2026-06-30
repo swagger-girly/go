@@ -4,6 +4,7 @@ package pagination
 
 import (
 	"net/http"
+	"reflect"
 
 	"github.com/swagger-girly/go/internal/apijson"
 	"github.com/swagger-girly/go/internal/requestconfig"
@@ -216,5 +217,115 @@ func (r *XFakeSinglePageAutoPager[T]) Err() error {
 }
 
 func (r *XFakeSinglePageAutoPager[T]) Index() int {
+	return r.run
+}
+
+type ReportCursorPage[T any] struct {
+	Data    []T                  `json:"data"`
+	HasMore bool                 `json:"has_more" api:"required"`
+	JSON    reportCursorPageJSON `json:"-"`
+	cfg     *requestconfig.RequestConfig
+	res     *http.Response
+}
+
+// reportCursorPageJSON contains the JSON metadata for the struct
+// [ReportCursorPage[T]]
+type reportCursorPageJSON struct {
+	Data        apijson.Field
+	HasMore     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ReportCursorPage[T]) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r reportCursorPageJSON) RawJSON() string {
+	return r.raw
+}
+
+// GetNextPage returns the next page as defined by this pagination style. When
+// there is no next page, this function will return a 'nil' for the page value, but
+// will not return an error
+func (r *ReportCursorPage[T]) GetNextPage() (res *ReportCursorPage[T], err error) {
+	if len(r.Data) == 0 {
+		return nil, nil
+	}
+
+	if !r.JSON.HasMore.IsMissing() && r.HasMore == false {
+		return nil, nil
+	}
+	items := r.Data
+	if items == nil || len(items) == 0 {
+		return nil, nil
+	}
+	cfg := r.cfg.Clone(r.cfg.Context)
+	value := reflect.ValueOf(items[len(items)-1])
+	field := value.FieldByName("ID")
+	err = cfg.Apply(option.WithQuery("starting_after", field.Interface().(string)))
+	if err != nil {
+		return nil, err
+	}
+	var raw *http.Response
+	cfg.ResponseInto = &raw
+	cfg.ResponseBodyInto = &res
+	err = cfg.Execute()
+	if err != nil {
+		return nil, err
+	}
+	res.SetPageConfig(cfg, raw)
+	return res, nil
+}
+
+func (r *ReportCursorPage[T]) SetPageConfig(cfg *requestconfig.RequestConfig, res *http.Response) {
+	if r == nil {
+		r = &ReportCursorPage[T]{}
+	}
+	r.cfg = cfg
+	r.res = res
+}
+
+type ReportCursorPageAutoPager[T any] struct {
+	page *ReportCursorPage[T]
+	cur  T
+	idx  int
+	run  int
+	err  error
+}
+
+func NewReportCursorPageAutoPager[T any](page *ReportCursorPage[T], err error) *ReportCursorPageAutoPager[T] {
+	return &ReportCursorPageAutoPager[T]{
+		page: page,
+		err:  err,
+	}
+}
+
+func (r *ReportCursorPageAutoPager[T]) Next() bool {
+	if r.page == nil || len(r.page.Data) == 0 {
+		return false
+	}
+	if r.idx >= len(r.page.Data) {
+		r.idx = 0
+		r.page, r.err = r.page.GetNextPage()
+		if r.err != nil || r.page == nil || len(r.page.Data) == 0 {
+			return false
+		}
+	}
+	r.cur = r.page.Data[r.idx]
+	r.run += 1
+	r.idx += 1
+	return true
+}
+
+func (r *ReportCursorPageAutoPager[T]) Current() T {
+	return r.cur
+}
+
+func (r *ReportCursorPageAutoPager[T]) Err() error {
+	return r.err
+}
+
+func (r *ReportCursorPageAutoPager[T]) Index() int {
 	return r.run
 }

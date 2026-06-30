@@ -19,7 +19,11 @@ import (
 type Client struct {
 	Options []option.RequestOption
 	// Everything about your Pets
-	Pet      *PetService
+	Pet *PetService
+	// File storage operations
+	Files *FileService
+	// Pet owner profile and compliance operations
+	Profiles *ProfileService
 	Webhooks *WebhookService
 	// Access to Petstore orders
 	Store *StoreService
@@ -63,6 +67,8 @@ func NewClient(opts ...option.RequestOption) (r *Client) {
 	r = &Client{Options: opts}
 
 	r.Pet = NewPetService(opts...)
+	r.Files = NewFileService(opts...)
+	r.Profiles = NewProfileService(opts...)
 	r.Webhooks = NewWebhookService(opts...)
 	r.Store = NewStoreService(opts...)
 	r.User = NewUserService(opts...)
