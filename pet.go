@@ -119,20 +119,11 @@ func (r *PetService) FindByTags(ctx context.Context, query PetFindByTagsParams, 
 }
 
 // Returns a single page-shaped pet response without SDK pagination helpers.
-func (r *PetService) ListFakePage(ctx context.Context, opts ...option.RequestOption) (res *PetListFakePageResponse, err error) {
-	opts = slices.Concat(r.Options, opts)
-	path := "pet/fake-page"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return res, err
-}
-
-// Returns a single page-shaped pet response whose fake pagination behavior is
-// inferred from the Stainless config scheme.
-func (r *PetService) ListFakePageInferred(ctx context.Context, opts ...option.RequestOption) (res *pagination.XFakeSinglePage[Pet], err error) {
+func (r *PetService) ListFakePage(ctx context.Context, opts ...option.RequestOption) (res *pagination.XFakeSinglePage[Pet], err error) {
 	var raw *http.Response
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
-	path := "pet/fake-page-inferred"
+	path := "pet/fake-page"
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, nil, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -145,10 +136,18 @@ func (r *PetService) ListFakePageInferred(ctx context.Context, opts ...option.Re
 	return res, nil
 }
 
+// Returns a single page-shaped pet response without SDK pagination helpers.
+func (r *PetService) ListFakePageAutoPaging(ctx context.Context, opts ...option.RequestOption) *pagination.XFakeSinglePageAutoPager[Pet] {
+	return pagination.NewXFakeSinglePageAutoPager(r.ListFakePage(ctx, opts...))
+}
+
 // Returns a single page-shaped pet response whose fake pagination behavior is
 // inferred from the Stainless config scheme.
-func (r *PetService) ListFakePageInferredAutoPaging(ctx context.Context, opts ...option.RequestOption) *pagination.XFakeSinglePageAutoPager[Pet] {
-	return pagination.NewXFakeSinglePageAutoPager(r.ListFakePageInferred(ctx, opts...))
+func (r *PetService) ListFakePageInferred(ctx context.Context, opts ...option.RequestOption) (res *PetListFakePageInferredResponse, err error) {
+	opts = slices.Concat(r.Options, opts)
+	path := "pet/fake-page-inferred"
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
+	return res, err
 }
 
 // Returns the same cursor-shaped pet list response without enabling SDK pagination
@@ -319,26 +318,26 @@ func (r PetTagParam) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
-type PetListFakePageResponse struct {
-	Data    []Pet                       `json:"data" api:"required"`
-	HasMore bool                        `json:"has_more" api:"required"`
-	JSON    petListFakePageResponseJSON `json:"-"`
+type PetListFakePageInferredResponse struct {
+	Data    []Pet                               `json:"data" api:"required"`
+	HasMore bool                                `json:"has_more" api:"required"`
+	JSON    petListFakePageInferredResponseJSON `json:"-"`
 }
 
-// petListFakePageResponseJSON contains the JSON metadata for the struct
-// [PetListFakePageResponse]
-type petListFakePageResponseJSON struct {
+// petListFakePageInferredResponseJSON contains the JSON metadata for the struct
+// [PetListFakePageInferredResponse]
+type petListFakePageInferredResponseJSON struct {
 	Data        apijson.Field
 	HasMore     apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
 
-func (r *PetListFakePageResponse) UnmarshalJSON(data []byte) (err error) {
+func (r *PetListFakePageInferredResponse) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r petListFakePageResponseJSON) RawJSON() string {
+func (r petListFakePageInferredResponseJSON) RawJSON() string {
 	return r.raw
 }
 
