@@ -179,7 +179,7 @@ func (r *PetService) UploadImage(ctx context.Context, petID int64, body io.Reade
 
 // Streams pet status updates over Server-Sent Events. Each `status` event contains
 // a full `Pet` payload.
-func (r *PetService) WatchStatusStreaming(ctx context.Context, petID int64, query PetWatchStatusParams, opts ...option.RequestOption) (stream *ssestream.Stream[interface{}]) {
+func (r *PetService) WatchStatusStreaming(ctx context.Context, petID int64, query PetWatchStatusParams, opts ...option.RequestOption) (stream *ssestream.Stream[Pet]) {
 	var (
 		raw *http.Response
 		err error
@@ -191,7 +191,7 @@ func (r *PetService) WatchStatusStreaming(ctx context.Context, petID int64, quer
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "text/event-stream")}, opts...)
 	path := fmt.Sprintf("pet/%v/status/stream", petID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &raw, opts...)
-	return ssestream.NewStream[interface{}](ssestream.NewDecoder(raw), err)
+	return ssestream.NewStream[Pet](ssestream.NewDecoder(raw), err)
 }
 
 type Pet struct {
