@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"reflect"
 	"slices"
+	"time"
 
 	"github.com/swagger-girly/go/internal/apiform"
 	"github.com/swagger-girly/go/internal/apijson"
@@ -21,6 +22,7 @@ import (
 	"github.com/swagger-girly/go/option"
 	"github.com/swagger-girly/go/packages/pagination"
 	"github.com/swagger-girly/go/packages/ssestream"
+	"github.com/swagger-girly/go/shared"
 	"github.com/tidwall/gjson"
 )
 
@@ -119,11 +121,20 @@ func (r *PetService) FindByTags(ctx context.Context, query PetFindByTagsParams, 
 }
 
 // Returns a single page-shaped pet response without SDK pagination helpers.
-func (r *PetService) ListFakePage(ctx context.Context, opts ...option.RequestOption) (res *pagination.XFakeSinglePage[Pet], err error) {
+func (r *PetService) ListFakePage(ctx context.Context, opts ...option.RequestOption) (res *PetListFakePageResponse, err error) {
+	opts = slices.Concat(r.Options, opts)
+	path := "pet/fake-page"
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
+	return res, err
+}
+
+// Returns a single page-shaped pet response whose fake pagination behavior is
+// inferred from the config scheme.
+func (r *PetService) ListFakePageInferred(ctx context.Context, opts ...option.RequestOption) (res *pagination.XFakeSinglePage[Pet], err error) {
 	var raw *http.Response
 	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
-	path := "pet/fake-page"
+	path := "pet/fake-page-inferred"
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, nil, &res, opts...)
 	if err != nil {
 		return nil, err
@@ -136,18 +147,10 @@ func (r *PetService) ListFakePage(ctx context.Context, opts ...option.RequestOpt
 	return res, nil
 }
 
-// Returns a single page-shaped pet response without SDK pagination helpers.
-func (r *PetService) ListFakePageAutoPaging(ctx context.Context, opts ...option.RequestOption) *pagination.XFakeSinglePageAutoPager[Pet] {
-	return pagination.NewXFakeSinglePageAutoPager(r.ListFakePage(ctx, opts...))
-}
-
 // Returns a single page-shaped pet response whose fake pagination behavior is
-// inferred from the Stainless config scheme.
-func (r *PetService) ListFakePageInferred(ctx context.Context, opts ...option.RequestOption) (res *PetListFakePageInferredResponse, err error) {
-	opts = slices.Concat(r.Options, opts)
-	path := "pet/fake-page-inferred"
-	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
-	return res, err
+// inferred from the config scheme.
+func (r *PetService) ListFakePageInferredAutoPaging(ctx context.Context, opts ...option.RequestOption) *pagination.XFakeSinglePageAutoPager[Pet] {
+	return pagination.NewXFakeSinglePageAutoPager(r.ListFakePageInferred(ctx, opts...))
 }
 
 // Returns the same cursor-shaped pet list response without enabling SDK pagination
@@ -156,6 +159,15 @@ func (r *PetService) ListUnpaginated(ctx context.Context, query PetListUnpaginat
 	opts = slices.Concat(r.Options, opts)
 	path := "pet/unpaginated"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
+	return res, err
+}
+
+// Returns the premium profile for a pet, extending the base pet with pedigree and
+// insurance details.
+func (r *PetService) GetPremium(ctx context.Context, petID int64, opts ...option.RequestOption) (res *PetGetPremiumResponse, err error) {
+	opts = slices.Concat(r.Options, opts)
+	path := fmt.Sprintf("pet/%v/premium", petID)
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
 
@@ -199,6 +211,8 @@ type Pet struct {
 	PhotoURLs []string    `json:"photoUrls" api:"required"`
 	ID        int64       `json:"id"`
 	Category  PetCategory `json:"category"`
+	// Microchip identifier; legacy chips used numeric identifiers.
+	MicrochipID PetMicrochipIDUnion `json:"microchipId"`
 	// pet status in the store
 	Status PetStatus `json:"status"`
 	Tags   []PetTag  `json:"tags"`
@@ -211,6 +225,7 @@ type petJSON struct {
 	PhotoURLs   apijson.Field
 	ID          apijson.Field
 	Category    apijson.Field
+	MicrochipID apijson.Field
 	Status      apijson.Field
 	Tags        apijson.Field
 	raw         string
@@ -226,17 +241,20 @@ func (r petJSON) RawJSON() string {
 }
 
 type PetCategory struct {
-	ID   int64           `json:"id"`
-	Name string          `json:"name"`
-	JSON petCategoryJSON `json:"-"`
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+	// Nested subcategories; the tree can recurse arbitrarily deep.
+	Subcategories []interface{}   `json:"subcategories"`
+	JSON          petCategoryJSON `json:"-"`
 }
 
 // petCategoryJSON contains the JSON metadata for the struct [PetCategory]
 type petCategoryJSON struct {
-	ID          apijson.Field
-	Name        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	ID            apijson.Field
+	Name          apijson.Field
+	Subcategories apijson.Field
+	raw           string
+	ExtraFields   map[string]apijson.Field
 }
 
 func (r *PetCategory) UnmarshalJSON(data []byte) (err error) {
@@ -247,21 +265,26 @@ func (r petCategoryJSON) RawJSON() string {
 	return r.raw
 }
 
-// pet status in the store
-type PetStatus string
+// Microchip identifier; legacy chips used numeric identifiers.
+//
+// Union satisfied by [shared.UnionString] or [shared.UnionInt].
+type PetMicrochipIDUnion interface {
+	ImplementsPetMicrochipIDUnion()
+}
 
-const (
-	PetStatusAvailable PetStatus = "available"
-	PetStatusPending   PetStatus = "pending"
-	PetStatusSold      PetStatus = "sold"
-)
-
-func (r PetStatus) IsKnown() bool {
-	switch r {
-	case PetStatusAvailable, PetStatusPending, PetStatusSold:
-		return true
-	}
-	return false
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*PetMicrochipIDUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(shared.UnionString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.Number,
+			Type:       reflect.TypeOf(shared.UnionInt(0)),
+		},
+	)
 }
 
 type PetTag struct {
@@ -291,6 +314,8 @@ type PetParam struct {
 	PhotoURLs param.Field[[]string]         `json:"photoUrls" api:"required"`
 	ID        param.Field[int64]            `json:"id"`
 	Category  param.Field[PetCategoryParam] `json:"category"`
+	// Microchip identifier; legacy chips used numeric identifiers.
+	MicrochipID param.Field[PetMicrochipIDUnionParam] `json:"microchipId"`
 	// pet status in the store
 	Status param.Field[PetStatus]     `json:"status"`
 	Tags   param.Field[[]PetTagParam] `json:"tags"`
@@ -303,10 +328,19 @@ func (r PetParam) MarshalJSON() (data []byte, err error) {
 type PetCategoryParam struct {
 	ID   param.Field[int64]  `json:"id"`
 	Name param.Field[string] `json:"name"`
+	// Nested subcategories; the tree can recurse arbitrarily deep.
+	Subcategories param.Field[[]interface{}] `json:"subcategories"`
 }
 
 func (r PetCategoryParam) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
+}
+
+// Microchip identifier; legacy chips used numeric identifiers.
+//
+// Satisfied by [shared.UnionString], [shared.UnionInt].
+type PetMicrochipIDUnionParam interface {
+	ImplementsPetMicrochipIDUnionParam()
 }
 
 type PetTagParam struct {
@@ -318,26 +352,43 @@ func (r PetTagParam) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
-type PetListFakePageInferredResponse struct {
-	Data    []Pet                               `json:"data" api:"required"`
-	HasMore bool                                `json:"has_more" api:"required"`
-	JSON    petListFakePageInferredResponseJSON `json:"-"`
+// pet status in the store
+type PetStatus string
+
+const (
+	PetStatusAvailable PetStatus = "available"
+	PetStatusPending   PetStatus = "pending"
+	PetStatusSold      PetStatus = "sold"
+)
+
+func (r PetStatus) IsKnown() bool {
+	switch r {
+	case PetStatusAvailable, PetStatusPending, PetStatusSold:
+		return true
+	}
+	return false
 }
 
-// petListFakePageInferredResponseJSON contains the JSON metadata for the struct
-// [PetListFakePageInferredResponse]
-type petListFakePageInferredResponseJSON struct {
+type PetListFakePageResponse struct {
+	Data    []Pet                       `json:"data" api:"required"`
+	HasMore bool                        `json:"has_more" api:"required"`
+	JSON    petListFakePageResponseJSON `json:"-"`
+}
+
+// petListFakePageResponseJSON contains the JSON metadata for the struct
+// [PetListFakePageResponse]
+type petListFakePageResponseJSON struct {
 	Data        apijson.Field
 	HasMore     apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
 
-func (r *PetListFakePageInferredResponse) UnmarshalJSON(data []byte) (err error) {
+func (r *PetListFakePageResponse) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r petListFakePageInferredResponseJSON) RawJSON() string {
+func (r petListFakePageResponseJSON) RawJSON() string {
 	return r.raw
 }
 
@@ -361,6 +412,157 @@ func (r *PetListUnpaginatedResponse) UnmarshalJSON(data []byte) (err error) {
 }
 
 func (r petListUnpaginatedResponseJSON) RawJSON() string {
+	return r.raw
+}
+
+// A pet extended with premium-tier pedigree and insurance details.
+type PetGetPremiumResponse struct {
+	PremiumSince time.Time `json:"premiumSince" api:"required" format:"date-time"`
+	// Coverage limit in minor units, or a negotiated custom limit.
+	CoverageLimit PetGetPremiumResponseCoverageLimitUnion `json:"coverageLimit"`
+	Insurance     PetGetPremiumResponseInsurance          `json:"insurance"`
+	Pedigree      PetGetPremiumResponsePedigree           `json:"pedigree"`
+	JSON          petGetPremiumResponseJSON               `json:"-"`
+	Pet
+}
+
+// petGetPremiumResponseJSON contains the JSON metadata for the struct
+// [PetGetPremiumResponse]
+type petGetPremiumResponseJSON struct {
+	PremiumSince  apijson.Field
+	CoverageLimit apijson.Field
+	Insurance     apijson.Field
+	Pedigree      apijson.Field
+	raw           string
+	ExtraFields   map[string]apijson.Field
+}
+
+func (r *PetGetPremiumResponse) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r petGetPremiumResponseJSON) RawJSON() string {
+	return r.raw
+}
+
+// Coverage limit in minor units, or a negotiated custom limit.
+//
+// Union satisfied by [shared.UnionInt] or
+// [PetGetPremiumResponseCoverageLimitCustomLimit].
+type PetGetPremiumResponseCoverageLimitUnion interface {
+	ImplementsPetGetPremiumResponseCoverageLimitUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*PetGetPremiumResponseCoverageLimitUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.Number,
+			Type:       reflect.TypeOf(shared.UnionInt(0)),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(PetGetPremiumResponseCoverageLimitCustomLimit{}),
+		},
+	)
+}
+
+type PetGetPremiumResponseCoverageLimitCustomLimit struct {
+	Amount     int64                                             `json:"amount" api:"required"`
+	Currency   string                                            `json:"currency"`
+	Negotiated bool                                              `json:"negotiated"`
+	JSON       petGetPremiumResponseCoverageLimitCustomLimitJSON `json:"-"`
+}
+
+// petGetPremiumResponseCoverageLimitCustomLimitJSON contains the JSON metadata for
+// the struct [PetGetPremiumResponseCoverageLimitCustomLimit]
+type petGetPremiumResponseCoverageLimitCustomLimitJSON struct {
+	Amount      apijson.Field
+	Currency    apijson.Field
+	Negotiated  apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PetGetPremiumResponseCoverageLimitCustomLimit) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r petGetPremiumResponseCoverageLimitCustomLimitJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r PetGetPremiumResponseCoverageLimitCustomLimit) ImplementsPetGetPremiumResponseCoverageLimitUnion() {
+}
+
+type PetGetPremiumResponseInsurance struct {
+	PlanID     string                             `json:"planId" api:"required"`
+	Provider   string                             `json:"provider" api:"required"`
+	Deductible int64                              `json:"deductible"`
+	Premium    shared.Money                       `json:"premium"`
+	Tier       PetGetPremiumResponseInsuranceTier `json:"tier"`
+	JSON       petGetPremiumResponseInsuranceJSON `json:"-"`
+}
+
+// petGetPremiumResponseInsuranceJSON contains the JSON metadata for the struct
+// [PetGetPremiumResponseInsurance]
+type petGetPremiumResponseInsuranceJSON struct {
+	PlanID      apijson.Field
+	Provider    apijson.Field
+	Deductible  apijson.Field
+	Premium     apijson.Field
+	Tier        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PetGetPremiumResponseInsurance) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r petGetPremiumResponseInsuranceJSON) RawJSON() string {
+	return r.raw
+}
+
+type PetGetPremiumResponseInsuranceTier string
+
+const (
+	PetGetPremiumResponseInsuranceTierBasic    PetGetPremiumResponseInsuranceTier = "basic"
+	PetGetPremiumResponseInsuranceTierPlus     PetGetPremiumResponseInsuranceTier = "plus"
+	PetGetPremiumResponseInsuranceTierPlatinum PetGetPremiumResponseInsuranceTier = "platinum"
+)
+
+func (r PetGetPremiumResponseInsuranceTier) IsKnown() bool {
+	switch r {
+	case PetGetPremiumResponseInsuranceTierBasic, PetGetPremiumResponseInsuranceTierPlus, PetGetPremiumResponseInsuranceTierPlatinum:
+		return true
+	}
+	return false
+}
+
+type PetGetPremiumResponsePedigree struct {
+	Certified bool                              `json:"certified"`
+	Lineage   []string                          `json:"lineage"`
+	Registry  string                            `json:"registry"`
+	JSON      petGetPremiumResponsePedigreeJSON `json:"-"`
+}
+
+// petGetPremiumResponsePedigreeJSON contains the JSON metadata for the struct
+// [PetGetPremiumResponsePedigree]
+type petGetPremiumResponsePedigreeJSON struct {
+	Certified   apijson.Field
+	Lineage     apijson.Field
+	Registry    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PetGetPremiumResponsePedigree) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r petGetPremiumResponsePedigreeJSON) RawJSON() string {
 	return r.raw
 }
 
@@ -390,9 +592,10 @@ func (r petUploadImageResponseJSON) RawJSON() string {
 }
 
 type ConnectClientEvent struct {
-	Type   ConnectClientEventType   `json:"type" api:"required"`
-	Status ConnectClientEventStatus `json:"status"`
-	JSON   connectClientEventJSON   `json:"-"`
+	Type ConnectClientEventType `json:"type" api:"required"`
+	// pet status in the store
+	Status PetStatus              `json:"status"`
+	JSON   connectClientEventJSON `json:"-"`
 	union  ConnectClientEventUnion
 }
 
@@ -488,9 +691,10 @@ func (r ConnectClientEventPetClientPingEventType) IsKnown() bool {
 }
 
 type ConnectClientEventPetClientSubscribeEvent struct {
-	Status ConnectClientEventPetClientSubscribeEventStatus `json:"status" api:"required"`
-	Type   ConnectClientEventPetClientSubscribeEventType   `json:"type" api:"required"`
-	JSON   connectClientEventPetClientSubscribeEventJSON   `json:"-"`
+	// pet status in the store
+	Status PetStatus                                     `json:"status" api:"required"`
+	Type   ConnectClientEventPetClientSubscribeEventType `json:"type" api:"required"`
+	JSON   connectClientEventPetClientSubscribeEventJSON `json:"-"`
 }
 
 // connectClientEventPetClientSubscribeEventJSON contains the JSON metadata for the
@@ -511,22 +715,6 @@ func (r connectClientEventPetClientSubscribeEventJSON) RawJSON() string {
 }
 
 func (r ConnectClientEventPetClientSubscribeEvent) implementsConnectClientEvent() {}
-
-type ConnectClientEventPetClientSubscribeEventStatus string
-
-const (
-	ConnectClientEventPetClientSubscribeEventStatusAvailable ConnectClientEventPetClientSubscribeEventStatus = "available"
-	ConnectClientEventPetClientSubscribeEventStatusPending   ConnectClientEventPetClientSubscribeEventStatus = "pending"
-	ConnectClientEventPetClientSubscribeEventStatusSold      ConnectClientEventPetClientSubscribeEventStatus = "sold"
-)
-
-func (r ConnectClientEventPetClientSubscribeEventStatus) IsKnown() bool {
-	switch r {
-	case ConnectClientEventPetClientSubscribeEventStatusAvailable, ConnectClientEventPetClientSubscribeEventStatusPending, ConnectClientEventPetClientSubscribeEventStatusSold:
-		return true
-	}
-	return false
-}
 
 type ConnectClientEventPetClientSubscribeEventType string
 
@@ -557,25 +745,10 @@ func (r ConnectClientEventType) IsKnown() bool {
 	return false
 }
 
-type ConnectClientEventStatus string
-
-const (
-	ConnectClientEventStatusAvailable ConnectClientEventStatus = "available"
-	ConnectClientEventStatusPending   ConnectClientEventStatus = "pending"
-	ConnectClientEventStatusSold      ConnectClientEventStatus = "sold"
-)
-
-func (r ConnectClientEventStatus) IsKnown() bool {
-	switch r {
-	case ConnectClientEventStatusAvailable, ConnectClientEventStatusPending, ConnectClientEventStatusSold:
-		return true
-	}
-	return false
-}
-
 type ConnectClientEventParam struct {
-	Type   param.Field[ConnectClientEventType]   `json:"type" api:"required"`
-	Status param.Field[ConnectClientEventStatus] `json:"status"`
+	Type param.Field[ConnectClientEventType] `json:"type" api:"required"`
+	// pet status in the store
+	Status param.Field[PetStatus] `json:"status"`
 }
 
 func (r ConnectClientEventParam) MarshalJSON() (data []byte, err error) {
@@ -601,8 +774,9 @@ func (r ConnectClientEventPetClientPingEventParam) MarshalJSON() (data []byte, e
 func (r ConnectClientEventPetClientPingEventParam) implementsConnectClientEventUnionParam() {}
 
 type ConnectClientEventPetClientSubscribeEventParam struct {
-	Status param.Field[ConnectClientEventPetClientSubscribeEventStatus] `json:"status" api:"required"`
-	Type   param.Field[ConnectClientEventPetClientSubscribeEventType]   `json:"type" api:"required"`
+	// pet status in the store
+	Status param.Field[PetStatus]                                     `json:"status" api:"required"`
+	Type   param.Field[ConnectClientEventPetClientSubscribeEventType] `json:"type" api:"required"`
 }
 
 func (r ConnectClientEventPetClientSubscribeEventParam) MarshalJSON() (data []byte, err error) {

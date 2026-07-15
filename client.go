@@ -24,7 +24,12 @@ type Client struct {
 	Files *FileService
 	// Pet owner profile and compliance operations
 	Profiles *ProfileService
-	Webhooks *WebhookService
+	// Adoption policies and applications
+	Adoptions *AdoptionService
+	// Post-adoption placement tracking
+	Placements *PlacementService
+	Veterinary *VeterinaryService
+	Webhooks   *WebhookService
 	// Access to Petstore orders
 	Store *StoreService
 	// Operations about user
@@ -69,6 +74,9 @@ func NewClient(opts ...option.RequestOption) (r *Client) {
 	r.Pet = NewPetService(opts...)
 	r.Files = NewFileService(opts...)
 	r.Profiles = NewProfileService(opts...)
+	r.Adoptions = NewAdoptionService(opts...)
+	r.Placements = NewPlacementService(opts...)
+	r.Veterinary = NewVeterinaryService(opts...)
 	r.Webhooks = NewWebhookService(opts...)
 	r.Store = NewStoreService(opts...)
 	r.User = NewUserService(opts...)
@@ -143,4 +151,20 @@ func (r *Client) Patch(ctx context.Context, path string, params interface{}, res
 // response.
 func (r *Client) Delete(ctx context.Context, path string, params interface{}, res interface{}, opts ...option.RequestOption) error {
 	return r.Execute(ctx, http.MethodDelete, path, params, res, opts...)
+}
+
+// Returns the current API health, including per-service statuses.
+func (r *Client) Health(ctx context.Context, opts ...option.RequestOption) (res *SystemHealth, err error) {
+	opts = slices.Concat(r.Options, opts)
+	path := "health"
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
+	return res, err
+}
+
+// Returns the caller's current rate-limit budget.
+func (r *Client) GetRateLimits(ctx context.Context, opts ...option.RequestOption) (res *GetRateLimitsResponse, err error) {
+	opts = slices.Concat(r.Options, opts)
+	path := "rate_limits"
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
+	return res, err
 }
