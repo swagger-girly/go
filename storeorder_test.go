@@ -12,6 +12,7 @@ import (
 	"github.com/swagger-girly/go"
 	"github.com/swagger-girly/go/internal/testutil"
 	"github.com/swagger-girly/go/option"
+	"github.com/swagger-girly/go/shared"
 )
 
 func TestStoreOrderNewWithOptionalParams(t *testing.T) {
@@ -34,6 +35,10 @@ func TestStoreOrderNewWithOptionalParams(t *testing.T) {
 		Quantity: helloworldtestingggg.F(int64(7)),
 		ShipDate: helloworldtestingggg.F(time.Now()),
 		Status:   helloworldtestingggg.F(helloworldtestingggg.StoreOrderNewParamsStatusApproved),
+		Total: helloworldtestingggg.F(shared.MoneyParam{
+			Amount:   helloworldtestingggg.F(int64(2500)),
+			Currency: helloworldtestingggg.F("USD"),
+		}),
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error

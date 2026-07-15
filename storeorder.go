@@ -13,6 +13,7 @@ import (
 	"github.com/swagger-girly/go/internal/param"
 	"github.com/swagger-girly/go/internal/requestconfig"
 	"github.com/swagger-girly/go/option"
+	"github.com/swagger-girly/go/shared"
 )
 
 // Access to Petstore orders
@@ -71,6 +72,7 @@ type StoreOrderNewResponse struct {
 	ShipDate time.Time `json:"shipDate" format:"date-time"`
 	// Order Status
 	Status StoreOrderNewResponseStatus `json:"status"`
+	Total  shared.Money                `json:"total"`
 	JSON   storeOrderNewResponseJSON   `json:"-"`
 }
 
@@ -83,6 +85,7 @@ type storeOrderNewResponseJSON struct {
 	Quantity    apijson.Field
 	ShipDate    apijson.Field
 	Status      apijson.Field
+	Total       apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -120,6 +123,7 @@ type StoreOrderGetResponse struct {
 	ShipDate time.Time `json:"shipDate" format:"date-time"`
 	// Order Status
 	Status StoreOrderGetResponseStatus `json:"status"`
+	Total  shared.Money                `json:"total"`
 	JSON   storeOrderGetResponseJSON   `json:"-"`
 }
 
@@ -132,6 +136,7 @@ type storeOrderGetResponseJSON struct {
 	Quantity    apijson.Field
 	ShipDate    apijson.Field
 	Status      apijson.Field
+	Total       apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -169,6 +174,7 @@ type StoreOrderNewParams struct {
 	ShipDate param.Field[time.Time] `json:"shipDate" format:"date-time"`
 	// Order Status
 	Status param.Field[StoreOrderNewParamsStatus] `json:"status"`
+	Total  param.Field[shared.MoneyParam]         `json:"total"`
 }
 
 func (r StoreOrderNewParams) MarshalJSON() (data []byte, err error) {

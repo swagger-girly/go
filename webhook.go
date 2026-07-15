@@ -13,6 +13,7 @@ import (
 	"github.com/swagger-girly/go/internal/apijson"
 	"github.com/swagger-girly/go/internal/requestconfig"
 	"github.com/swagger-girly/go/option"
+	"github.com/swagger-girly/go/shared"
 	"github.com/tidwall/gjson"
 )
 
@@ -101,12 +102,13 @@ func (r PetCreatedWebhookEventType) IsKnown() bool {
 }
 
 type PetUpdatedWebhookEvent struct {
-	ChangedFields  []PetUpdatedWebhookEventChangedField `json:"changed_fields" api:"required"`
-	Pet            Pet                                  `json:"pet" api:"required"`
-	Type           PetUpdatedWebhookEventType           `json:"type" api:"required"`
-	Metadata       map[string]string                    `json:"metadata"`
-	PreviousStatus PetUpdatedWebhookEventPreviousStatus `json:"previous_status" api:"nullable"`
-	JSON           petUpdatedWebhookEventJSON           `json:"-"`
+	ChangedFields []PetUpdatedWebhookEventChangedField `json:"changed_fields" api:"required"`
+	Pet           Pet                                  `json:"pet" api:"required"`
+	Type          PetUpdatedWebhookEventType           `json:"type" api:"required"`
+	Metadata      map[string]string                    `json:"metadata"`
+	// pet status in the store
+	PreviousStatus PetStatus                  `json:"previous_status" api:"nullable"`
+	JSON           petUpdatedWebhookEventJSON `json:"-"`
 }
 
 // petUpdatedWebhookEventJSON contains the JSON metadata for the struct
@@ -162,30 +164,14 @@ func (r PetUpdatedWebhookEventType) IsKnown() bool {
 	return false
 }
 
-type PetUpdatedWebhookEventPreviousStatus string
-
-const (
-	PetUpdatedWebhookEventPreviousStatusAvailable PetUpdatedWebhookEventPreviousStatus = "available"
-	PetUpdatedWebhookEventPreviousStatusPending   PetUpdatedWebhookEventPreviousStatus = "pending"
-	PetUpdatedWebhookEventPreviousStatusSold      PetUpdatedWebhookEventPreviousStatus = "sold"
-)
-
-func (r PetUpdatedWebhookEventPreviousStatus) IsKnown() bool {
-	switch r {
-	case PetUpdatedWebhookEventPreviousStatusAvailable, PetUpdatedWebhookEventPreviousStatusPending, PetUpdatedWebhookEventPreviousStatusSold:
-		return true
-	}
-	return false
-}
-
 type PetInventoryLowWebhookEvent struct {
-	Pet       Pet                                   `json:"pet" api:"required"`
-	Quantity  int64                                 `json:"quantity" api:"required"`
-	Threshold int64                                 `json:"threshold" api:"required"`
-	Type      PetInventoryLowWebhookEventType       `json:"type" api:"required"`
-	LastOrder PetInventoryLowWebhookEventLastOrder  `json:"last_order"`
-	Locations []PetInventoryLowWebhookEventLocation `json:"locations"`
-	JSON      petInventoryLowWebhookEventJSON       `json:"-"`
+	Pet       Pet                                  `json:"pet" api:"required"`
+	Quantity  int64                                `json:"quantity" api:"required"`
+	Threshold int64                                `json:"threshold" api:"required"`
+	Type      PetInventoryLowWebhookEventType      `json:"type" api:"required"`
+	LastOrder PetInventoryLowWebhookEventLastOrder `json:"last_order"`
+	Locations []shared.Address                     `json:"locations"`
+	JSON      petInventoryLowWebhookEventJSON      `json:"-"`
 }
 
 // petInventoryLowWebhookEventJSON contains the JSON metadata for the struct
@@ -233,6 +219,7 @@ type PetInventoryLowWebhookEventLastOrder struct {
 	ShipDate time.Time `json:"shipDate" format:"date-time"`
 	// Order Status
 	Status PetInventoryLowWebhookEventLastOrderStatus `json:"status"`
+	Total  shared.Money                               `json:"total"`
 	JSON   petInventoryLowWebhookEventLastOrderJSON   `json:"-"`
 }
 
@@ -245,6 +232,7 @@ type petInventoryLowWebhookEventLastOrderJSON struct {
 	Quantity    apijson.Field
 	ShipDate    apijson.Field
 	Status      apijson.Field
+	Total       apijson.Field
 	raw         string
 	ExtraFields map[string]apijson.Field
 }
@@ -272,33 +260,6 @@ func (r PetInventoryLowWebhookEventLastOrderStatus) IsKnown() bool {
 		return true
 	}
 	return false
-}
-
-type PetInventoryLowWebhookEventLocation struct {
-	City   string                                  `json:"city"`
-	State  string                                  `json:"state"`
-	Street string                                  `json:"street"`
-	Zip    string                                  `json:"zip"`
-	JSON   petInventoryLowWebhookEventLocationJSON `json:"-"`
-}
-
-// petInventoryLowWebhookEventLocationJSON contains the JSON metadata for the
-// struct [PetInventoryLowWebhookEventLocation]
-type petInventoryLowWebhookEventLocationJSON struct {
-	City        apijson.Field
-	State       apijson.Field
-	Street      apijson.Field
-	Zip         apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *PetInventoryLowWebhookEventLocation) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r petInventoryLowWebhookEventLocationJSON) RawJSON() string {
-	return r.raw
 }
 
 type PetModerationWebhookEvent struct {
@@ -608,6 +569,205 @@ func (r StoreReportGeneratedWebhookEventType) IsKnown() bool {
 	return false
 }
 
+type AdoptionsPolicyChangedWebhookEvent struct {
+	ID        string                                 `json:"id" api:"required"`
+	CreatedAt time.Time                              `json:"created_at" api:"required" format:"date-time"`
+	Policy    Policy                                 `json:"policy" api:"required"`
+	Type      AdoptionsPolicyChangedWebhookEventType `json:"type" api:"required"`
+	// Values before the change.
+	Previous AdoptionsPolicyChangedWebhookEventPrevious `json:"previous"`
+	JSON     adoptionsPolicyChangedWebhookEventJSON     `json:"-"`
+}
+
+// adoptionsPolicyChangedWebhookEventJSON contains the JSON metadata for the struct
+// [AdoptionsPolicyChangedWebhookEvent]
+type adoptionsPolicyChangedWebhookEventJSON struct {
+	ID          apijson.Field
+	CreatedAt   apijson.Field
+	Policy      apijson.Field
+	Type        apijson.Field
+	Previous    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AdoptionsPolicyChangedWebhookEvent) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r adoptionsPolicyChangedWebhookEventJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r AdoptionsPolicyChangedWebhookEvent) implementsParsedWebhookEvent() {}
+
+type AdoptionsPolicyChangedWebhookEventType string
+
+const (
+	AdoptionsPolicyChangedWebhookEventTypeAdoptionsPolicyChanged AdoptionsPolicyChangedWebhookEventType = "adoptions.policy.changed"
+)
+
+func (r AdoptionsPolicyChangedWebhookEventType) IsKnown() bool {
+	switch r {
+	case AdoptionsPolicyChangedWebhookEventTypeAdoptionsPolicyChanged:
+		return true
+	}
+	return false
+}
+
+// Values before the change.
+type AdoptionsPolicyChangedWebhookEventPrevious struct {
+	// Where policy decisions are delivered: a plain email address or a webhook sink.
+	NotificationTarget AdoptionsPolicyChangedWebhookEventPreviousNotificationTargetUnion `json:"notificationTarget"`
+	Status             AdoptionsPolicyChangedWebhookEventPreviousStatus                  `json:"status"`
+	JSON               adoptionsPolicyChangedWebhookEventPreviousJSON                    `json:"-"`
+}
+
+// adoptionsPolicyChangedWebhookEventPreviousJSON contains the JSON metadata for
+// the struct [AdoptionsPolicyChangedWebhookEventPrevious]
+type adoptionsPolicyChangedWebhookEventPreviousJSON struct {
+	NotificationTarget apijson.Field
+	Status             apijson.Field
+	raw                string
+	ExtraFields        map[string]apijson.Field
+}
+
+func (r *AdoptionsPolicyChangedWebhookEventPrevious) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r adoptionsPolicyChangedWebhookEventPreviousJSON) RawJSON() string {
+	return r.raw
+}
+
+// Where policy decisions are delivered: a plain email address or a webhook sink.
+//
+// Union satisfied by [shared.UnionString] or
+// [AdoptionsPolicyChangedWebhookEventPreviousNotificationTargetWebhookSink].
+type AdoptionsPolicyChangedWebhookEventPreviousNotificationTargetUnion interface {
+	ImplementsAdoptionsPolicyChangedWebhookEventPreviousNotificationTargetUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*AdoptionsPolicyChangedWebhookEventPreviousNotificationTargetUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(shared.UnionString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(AdoptionsPolicyChangedWebhookEventPreviousNotificationTargetWebhookSink{}),
+		},
+	)
+}
+
+type AdoptionsPolicyChangedWebhookEventPreviousNotificationTargetWebhookSink struct {
+	URL    string                                                                         `json:"url" api:"required" format:"uri"`
+	Events []AdoptionsPolicyChangedWebhookEventPreviousNotificationTargetWebhookSinkEvent `json:"events"`
+	JSON   adoptionsPolicyChangedWebhookEventPreviousNotificationTargetWebhookSinkJSON    `json:"-"`
+}
+
+// adoptionsPolicyChangedWebhookEventPreviousNotificationTargetWebhookSinkJSON
+// contains the JSON metadata for the struct
+// [AdoptionsPolicyChangedWebhookEventPreviousNotificationTargetWebhookSink]
+type adoptionsPolicyChangedWebhookEventPreviousNotificationTargetWebhookSinkJSON struct {
+	URL         apijson.Field
+	Events      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AdoptionsPolicyChangedWebhookEventPreviousNotificationTargetWebhookSink) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r adoptionsPolicyChangedWebhookEventPreviousNotificationTargetWebhookSinkJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r AdoptionsPolicyChangedWebhookEventPreviousNotificationTargetWebhookSink) ImplementsAdoptionsPolicyChangedWebhookEventPreviousNotificationTargetUnion() {
+}
+
+type AdoptionsPolicyChangedWebhookEventPreviousNotificationTargetWebhookSinkEvent string
+
+const (
+	AdoptionsPolicyChangedWebhookEventPreviousNotificationTargetWebhookSinkEventApproved  AdoptionsPolicyChangedWebhookEventPreviousNotificationTargetWebhookSinkEvent = "approved"
+	AdoptionsPolicyChangedWebhookEventPreviousNotificationTargetWebhookSinkEventRejected  AdoptionsPolicyChangedWebhookEventPreviousNotificationTargetWebhookSinkEvent = "rejected"
+	AdoptionsPolicyChangedWebhookEventPreviousNotificationTargetWebhookSinkEventEscalated AdoptionsPolicyChangedWebhookEventPreviousNotificationTargetWebhookSinkEvent = "escalated"
+)
+
+func (r AdoptionsPolicyChangedWebhookEventPreviousNotificationTargetWebhookSinkEvent) IsKnown() bool {
+	switch r {
+	case AdoptionsPolicyChangedWebhookEventPreviousNotificationTargetWebhookSinkEventApproved, AdoptionsPolicyChangedWebhookEventPreviousNotificationTargetWebhookSinkEventRejected, AdoptionsPolicyChangedWebhookEventPreviousNotificationTargetWebhookSinkEventEscalated:
+		return true
+	}
+	return false
+}
+
+type AdoptionsPolicyChangedWebhookEventPreviousStatus string
+
+const (
+	AdoptionsPolicyChangedWebhookEventPreviousStatusDraft    AdoptionsPolicyChangedWebhookEventPreviousStatus = "draft"
+	AdoptionsPolicyChangedWebhookEventPreviousStatusActive   AdoptionsPolicyChangedWebhookEventPreviousStatus = "active"
+	AdoptionsPolicyChangedWebhookEventPreviousStatusArchived AdoptionsPolicyChangedWebhookEventPreviousStatus = "archived"
+)
+
+func (r AdoptionsPolicyChangedWebhookEventPreviousStatus) IsKnown() bool {
+	switch r {
+	case AdoptionsPolicyChangedWebhookEventPreviousStatusDraft, AdoptionsPolicyChangedWebhookEventPreviousStatusActive, AdoptionsPolicyChangedWebhookEventPreviousStatusArchived:
+		return true
+	}
+	return false
+}
+
+type PlacementEventRecordedWebhookEvent struct {
+	// A placement history entry; the shape depends on the event kind and carries no
+	// discriminator mapping.
+	Event       PlacementEvent                         `json:"event" api:"required"`
+	PlacementID string                                 `json:"placementId" api:"required"`
+	Type        PlacementEventRecordedWebhookEventType `json:"type" api:"required"`
+	// The policy rule value that triggered this event, if any.
+	TriggerValue ConditionValueUnion                    `json:"triggerValue"`
+	JSON         placementEventRecordedWebhookEventJSON `json:"-"`
+}
+
+// placementEventRecordedWebhookEventJSON contains the JSON metadata for the struct
+// [PlacementEventRecordedWebhookEvent]
+type placementEventRecordedWebhookEventJSON struct {
+	Event        apijson.Field
+	PlacementID  apijson.Field
+	Type         apijson.Field
+	TriggerValue apijson.Field
+	raw          string
+	ExtraFields  map[string]apijson.Field
+}
+
+func (r *PlacementEventRecordedWebhookEvent) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r placementEventRecordedWebhookEventJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r PlacementEventRecordedWebhookEvent) implementsParsedWebhookEvent() {}
+
+type PlacementEventRecordedWebhookEventType string
+
+const (
+	PlacementEventRecordedWebhookEventTypePlacementEventRecorded PlacementEventRecordedWebhookEventType = "placement.event-recorded"
+)
+
+func (r PlacementEventRecordedWebhookEventType) IsKnown() bool {
+	switch r {
+	case PlacementEventRecordedWebhookEventTypePlacementEventRecorded:
+		return true
+	}
+	return false
+}
+
 type ParsedWebhookEvent struct {
 	Type       ParsedWebhookEventType `json:"type" api:"required"`
 	ID         string                 `json:"id"`
@@ -615,25 +775,36 @@ type ParsedWebhookEvent struct {
 	// This field can have the runtime type of [[]PetUpdatedWebhookEventChangedField].
 	ChangedFields interface{} `json:"changed_fields"`
 	CreatedAt     time.Time   `json:"created_at" format:"date-time"`
+	// A placement history entry; the shape depends on the event kind and carries no
+	// discriminator mapping.
+	Event PlacementEvent `json:"event"`
 	// This field can have the runtime type of [PetInventoryLowWebhookEventLastOrder].
 	LastOrder interface{} `json:"last_order"`
-	// This field can have the runtime type of [[]PetInventoryLowWebhookEventLocation].
+	// This field can have the runtime type of [[]shared.Address].
 	Locations interface{} `json:"locations"`
 	// This field can have the runtime type of [map[string]string].
 	Metadata interface{} `json:"metadata"`
 	// This field can have the runtime type of [interface{}].
-	Metrics        interface{}                      `json:"metrics"`
-	Pet            Pet                              `json:"pet"`
-	PreviousStatus ParsedWebhookEventPreviousStatus `json:"previous_status" api:"nullable"`
-	Quantity       int64                            `json:"quantity"`
-	Reason         ParsedWebhookEventReason         `json:"reason"`
-	Report         Report                           `json:"report"`
+	Metrics     interface{} `json:"metrics"`
+	Pet         Pet         `json:"pet"`
+	PlacementID string      `json:"placementId"`
+	Policy      Policy      `json:"policy"`
+	// This field can have the runtime type of
+	// [AdoptionsPolicyChangedWebhookEventPrevious].
+	Previous interface{} `json:"previous"`
+	// pet status in the store
+	PreviousStatus PetStatus                `json:"previous_status" api:"nullable"`
+	Quantity       int64                    `json:"quantity"`
+	Reason         ParsedWebhookEventReason `json:"reason"`
+	Report         Report                   `json:"report"`
 	// This field can have the runtime type of
 	// [[]ParsedWebhookEventPetModerationRejectedEventReviewNote].
-	ReviewNotes interface{}            `json:"review_notes"`
-	Threshold   int64                  `json:"threshold"`
-	JSON        parsedWebhookEventJSON `json:"-"`
-	union       ParsedWebhookEventUnion
+	ReviewNotes interface{} `json:"review_notes"`
+	Threshold   int64       `json:"threshold"`
+	// The policy rule value that triggered this event, if any.
+	TriggerValue ConditionValueUnion    `json:"triggerValue"`
+	JSON         parsedWebhookEventJSON `json:"-"`
+	union        ParsedWebhookEventUnion
 }
 
 // parsedWebhookEventJSON contains the JSON metadata for the struct
@@ -644,17 +815,22 @@ type parsedWebhookEventJSON struct {
 	ApprovedAt     apijson.Field
 	ChangedFields  apijson.Field
 	CreatedAt      apijson.Field
+	Event          apijson.Field
 	LastOrder      apijson.Field
 	Locations      apijson.Field
 	Metadata       apijson.Field
 	Metrics        apijson.Field
 	Pet            apijson.Field
+	PlacementID    apijson.Field
+	Policy         apijson.Field
+	Previous       apijson.Field
 	PreviousStatus apijson.Field
 	Quantity       apijson.Field
 	Reason         apijson.Field
 	Report         apijson.Field
 	ReviewNotes    apijson.Field
 	Threshold      apijson.Field
+	TriggerValue   apijson.Field
 	raw            string
 	ExtraFields    map[string]apijson.Field
 }
@@ -679,15 +855,17 @@ func (r *ParsedWebhookEvent) UnmarshalJSON(data []byte) (err error) {
 // [PetUpdatedWebhookEvent], [PetInventoryLowWebhookEvent],
 // [ParsedWebhookEventPetModerationApprovedEvent],
 // [ParsedWebhookEventPetModerationRejectedEvent],
-// [StoreReportGeneratedWebhookEvent].
+// [StoreReportGeneratedWebhookEvent], [AdoptionsPolicyChangedWebhookEvent],
+// [PlacementEventRecordedWebhookEvent].
 func (r ParsedWebhookEvent) AsUnion() ParsedWebhookEventUnion {
 	return r.union
 }
 
 // Union satisfied by [PetCreatedWebhookEvent], [PetUpdatedWebhookEvent],
 // [PetInventoryLowWebhookEvent], [ParsedWebhookEventPetModerationApprovedEvent],
-// [ParsedWebhookEventPetModerationRejectedEvent] or
-// [StoreReportGeneratedWebhookEvent].
+// [ParsedWebhookEventPetModerationRejectedEvent],
+// [StoreReportGeneratedWebhookEvent], [AdoptionsPolicyChangedWebhookEvent] or
+// [PlacementEventRecordedWebhookEvent].
 type ParsedWebhookEventUnion interface {
 	implementsParsedWebhookEvent()
 }
@@ -719,6 +897,14 @@ func init() {
 		apijson.UnionVariant{
 			TypeFilter: gjson.JSON,
 			Type:       reflect.TypeOf(StoreReportGeneratedWebhookEvent{}),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(AdoptionsPolicyChangedWebhookEvent{}),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(PlacementEventRecordedWebhookEvent{}),
 		},
 	)
 }
@@ -886,33 +1072,19 @@ func (r parsedWebhookEventPetModerationRejectedEventReviewNotesReviewerJSON) Raw
 type ParsedWebhookEventType string
 
 const (
-	ParsedWebhookEventTypePetCreated            ParsedWebhookEventType = "pet.created"
-	ParsedWebhookEventTypePetUpdated            ParsedWebhookEventType = "pet.updated"
-	ParsedWebhookEventTypePetInventoryLow       ParsedWebhookEventType = "pet.inventory-low"
-	ParsedWebhookEventTypePetModerationApproved ParsedWebhookEventType = "pet.moderation.approved"
-	ParsedWebhookEventTypePetModerationRejected ParsedWebhookEventType = "pet.moderation.rejected"
-	ParsedWebhookEventTypeStoreReportGenerated  ParsedWebhookEventType = "store.report.generated"
+	ParsedWebhookEventTypePetCreated             ParsedWebhookEventType = "pet.created"
+	ParsedWebhookEventTypePetUpdated             ParsedWebhookEventType = "pet.updated"
+	ParsedWebhookEventTypePetInventoryLow        ParsedWebhookEventType = "pet.inventory-low"
+	ParsedWebhookEventTypePetModerationApproved  ParsedWebhookEventType = "pet.moderation.approved"
+	ParsedWebhookEventTypePetModerationRejected  ParsedWebhookEventType = "pet.moderation.rejected"
+	ParsedWebhookEventTypeStoreReportGenerated   ParsedWebhookEventType = "store.report.generated"
+	ParsedWebhookEventTypeAdoptionsPolicyChanged ParsedWebhookEventType = "adoptions.policy.changed"
+	ParsedWebhookEventTypePlacementEventRecorded ParsedWebhookEventType = "placement.event-recorded"
 )
 
 func (r ParsedWebhookEventType) IsKnown() bool {
 	switch r {
-	case ParsedWebhookEventTypePetCreated, ParsedWebhookEventTypePetUpdated, ParsedWebhookEventTypePetInventoryLow, ParsedWebhookEventTypePetModerationApproved, ParsedWebhookEventTypePetModerationRejected, ParsedWebhookEventTypeStoreReportGenerated:
-		return true
-	}
-	return false
-}
-
-type ParsedWebhookEventPreviousStatus string
-
-const (
-	ParsedWebhookEventPreviousStatusAvailable ParsedWebhookEventPreviousStatus = "available"
-	ParsedWebhookEventPreviousStatusPending   ParsedWebhookEventPreviousStatus = "pending"
-	ParsedWebhookEventPreviousStatusSold      ParsedWebhookEventPreviousStatus = "sold"
-)
-
-func (r ParsedWebhookEventPreviousStatus) IsKnown() bool {
-	switch r {
-	case ParsedWebhookEventPreviousStatusAvailable, ParsedWebhookEventPreviousStatusPending, ParsedWebhookEventPreviousStatusSold:
+	case ParsedWebhookEventTypePetCreated, ParsedWebhookEventTypePetUpdated, ParsedWebhookEventTypePetInventoryLow, ParsedWebhookEventTypePetModerationApproved, ParsedWebhookEventTypePetModerationRejected, ParsedWebhookEventTypeStoreReportGenerated, ParsedWebhookEventTypeAdoptionsPolicyChanged, ParsedWebhookEventTypePlacementEventRecorded:
 		return true
 	}
 	return false
