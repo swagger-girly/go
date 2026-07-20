@@ -101,12 +101,14 @@ func (r *PlacementService) RecordEvent(ctx context.Context, placementID string, 
 
 // A post-adoption placement tracking the pet's transition to its new home.
 type Placement struct {
-	ID            string           `json:"id" api:"required"`
-	Application   Application      `json:"application" api:"required"`
-	CreatedAt     time.Time        `json:"createdAt" api:"required" format:"date-time"`
-	Status        PlacementStatus  `json:"status" api:"required"`
-	Events        []PlacementEvent `json:"events"`
-	FollowUpAfter time.Time        `json:"followUpAfter" api:"nullable" format:"date-time"`
+	ID          string          `json:"id" api:"required"`
+	Application Application     `json:"application" api:"required"`
+	CreatedAt   time.Time       `json:"createdAt" api:"required" format:"date-time"`
+	Status      PlacementStatus `json:"status" api:"required"`
+	// Unified activity feed mixing event, milestone, and note entries.
+	Activity      []PlacementActivity `json:"activity"`
+	Events        []PlacementEvent    `json:"events"`
+	FollowUpAfter time.Time           `json:"followUpAfter" api:"nullable" format:"date-time"`
 	// Transport plan for a placement; pickup and delivery share the transfer-leg
 	// shape.
 	Logistics        PlacementLogistics `json:"logistics"`
@@ -120,6 +122,7 @@ type placementJSON struct {
 	Application      apijson.Field
 	CreatedAt        apijson.Field
 	Status           apijson.Field
+	Activity         apijson.Field
 	Events           apijson.Field
 	FollowUpAfter    apijson.Field
 	Logistics        apijson.Field
@@ -148,6 +151,495 @@ const (
 func (r PlacementStatus) IsKnown() bool {
 	switch r {
 	case PlacementStatusPending, PlacementStatusActive, PlacementStatusCompleted, PlacementStatusDisrupted:
+		return true
+	}
+	return false
+}
+
+// A unified placement activity-feed entry. An undiscriminated union-of-unions: two
+// branches are themselves unions (event kinds and milestones) and one is a plain
+// note.
+type PlacementActivity struct {
+	ID        string    `json:"id"`
+	AdoptedAt time.Time `json:"adoptedAt" format:"date-time"`
+	Body      string    `json:"body"`
+	// This field can have the runtime type of
+	// [PlacementActivityPlacementCheckupEventFollowUp].
+	FollowUp   interface{}           `json:"followUp"`
+	Kind       PlacementActivityKind `json:"kind"`
+	Leg        TransferLeg           `json:"leg"`
+	Note       string                `json:"note" api:"nullable"`
+	OccurredAt time.Time             `json:"occurredAt" format:"date-time"`
+	Reason     string                `json:"reason"`
+	Record     VaccinationRecord     `json:"record"`
+	// This field can have the runtime type of
+	// [PlacementActivityPlacementDisruptionEventSeverityUnion].
+	Severity interface{}           `json:"severity"`
+	Type     PlacementActivityType `json:"type"`
+	JSON     placementActivityJSON `json:"-"`
+	union    PlacementActivityUnion
+}
+
+// placementActivityJSON contains the JSON metadata for the struct
+// [PlacementActivity]
+type placementActivityJSON struct {
+	ID          apijson.Field
+	AdoptedAt   apijson.Field
+	Body        apijson.Field
+	FollowUp    apijson.Field
+	Kind        apijson.Field
+	Leg         apijson.Field
+	Note        apijson.Field
+	OccurredAt  apijson.Field
+	Reason      apijson.Field
+	Record      apijson.Field
+	Severity    apijson.Field
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r placementActivityJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r *PlacementActivity) UnmarshalJSON(data []byte) (err error) {
+	*r = PlacementActivity{}
+	err = apijson.UnmarshalRoot(data, &r.union)
+	if err != nil {
+		return err
+	}
+	return apijson.Port(r.union, &r)
+}
+
+// AsUnion returns a [PlacementActivityUnion] interface which you can cast to the
+// specific types for more type safety.
+//
+// Possible runtime types of the union are
+// [PlacementActivityPlacementTransferEvent],
+// [PlacementActivityPlacementCheckupEvent],
+// [PlacementActivityPlacementDisruptionEvent], [PlacementActivityPlacementNote],
+// [PlacementActivityPlacementAdoptedMilestone],
+// [PlacementActivityPlacementReturnedMilestone].
+func (r PlacementActivity) AsUnion() PlacementActivityUnion {
+	return r.union
+}
+
+// A unified placement activity-feed entry. An undiscriminated union-of-unions: two
+// branches are themselves unions (event kinds and milestones) and one is a plain
+// note.
+//
+// Union satisfied by [PlacementActivityPlacementTransferEvent],
+// [PlacementActivityPlacementCheckupEvent],
+// [PlacementActivityPlacementDisruptionEvent], [PlacementActivityPlacementNote],
+// [PlacementActivityPlacementAdoptedMilestone] or
+// [PlacementActivityPlacementReturnedMilestone].
+type PlacementActivityUnion interface {
+	implementsPlacementActivity()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*PlacementActivityUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(PlacementActivityPlacementTransferEvent{}),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(PlacementActivityPlacementCheckupEvent{}),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(PlacementActivityPlacementDisruptionEvent{}),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(PlacementActivityPlacementNote{}),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(PlacementActivityPlacementAdoptedMilestone{}),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(PlacementActivityPlacementReturnedMilestone{}),
+		},
+	)
+}
+
+type PlacementActivityPlacementTransferEvent struct {
+	ID         string                                      `json:"id" api:"required"`
+	Leg        TransferLeg                                 `json:"leg" api:"required"`
+	OccurredAt time.Time                                   `json:"occurredAt" api:"required" format:"date-time"`
+	Type       PlacementActivityPlacementTransferEventType `json:"type" api:"required"`
+	Note       string                                      `json:"note" api:"nullable"`
+	JSON       placementActivityPlacementTransferEventJSON `json:"-"`
+}
+
+// placementActivityPlacementTransferEventJSON contains the JSON metadata for the
+// struct [PlacementActivityPlacementTransferEvent]
+type placementActivityPlacementTransferEventJSON struct {
+	ID          apijson.Field
+	Leg         apijson.Field
+	OccurredAt  apijson.Field
+	Type        apijson.Field
+	Note        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PlacementActivityPlacementTransferEvent) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r placementActivityPlacementTransferEventJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r PlacementActivityPlacementTransferEvent) implementsPlacementActivity() {}
+
+type PlacementActivityPlacementTransferEventType string
+
+const (
+	PlacementActivityPlacementTransferEventTypeTransfer PlacementActivityPlacementTransferEventType = "transfer"
+)
+
+func (r PlacementActivityPlacementTransferEventType) IsKnown() bool {
+	switch r {
+	case PlacementActivityPlacementTransferEventTypeTransfer:
+		return true
+	}
+	return false
+}
+
+type PlacementActivityPlacementCheckupEvent struct {
+	ID         string                                         `json:"id" api:"required"`
+	OccurredAt time.Time                                      `json:"occurredAt" api:"required" format:"date-time"`
+	Type       PlacementActivityPlacementCheckupEventType     `json:"type" api:"required"`
+	FollowUp   PlacementActivityPlacementCheckupEventFollowUp `json:"followUp"`
+	Note       string                                         `json:"note" api:"nullable"`
+	Record     VaccinationRecord                              `json:"record"`
+	JSON       placementActivityPlacementCheckupEventJSON     `json:"-"`
+}
+
+// placementActivityPlacementCheckupEventJSON contains the JSON metadata for the
+// struct [PlacementActivityPlacementCheckupEvent]
+type placementActivityPlacementCheckupEventJSON struct {
+	ID          apijson.Field
+	OccurredAt  apijson.Field
+	Type        apijson.Field
+	FollowUp    apijson.Field
+	Note        apijson.Field
+	Record      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PlacementActivityPlacementCheckupEvent) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r placementActivityPlacementCheckupEventJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r PlacementActivityPlacementCheckupEvent) implementsPlacementActivity() {}
+
+type PlacementActivityPlacementCheckupEventType string
+
+const (
+	PlacementActivityPlacementCheckupEventTypeCheckup PlacementActivityPlacementCheckupEventType = "checkup"
+)
+
+func (r PlacementActivityPlacementCheckupEventType) IsKnown() bool {
+	switch r {
+	case PlacementActivityPlacementCheckupEventTypeCheckup:
+		return true
+	}
+	return false
+}
+
+type PlacementActivityPlacementCheckupEventFollowUp struct {
+	Due    time.Time                                          `json:"due" format:"date-time"`
+	Reason string                                             `json:"reason"`
+	JSON   placementActivityPlacementCheckupEventFollowUpJSON `json:"-"`
+}
+
+// placementActivityPlacementCheckupEventFollowUpJSON contains the JSON metadata
+// for the struct [PlacementActivityPlacementCheckupEventFollowUp]
+type placementActivityPlacementCheckupEventFollowUpJSON struct {
+	Due         apijson.Field
+	Reason      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PlacementActivityPlacementCheckupEventFollowUp) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r placementActivityPlacementCheckupEventFollowUpJSON) RawJSON() string {
+	return r.raw
+}
+
+type PlacementActivityPlacementDisruptionEvent struct {
+	ID         string    `json:"id" api:"required"`
+	OccurredAt time.Time `json:"occurredAt" api:"required" format:"date-time"`
+	// A numeric severity score or a structured assessment.
+	Severity PlacementActivityPlacementDisruptionEventSeverityUnion `json:"severity" api:"required"`
+	Type     PlacementActivityPlacementDisruptionEventType          `json:"type" api:"required"`
+	Note     string                                                 `json:"note" api:"nullable"`
+	JSON     placementActivityPlacementDisruptionEventJSON          `json:"-"`
+}
+
+// placementActivityPlacementDisruptionEventJSON contains the JSON metadata for the
+// struct [PlacementActivityPlacementDisruptionEvent]
+type placementActivityPlacementDisruptionEventJSON struct {
+	ID          apijson.Field
+	OccurredAt  apijson.Field
+	Severity    apijson.Field
+	Type        apijson.Field
+	Note        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PlacementActivityPlacementDisruptionEvent) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r placementActivityPlacementDisruptionEventJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r PlacementActivityPlacementDisruptionEvent) implementsPlacementActivity() {}
+
+// A numeric severity score or a structured assessment.
+//
+// Union satisfied by [shared.UnionInt] or
+// [PlacementActivityPlacementDisruptionEventSeverityAssessment].
+type PlacementActivityPlacementDisruptionEventSeverityUnion interface {
+	ImplementsPlacementActivityPlacementDisruptionEventSeverityUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*PlacementActivityPlacementDisruptionEventSeverityUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.Number,
+			Type:       reflect.TypeOf(shared.UnionInt(0)),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(PlacementActivityPlacementDisruptionEventSeverityAssessment{}),
+		},
+	)
+}
+
+type PlacementActivityPlacementDisruptionEventSeverityAssessment struct {
+	Level    PlacementActivityPlacementDisruptionEventSeverityAssessmentLevel `json:"level" api:"required"`
+	Reviewer string                                                           `json:"reviewer"`
+	JSON     placementActivityPlacementDisruptionEventSeverityAssessmentJSON  `json:"-"`
+}
+
+// placementActivityPlacementDisruptionEventSeverityAssessmentJSON contains the
+// JSON metadata for the struct
+// [PlacementActivityPlacementDisruptionEventSeverityAssessment]
+type placementActivityPlacementDisruptionEventSeverityAssessmentJSON struct {
+	Level       apijson.Field
+	Reviewer    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PlacementActivityPlacementDisruptionEventSeverityAssessment) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r placementActivityPlacementDisruptionEventSeverityAssessmentJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r PlacementActivityPlacementDisruptionEventSeverityAssessment) ImplementsPlacementActivityPlacementDisruptionEventSeverityUnion() {
+}
+
+type PlacementActivityPlacementDisruptionEventSeverityAssessmentLevel string
+
+const (
+	PlacementActivityPlacementDisruptionEventSeverityAssessmentLevelLow      PlacementActivityPlacementDisruptionEventSeverityAssessmentLevel = "low"
+	PlacementActivityPlacementDisruptionEventSeverityAssessmentLevelHigh     PlacementActivityPlacementDisruptionEventSeverityAssessmentLevel = "high"
+	PlacementActivityPlacementDisruptionEventSeverityAssessmentLevelCritical PlacementActivityPlacementDisruptionEventSeverityAssessmentLevel = "critical"
+)
+
+func (r PlacementActivityPlacementDisruptionEventSeverityAssessmentLevel) IsKnown() bool {
+	switch r {
+	case PlacementActivityPlacementDisruptionEventSeverityAssessmentLevelLow, PlacementActivityPlacementDisruptionEventSeverityAssessmentLevelHigh, PlacementActivityPlacementDisruptionEventSeverityAssessmentLevelCritical:
+		return true
+	}
+	return false
+}
+
+type PlacementActivityPlacementDisruptionEventType string
+
+const (
+	PlacementActivityPlacementDisruptionEventTypeDisruption PlacementActivityPlacementDisruptionEventType = "disruption"
+)
+
+func (r PlacementActivityPlacementDisruptionEventType) IsKnown() bool {
+	switch r {
+	case PlacementActivityPlacementDisruptionEventTypeDisruption:
+		return true
+	}
+	return false
+}
+
+type PlacementActivityPlacementNote struct {
+	Body string                             `json:"body" api:"required"`
+	Kind PlacementActivityPlacementNoteKind `json:"kind" api:"required"`
+	JSON placementActivityPlacementNoteJSON `json:"-"`
+}
+
+// placementActivityPlacementNoteJSON contains the JSON metadata for the struct
+// [PlacementActivityPlacementNote]
+type placementActivityPlacementNoteJSON struct {
+	Body        apijson.Field
+	Kind        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PlacementActivityPlacementNote) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r placementActivityPlacementNoteJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r PlacementActivityPlacementNote) implementsPlacementActivity() {}
+
+type PlacementActivityPlacementNoteKind string
+
+const (
+	PlacementActivityPlacementNoteKindNote PlacementActivityPlacementNoteKind = "note"
+)
+
+func (r PlacementActivityPlacementNoteKind) IsKnown() bool {
+	switch r {
+	case PlacementActivityPlacementNoteKindNote:
+		return true
+	}
+	return false
+}
+
+type PlacementActivityPlacementAdoptedMilestone struct {
+	AdoptedAt time.Time                                      `json:"adoptedAt" api:"required" format:"date-time"`
+	Kind      PlacementActivityPlacementAdoptedMilestoneKind `json:"kind" api:"required"`
+	JSON      placementActivityPlacementAdoptedMilestoneJSON `json:"-"`
+}
+
+// placementActivityPlacementAdoptedMilestoneJSON contains the JSON metadata for
+// the struct [PlacementActivityPlacementAdoptedMilestone]
+type placementActivityPlacementAdoptedMilestoneJSON struct {
+	AdoptedAt   apijson.Field
+	Kind        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PlacementActivityPlacementAdoptedMilestone) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r placementActivityPlacementAdoptedMilestoneJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r PlacementActivityPlacementAdoptedMilestone) implementsPlacementActivity() {}
+
+type PlacementActivityPlacementAdoptedMilestoneKind string
+
+const (
+	PlacementActivityPlacementAdoptedMilestoneKindAdopted PlacementActivityPlacementAdoptedMilestoneKind = "adopted"
+)
+
+func (r PlacementActivityPlacementAdoptedMilestoneKind) IsKnown() bool {
+	switch r {
+	case PlacementActivityPlacementAdoptedMilestoneKindAdopted:
+		return true
+	}
+	return false
+}
+
+type PlacementActivityPlacementReturnedMilestone struct {
+	Kind   PlacementActivityPlacementReturnedMilestoneKind `json:"kind" api:"required"`
+	Reason string                                          `json:"reason" api:"required"`
+	JSON   placementActivityPlacementReturnedMilestoneJSON `json:"-"`
+}
+
+// placementActivityPlacementReturnedMilestoneJSON contains the JSON metadata for
+// the struct [PlacementActivityPlacementReturnedMilestone]
+type placementActivityPlacementReturnedMilestoneJSON struct {
+	Kind        apijson.Field
+	Reason      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PlacementActivityPlacementReturnedMilestone) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r placementActivityPlacementReturnedMilestoneJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r PlacementActivityPlacementReturnedMilestone) implementsPlacementActivity() {}
+
+type PlacementActivityPlacementReturnedMilestoneKind string
+
+const (
+	PlacementActivityPlacementReturnedMilestoneKindReturned PlacementActivityPlacementReturnedMilestoneKind = "returned"
+)
+
+func (r PlacementActivityPlacementReturnedMilestoneKind) IsKnown() bool {
+	switch r {
+	case PlacementActivityPlacementReturnedMilestoneKindReturned:
+		return true
+	}
+	return false
+}
+
+type PlacementActivityKind string
+
+const (
+	PlacementActivityKindNote     PlacementActivityKind = "note"
+	PlacementActivityKindAdopted  PlacementActivityKind = "adopted"
+	PlacementActivityKindReturned PlacementActivityKind = "returned"
+)
+
+func (r PlacementActivityKind) IsKnown() bool {
+	switch r {
+	case PlacementActivityKindNote, PlacementActivityKindAdopted, PlacementActivityKindReturned:
+		return true
+	}
+	return false
+}
+
+type PlacementActivityType string
+
+const (
+	PlacementActivityTypeTransfer   PlacementActivityType = "transfer"
+	PlacementActivityTypeCheckup    PlacementActivityType = "checkup"
+	PlacementActivityTypeDisruption PlacementActivityType = "disruption"
+)
+
+func (r PlacementActivityType) IsKnown() bool {
+	switch r {
+	case PlacementActivityTypeTransfer, PlacementActivityTypeCheckup, PlacementActivityTypeDisruption:
 		return true
 	}
 	return false

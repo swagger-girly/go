@@ -487,10 +487,12 @@ type ApplicationDecision struct {
 	Conditions interface{} `json:"conditions"`
 	// This field can have the runtime type of
 	// [ApplicationDecisionDecisionEscalatedEscalatedTo].
-	EscalatedTo interface{}               `json:"escalatedTo"`
-	Reason      ApplicationDecisionReason `json:"reason"`
-	ReviewAfter time.Time                 `json:"reviewAfter" format:"date-time"`
-	JSON        applicationDecisionJSON   `json:"-"`
+	EscalatedTo interface{}                    `json:"escalatedTo"`
+	Reason      ApplicationDecisionReason      `json:"reason"`
+	ReviewAfter time.Time                      `json:"reviewAfter" format:"date-time"`
+	WithdrawnAt time.Time                      `json:"withdrawnAt" format:"date-time"`
+	WithdrawnBy ApplicationDecisionWithdrawnBy `json:"withdrawnBy"`
+	JSON        applicationDecisionJSON        `json:"-"`
 	union       ApplicationDecisionUnion
 }
 
@@ -504,6 +506,8 @@ type applicationDecisionJSON struct {
 	EscalatedTo    apijson.Field
 	Reason         apijson.Field
 	ReviewAfter    apijson.Field
+	WithdrawnAt    apijson.Field
+	WithdrawnBy    apijson.Field
 	raw            string
 	ExtraFields    map[string]apijson.Field
 }
@@ -525,7 +529,8 @@ func (r *ApplicationDecision) UnmarshalJSON(data []byte) (err error) {
 // specific types for more type safety.
 //
 // Possible runtime types of the union are [ApplicationDecisionDecisionApproved],
-// [ApplicationDecisionDecisionRejected], [ApplicationDecisionDecisionEscalated].
+// [ApplicationDecisionDecisionRejected], [ApplicationDecisionDecisionEscalated],
+// [ApplicationDecisionDecisionWithdrawn].
 func (r ApplicationDecision) AsUnion() ApplicationDecisionUnion {
 	return r.union
 }
@@ -533,7 +538,8 @@ func (r ApplicationDecision) AsUnion() ApplicationDecisionUnion {
 // The decision for an application; the shape depends on the outcome.
 //
 // Union satisfied by [ApplicationDecisionDecisionApproved],
-// [ApplicationDecisionDecisionRejected] or [ApplicationDecisionDecisionEscalated].
+// [ApplicationDecisionDecisionRejected], [ApplicationDecisionDecisionEscalated] or
+// [ApplicationDecisionDecisionWithdrawn].
 type ApplicationDecisionUnion interface {
 	implementsApplicationDecision()
 }
@@ -553,6 +559,10 @@ func init() {
 		apijson.UnionVariant{
 			TypeFilter: gjson.JSON,
 			Type:       reflect.TypeOf(ApplicationDecisionDecisionEscalated{}),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(ApplicationDecisionDecisionWithdrawn{}),
 		},
 	)
 }
@@ -742,17 +752,78 @@ func (r ApplicationDecisionDecisionEscalatedOutcome) IsKnown() bool {
 	return false
 }
 
+// The applicant or shelter withdrew before a decision was finalized.
+type ApplicationDecisionDecisionWithdrawn struct {
+	Outcome     ApplicationDecisionDecisionWithdrawnOutcome     `json:"outcome" api:"required"`
+	WithdrawnBy ApplicationDecisionDecisionWithdrawnWithdrawnBy `json:"withdrawnBy" api:"required"`
+	WithdrawnAt time.Time                                       `json:"withdrawnAt" format:"date-time"`
+	JSON        applicationDecisionDecisionWithdrawnJSON        `json:"-"`
+}
+
+// applicationDecisionDecisionWithdrawnJSON contains the JSON metadata for the
+// struct [ApplicationDecisionDecisionWithdrawn]
+type applicationDecisionDecisionWithdrawnJSON struct {
+	Outcome     apijson.Field
+	WithdrawnBy apijson.Field
+	WithdrawnAt apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ApplicationDecisionDecisionWithdrawn) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r applicationDecisionDecisionWithdrawnJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r ApplicationDecisionDecisionWithdrawn) implementsApplicationDecision() {}
+
+type ApplicationDecisionDecisionWithdrawnOutcome string
+
+const (
+	ApplicationDecisionDecisionWithdrawnOutcomeWithdrawn ApplicationDecisionDecisionWithdrawnOutcome = "withdrawn"
+	ApplicationDecisionDecisionWithdrawnOutcomeExpired   ApplicationDecisionDecisionWithdrawnOutcome = "expired"
+)
+
+func (r ApplicationDecisionDecisionWithdrawnOutcome) IsKnown() bool {
+	switch r {
+	case ApplicationDecisionDecisionWithdrawnOutcomeWithdrawn, ApplicationDecisionDecisionWithdrawnOutcomeExpired:
+		return true
+	}
+	return false
+}
+
+type ApplicationDecisionDecisionWithdrawnWithdrawnBy string
+
+const (
+	ApplicationDecisionDecisionWithdrawnWithdrawnByApplicant ApplicationDecisionDecisionWithdrawnWithdrawnBy = "applicant"
+	ApplicationDecisionDecisionWithdrawnWithdrawnByShelter   ApplicationDecisionDecisionWithdrawnWithdrawnBy = "shelter"
+	ApplicationDecisionDecisionWithdrawnWithdrawnBySystem    ApplicationDecisionDecisionWithdrawnWithdrawnBy = "system"
+)
+
+func (r ApplicationDecisionDecisionWithdrawnWithdrawnBy) IsKnown() bool {
+	switch r {
+	case ApplicationDecisionDecisionWithdrawnWithdrawnByApplicant, ApplicationDecisionDecisionWithdrawnWithdrawnByShelter, ApplicationDecisionDecisionWithdrawnWithdrawnBySystem:
+		return true
+	}
+	return false
+}
+
 type ApplicationDecisionOutcome string
 
 const (
 	ApplicationDecisionOutcomeApproved  ApplicationDecisionOutcome = "approved"
 	ApplicationDecisionOutcomeRejected  ApplicationDecisionOutcome = "rejected"
 	ApplicationDecisionOutcomeEscalated ApplicationDecisionOutcome = "escalated"
+	ApplicationDecisionOutcomeWithdrawn ApplicationDecisionOutcome = "withdrawn"
+	ApplicationDecisionOutcomeExpired   ApplicationDecisionOutcome = "expired"
 )
 
 func (r ApplicationDecisionOutcome) IsKnown() bool {
 	switch r {
-	case ApplicationDecisionOutcomeApproved, ApplicationDecisionOutcomeRejected, ApplicationDecisionOutcomeEscalated:
+	case ApplicationDecisionOutcomeApproved, ApplicationDecisionOutcomeRejected, ApplicationDecisionOutcomeEscalated, ApplicationDecisionOutcomeWithdrawn, ApplicationDecisionOutcomeExpired:
 		return true
 	}
 	return false
@@ -769,6 +840,22 @@ const (
 func (r ApplicationDecisionReason) IsKnown() bool {
 	switch r {
 	case ApplicationDecisionReasonPolicy, ApplicationDecisionReasonCapacity, ApplicationDecisionReasonIncomplete:
+		return true
+	}
+	return false
+}
+
+type ApplicationDecisionWithdrawnBy string
+
+const (
+	ApplicationDecisionWithdrawnByApplicant ApplicationDecisionWithdrawnBy = "applicant"
+	ApplicationDecisionWithdrawnByShelter   ApplicationDecisionWithdrawnBy = "shelter"
+	ApplicationDecisionWithdrawnBySystem    ApplicationDecisionWithdrawnBy = "system"
+)
+
+func (r ApplicationDecisionWithdrawnBy) IsKnown() bool {
+	switch r {
+	case ApplicationDecisionWithdrawnByApplicant, ApplicationDecisionWithdrawnByShelter, ApplicationDecisionWithdrawnBySystem:
 		return true
 	}
 	return false
@@ -880,10 +967,12 @@ type AdoptionGetDecisionResponse struct {
 	Conditions interface{} `json:"conditions"`
 	// This field can have the runtime type of
 	// [AdoptionGetDecisionResponseDecisionEscalatedEscalatedTo].
-	EscalatedTo interface{}                       `json:"escalatedTo"`
-	Reason      AdoptionGetDecisionResponseReason `json:"reason"`
-	ReviewAfter time.Time                         `json:"reviewAfter" format:"date-time"`
-	JSON        adoptionGetDecisionResponseJSON   `json:"-"`
+	EscalatedTo interface{}                            `json:"escalatedTo"`
+	Reason      AdoptionGetDecisionResponseReason      `json:"reason"`
+	ReviewAfter time.Time                              `json:"reviewAfter" format:"date-time"`
+	WithdrawnAt time.Time                              `json:"withdrawnAt" format:"date-time"`
+	WithdrawnBy AdoptionGetDecisionResponseWithdrawnBy `json:"withdrawnBy"`
+	JSON        adoptionGetDecisionResponseJSON        `json:"-"`
 	union       AdoptionGetDecisionResponseUnion
 }
 
@@ -897,6 +986,8 @@ type adoptionGetDecisionResponseJSON struct {
 	EscalatedTo    apijson.Field
 	Reason         apijson.Field
 	ReviewAfter    apijson.Field
+	WithdrawnAt    apijson.Field
+	WithdrawnBy    apijson.Field
 	raw            string
 	ExtraFields    map[string]apijson.Field
 }
@@ -920,7 +1011,8 @@ func (r *AdoptionGetDecisionResponse) UnmarshalJSON(data []byte) (err error) {
 // Possible runtime types of the union are
 // [AdoptionGetDecisionResponseDecisionApproved],
 // [AdoptionGetDecisionResponseDecisionRejected],
-// [AdoptionGetDecisionResponseDecisionEscalated].
+// [AdoptionGetDecisionResponseDecisionEscalated],
+// [AdoptionGetDecisionResponseDecisionWithdrawn].
 func (r AdoptionGetDecisionResponse) AsUnion() AdoptionGetDecisionResponseUnion {
 	return r.union
 }
@@ -928,8 +1020,9 @@ func (r AdoptionGetDecisionResponse) AsUnion() AdoptionGetDecisionResponseUnion 
 // The decision for an application; the shape depends on the outcome.
 //
 // Union satisfied by [AdoptionGetDecisionResponseDecisionApproved],
-// [AdoptionGetDecisionResponseDecisionRejected] or
-// [AdoptionGetDecisionResponseDecisionEscalated].
+// [AdoptionGetDecisionResponseDecisionRejected],
+// [AdoptionGetDecisionResponseDecisionEscalated] or
+// [AdoptionGetDecisionResponseDecisionWithdrawn].
 type AdoptionGetDecisionResponseUnion interface {
 	implementsAdoptionGetDecisionResponse()
 }
@@ -949,6 +1042,10 @@ func init() {
 		apijson.UnionVariant{
 			TypeFilter: gjson.JSON,
 			Type:       reflect.TypeOf(AdoptionGetDecisionResponseDecisionEscalated{}),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(AdoptionGetDecisionResponseDecisionWithdrawn{}),
 		},
 	)
 }
@@ -1140,17 +1237,78 @@ func (r AdoptionGetDecisionResponseDecisionEscalatedOutcome) IsKnown() bool {
 	return false
 }
 
+// The applicant or shelter withdrew before a decision was finalized.
+type AdoptionGetDecisionResponseDecisionWithdrawn struct {
+	Outcome     AdoptionGetDecisionResponseDecisionWithdrawnOutcome     `json:"outcome" api:"required"`
+	WithdrawnBy AdoptionGetDecisionResponseDecisionWithdrawnWithdrawnBy `json:"withdrawnBy" api:"required"`
+	WithdrawnAt time.Time                                               `json:"withdrawnAt" format:"date-time"`
+	JSON        adoptionGetDecisionResponseDecisionWithdrawnJSON        `json:"-"`
+}
+
+// adoptionGetDecisionResponseDecisionWithdrawnJSON contains the JSON metadata for
+// the struct [AdoptionGetDecisionResponseDecisionWithdrawn]
+type adoptionGetDecisionResponseDecisionWithdrawnJSON struct {
+	Outcome     apijson.Field
+	WithdrawnBy apijson.Field
+	WithdrawnAt apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AdoptionGetDecisionResponseDecisionWithdrawn) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r adoptionGetDecisionResponseDecisionWithdrawnJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r AdoptionGetDecisionResponseDecisionWithdrawn) implementsAdoptionGetDecisionResponse() {}
+
+type AdoptionGetDecisionResponseDecisionWithdrawnOutcome string
+
+const (
+	AdoptionGetDecisionResponseDecisionWithdrawnOutcomeWithdrawn AdoptionGetDecisionResponseDecisionWithdrawnOutcome = "withdrawn"
+	AdoptionGetDecisionResponseDecisionWithdrawnOutcomeExpired   AdoptionGetDecisionResponseDecisionWithdrawnOutcome = "expired"
+)
+
+func (r AdoptionGetDecisionResponseDecisionWithdrawnOutcome) IsKnown() bool {
+	switch r {
+	case AdoptionGetDecisionResponseDecisionWithdrawnOutcomeWithdrawn, AdoptionGetDecisionResponseDecisionWithdrawnOutcomeExpired:
+		return true
+	}
+	return false
+}
+
+type AdoptionGetDecisionResponseDecisionWithdrawnWithdrawnBy string
+
+const (
+	AdoptionGetDecisionResponseDecisionWithdrawnWithdrawnByApplicant AdoptionGetDecisionResponseDecisionWithdrawnWithdrawnBy = "applicant"
+	AdoptionGetDecisionResponseDecisionWithdrawnWithdrawnByShelter   AdoptionGetDecisionResponseDecisionWithdrawnWithdrawnBy = "shelter"
+	AdoptionGetDecisionResponseDecisionWithdrawnWithdrawnBySystem    AdoptionGetDecisionResponseDecisionWithdrawnWithdrawnBy = "system"
+)
+
+func (r AdoptionGetDecisionResponseDecisionWithdrawnWithdrawnBy) IsKnown() bool {
+	switch r {
+	case AdoptionGetDecisionResponseDecisionWithdrawnWithdrawnByApplicant, AdoptionGetDecisionResponseDecisionWithdrawnWithdrawnByShelter, AdoptionGetDecisionResponseDecisionWithdrawnWithdrawnBySystem:
+		return true
+	}
+	return false
+}
+
 type AdoptionGetDecisionResponseOutcome string
 
 const (
 	AdoptionGetDecisionResponseOutcomeApproved  AdoptionGetDecisionResponseOutcome = "approved"
 	AdoptionGetDecisionResponseOutcomeRejected  AdoptionGetDecisionResponseOutcome = "rejected"
 	AdoptionGetDecisionResponseOutcomeEscalated AdoptionGetDecisionResponseOutcome = "escalated"
+	AdoptionGetDecisionResponseOutcomeWithdrawn AdoptionGetDecisionResponseOutcome = "withdrawn"
+	AdoptionGetDecisionResponseOutcomeExpired   AdoptionGetDecisionResponseOutcome = "expired"
 )
 
 func (r AdoptionGetDecisionResponseOutcome) IsKnown() bool {
 	switch r {
-	case AdoptionGetDecisionResponseOutcomeApproved, AdoptionGetDecisionResponseOutcomeRejected, AdoptionGetDecisionResponseOutcomeEscalated:
+	case AdoptionGetDecisionResponseOutcomeApproved, AdoptionGetDecisionResponseOutcomeRejected, AdoptionGetDecisionResponseOutcomeEscalated, AdoptionGetDecisionResponseOutcomeWithdrawn, AdoptionGetDecisionResponseOutcomeExpired:
 		return true
 	}
 	return false
@@ -1167,6 +1325,22 @@ const (
 func (r AdoptionGetDecisionResponseReason) IsKnown() bool {
 	switch r {
 	case AdoptionGetDecisionResponseReasonPolicy, AdoptionGetDecisionResponseReasonCapacity, AdoptionGetDecisionResponseReasonIncomplete:
+		return true
+	}
+	return false
+}
+
+type AdoptionGetDecisionResponseWithdrawnBy string
+
+const (
+	AdoptionGetDecisionResponseWithdrawnByApplicant AdoptionGetDecisionResponseWithdrawnBy = "applicant"
+	AdoptionGetDecisionResponseWithdrawnByShelter   AdoptionGetDecisionResponseWithdrawnBy = "shelter"
+	AdoptionGetDecisionResponseWithdrawnBySystem    AdoptionGetDecisionResponseWithdrawnBy = "system"
+)
+
+func (r AdoptionGetDecisionResponseWithdrawnBy) IsKnown() bool {
+	switch r {
+	case AdoptionGetDecisionResponseWithdrawnByApplicant, AdoptionGetDecisionResponseWithdrawnByShelter, AdoptionGetDecisionResponseWithdrawnBySystem:
 		return true
 	}
 	return false

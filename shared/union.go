@@ -34,6 +34,7 @@ func (UnionInt) ImplementsPetMicrochipIDUnion()                                 
 func (UnionInt) ImplementsPetGetPremiumResponseCoverageLimitUnion()                  {}
 func (UnionInt) ImplementsConditionValueUnionParam()                                 {}
 func (UnionInt) ImplementsConditionValueUnion()                                      {}
+func (UnionInt) ImplementsPlacementActivityPlacementDisruptionEventSeverityUnion()   {}
 func (UnionInt) ImplementsPlacementEventPlacementDisruptionEventSeverityUnionParam() {}
 func (UnionInt) ImplementsPlacementEventPlacementDisruptionEventSeverityUnion()      {}
 

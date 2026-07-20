@@ -207,10 +207,13 @@ func (r *PetService) WatchStatusStreaming(ctx context.Context, petID int64, quer
 }
 
 type Pet struct {
-	Name      string      `json:"name" api:"required"`
-	PhotoURLs []string    `json:"photoUrls" api:"required"`
-	ID        int64       `json:"id"`
-	Category  PetCategory `json:"category"`
+	Name      string   `json:"name" api:"required"`
+	PhotoURLs []string `json:"photoUrls" api:"required"`
+	ID        int64    `json:"id"`
+	// How the pet entered the store. Open enum: known channels plus forward-compatible
+	// free-form strings.
+	AcquisitionChannel PetAcquisitionChannel `json:"acquisitionChannel"`
+	Category           PetCategory           `json:"category"`
 	// Microchip identifier; legacy chips used numeric identifiers.
 	MicrochipID PetMicrochipIDUnion `json:"microchipId"`
 	// pet status in the store
@@ -221,15 +224,16 @@ type Pet struct {
 
 // petJSON contains the JSON metadata for the struct [Pet]
 type petJSON struct {
-	Name        apijson.Field
-	PhotoURLs   apijson.Field
-	ID          apijson.Field
-	Category    apijson.Field
-	MicrochipID apijson.Field
-	Status      apijson.Field
-	Tags        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	Name               apijson.Field
+	PhotoURLs          apijson.Field
+	ID                 apijson.Field
+	AcquisitionChannel apijson.Field
+	Category           apijson.Field
+	MicrochipID        apijson.Field
+	Status             apijson.Field
+	Tags               apijson.Field
+	raw                string
+	ExtraFields        map[string]apijson.Field
 }
 
 func (r *Pet) UnmarshalJSON(data []byte) (err error) {
@@ -238,6 +242,25 @@ func (r *Pet) UnmarshalJSON(data []byte) (err error) {
 
 func (r petJSON) RawJSON() string {
 	return r.raw
+}
+
+// How the pet entered the store. Open enum: known channels plus forward-compatible
+// free-form strings.
+type PetAcquisitionChannel string
+
+const (
+	PetAcquisitionChannelBreeder   PetAcquisitionChannel = "breeder"
+	PetAcquisitionChannelShelter   PetAcquisitionChannel = "shelter"
+	PetAcquisitionChannelSurrender PetAcquisitionChannel = "surrender"
+	PetAcquisitionChannelTransfer  PetAcquisitionChannel = "transfer"
+)
+
+func (r PetAcquisitionChannel) IsKnown() bool {
+	switch r {
+	case PetAcquisitionChannelBreeder, PetAcquisitionChannelShelter, PetAcquisitionChannelSurrender, PetAcquisitionChannelTransfer:
+		return true
+	}
+	return false
 }
 
 type PetCategory struct {
@@ -310,10 +333,13 @@ func (r petTagJSON) RawJSON() string {
 }
 
 type PetParam struct {
-	Name      param.Field[string]           `json:"name" api:"required"`
-	PhotoURLs param.Field[[]string]         `json:"photoUrls" api:"required"`
-	ID        param.Field[int64]            `json:"id"`
-	Category  param.Field[PetCategoryParam] `json:"category"`
+	Name      param.Field[string]   `json:"name" api:"required"`
+	PhotoURLs param.Field[[]string] `json:"photoUrls" api:"required"`
+	ID        param.Field[int64]    `json:"id"`
+	// How the pet entered the store. Open enum: known channels plus forward-compatible
+	// free-form strings.
+	AcquisitionChannel param.Field[PetAcquisitionChannel] `json:"acquisitionChannel"`
+	Category           param.Field[PetCategoryParam]      `json:"category"`
 	// Microchip identifier; legacy chips used numeric identifiers.
 	MicrochipID param.Field[PetMicrochipIDUnionParam] `json:"microchipId"`
 	// pet status in the store

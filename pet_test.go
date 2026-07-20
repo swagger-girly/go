@@ -31,9 +31,10 @@ func TestPetNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Pet.New(context.TODO(), helloworldtestingggg.PetNewParams{
 		Pet: helloworldtestingggg.PetParam{
-			Name:      helloworldtestingggg.F("doggie"),
-			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
-			ID:        helloworldtestingggg.F(int64(10)),
+			Name:               helloworldtestingggg.F("doggie"),
+			PhotoURLs:          helloworldtestingggg.F([]string{"string"}),
+			ID:                 helloworldtestingggg.F(int64(10)),
+			AcquisitionChannel: helloworldtestingggg.F(helloworldtestingggg.PetAcquisitionChannelBreeder),
 			Category: helloworldtestingggg.F(helloworldtestingggg.PetCategoryParam{
 				ID:            helloworldtestingggg.F(int64(1)),
 				Name:          helloworldtestingggg.F("Dogs"),
@@ -94,9 +95,10 @@ func TestPetUpdateWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Pet.Update(context.TODO(), helloworldtestingggg.PetUpdateParams{
 		Pet: helloworldtestingggg.PetParam{
-			Name:      helloworldtestingggg.F("doggie"),
-			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
-			ID:        helloworldtestingggg.F(int64(10)),
+			Name:               helloworldtestingggg.F("doggie"),
+			PhotoURLs:          helloworldtestingggg.F([]string{"string"}),
+			ID:                 helloworldtestingggg.F(int64(10)),
+			AcquisitionChannel: helloworldtestingggg.F(helloworldtestingggg.PetAcquisitionChannelBreeder),
 			Category: helloworldtestingggg.F(helloworldtestingggg.PetCategoryParam{
 				ID:            helloworldtestingggg.F(int64(1)),
 				Name:          helloworldtestingggg.F("Dogs"),
