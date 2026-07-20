@@ -18,7 +18,7 @@ func TestWebhookParsed(t *testing.T) {
 		option.WithWebhookSecret("whsec_c2VjcmV0Cg=="),
 		option.WithAPIKey("My API Key"),
 	)
-	payload := []byte(`{"pet":{"name":"doggie","photoUrls":["string"],"id":10,"category":{"id":1,"name":"Dogs","subcategories":[]},"microchipId":"string","status":"available","tags":[{"id":0,"name":"name"}]},"type":"pet.created"}`)
+	payload := []byte(`{"pet":{"name":"doggie","photoUrls":["string"],"id":10,"acquisitionChannel":"breeder","category":{"id":1,"name":"Dogs","subcategories":[]},"microchipId":"string","status":"available","tags":[{"id":0,"name":"name"}]},"type":"pet.created"}`)
 	wh, err := standardwebhooks.NewWebhook("whsec_c2VjcmV0Cg==")
 	if err != nil {
 		t.Fatal("Failed to sign test webhook message", err)
