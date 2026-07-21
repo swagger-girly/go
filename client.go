@@ -33,7 +33,8 @@ type Client struct {
 	// Access to Petstore orders
 	Store *StoreService
 	// Operations about user
-	User *UserService
+	User  *UserService
+	Media *MediaService
 }
 
 // DefaultClientOptions read from the environment (API_KEY,
@@ -80,6 +81,7 @@ func NewClient(opts ...option.RequestOption) (r *Client) {
 	r.Webhooks = NewWebhookService(opts...)
 	r.Store = NewStoreService(opts...)
 	r.User = NewUserService(opts...)
+	r.Media = NewMediaService(opts...)
 
 	return
 }
