@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/swagger-girly/go"
 	"github.com/swagger-girly/go/internal/testutil"
@@ -135,6 +136,12 @@ func TestPetListWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Pet.List(context.TODO(), helloworldtestingggg.PetListParams{
+		CreatedAt: helloworldtestingggg.F(helloworldtestingggg.PetListParamsCreatedAt{
+			Gt:  helloworldtestingggg.F(time.Now()),
+			Gte: helloworldtestingggg.F(time.Now()),
+			Lt:  helloworldtestingggg.F(time.Now()),
+			Lte: helloworldtestingggg.F(time.Now()),
+		}),
 		Cursor: helloworldtestingggg.F("cursor"),
 		Limit:  helloworldtestingggg.F(int64(0)),
 	})

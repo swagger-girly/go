@@ -980,6 +980,8 @@ func (r PetUpdateParams) MarshalJSON() (data []byte, err error) {
 }
 
 type PetListParams struct {
+	// Filter by created_at timestamp range in UTC. Accepts gt/gte/lt/lte.
+	CreatedAt param.Field[PetListParamsCreatedAt] `query:"created_at"`
 	// Cursor from a previous response used to fetch the next page.
 	Cursor param.Field[string] `query:"cursor"`
 	// Maximum number of pets to return.
@@ -988,6 +990,26 @@ type PetListParams struct {
 
 // URLQuery serializes [PetListParams]'s query parameters as `url.Values`.
 func (r PetListParams) URLQuery() (v url.Values) {
+	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
+		ArrayFormat:  apiquery.ArrayQueryFormatComma,
+		NestedFormat: apiquery.NestedQueryFormatBrackets,
+	})
+}
+
+// Filter by created_at timestamp range in UTC. Accepts gt/gte/lt/lte.
+type PetListParamsCreatedAt struct {
+	// Minimum value to filter by (exclusive).
+	Gt param.Field[time.Time] `query:"gt" format:"date-time"`
+	// Minimum value to filter by (inclusive).
+	Gte param.Field[time.Time] `query:"gte" format:"date-time"`
+	// Maximum value to filter by (exclusive).
+	Lt param.Field[time.Time] `query:"lt" format:"date-time"`
+	// Maximum value to filter by (inclusive).
+	Lte param.Field[time.Time] `query:"lte" format:"date-time"`
+}
+
+// URLQuery serializes [PetListParamsCreatedAt]'s query parameters as `url.Values`.
+func (r PetListParamsCreatedAt) URLQuery() (v url.Values) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
