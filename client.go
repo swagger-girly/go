@@ -34,6 +34,7 @@ type Client struct {
 	Store *StoreService
 	// Operations about user
 	User  *UserService
+	AI    *AIService
 	Media *MediaService
 }
 
@@ -81,6 +82,7 @@ func NewClient(opts ...option.RequestOption) (r *Client) {
 	r.Webhooks = NewWebhookService(opts...)
 	r.Store = NewStoreService(opts...)
 	r.User = NewUserService(opts...)
+	r.AI = NewAIService(opts...)
 	r.Media = NewMediaService(opts...)
 
 	return
