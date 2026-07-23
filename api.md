@@ -228,6 +228,7 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#UserNewResponse">UserNewResponse</a>
 - <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#UserGetResponse">UserGetResponse</a>
 - <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#UserNewWithListResponse">UserNewWithListResponse</a>
+- <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#UserVerifyIdentityResponse">UserVerifyIdentityResponse</a>
 
 Methods:
 
@@ -238,6 +239,17 @@ Methods:
 - <code title="post /user/createWithList">client.User.<a href="https://pkg.go.dev/github.com/swagger-girly/go#UserService.NewWithList">NewWithList</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#UserNewWithListParams">UserNewWithListParams</a>) (\*<a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#UserNewWithListResponse">UserNewWithListResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="get /user/login">client.User.<a href="https://pkg.go.dev/github.com/swagger-girly/go#UserService.Login">Login</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#UserLoginParams">UserLoginParams</a>) (\*<a href="https://pkg.go.dev/builtin#string">string</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="get /user/logout">client.User.<a href="https://pkg.go.dev/github.com/swagger-girly/go#UserService.Logout">Logout</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>) <a href="https://pkg.go.dev/builtin#error">error</a></code>
+- <code title="post /user/{username}/verifyIdentity">client.User.<a href="https://pkg.go.dev/github.com/swagger-girly/go#UserService.VerifyIdentity">VerifyIdentity</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, username <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#UserVerifyIdentityResponse">UserVerifyIdentityResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+
+# AI
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#AiaiQueryResponse">AiaiQueryResponse</a>
+
+Methods:
+
+- <code title="post /ai/query">client.AI.<a href="https://pkg.go.dev/github.com/swagger-girly/go#AIService.AIQuery">AIQuery</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#AIAIQueryParams">AIAIQueryParams</a>) (\*<a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#AiaiQueryResponse">AiaiQueryResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
 # Media
 
