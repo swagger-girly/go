@@ -28,21 +28,20 @@ func TestAdoptionNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Adoptions.New(context.TODO(), helloworldtestingggg.AdoptionNewParams{
-		Body: helloworldtestingggg.AdoptionNewParamsBodyIndividualApplicant{
-			ApplicantType: helloworldtestingggg.F(helloworldtestingggg.AdoptionNewParamsBodyIndividualApplicantApplicantTypeIndividual),
-			Name:          helloworldtestingggg.F("name"),
-			Address: helloworldtestingggg.F(shared.AddressParam{
-				City: helloworldtestingggg.F("Palo Alto"),
-				Geo: helloworldtestingggg.F(shared.AddressGeoParam{
-					Latitude:  helloworldtestingggg.F(37.444300),
-					Longitude: helloworldtestingggg.F(-122.159800),
-				}),
-				State:  helloworldtestingggg.F("CA"),
-				Street: helloworldtestingggg.F("437 Lytton"),
-				Zip:    helloworldtestingggg.F("94301"),
-			}),
-			Age:   helloworldtestingggg.F(int64(0)),
-			Email: helloworldtestingggg.F("email"),
+		OfIndividual: &helloworldtestingggg.AdoptionNewParamsBodyIndividual{
+			Name: "name",
+			Address: shared.AddressParam{
+				City: helloworldtestingggg.String("Palo Alto"),
+				Geo: shared.AddressGeoParam{
+					Latitude:  37.4443,
+					Longitude: -122.1598,
+				},
+				State:  helloworldtestingggg.String("CA"),
+				Street: helloworldtestingggg.String("437 Lytton"),
+				Zip:    helloworldtestingggg.String("94301"),
+			},
+			Age:   helloworldtestingggg.Int(0),
+			Email: helloworldtestingggg.String("email"),
 		},
 	})
 	if err != nil {

@@ -50,9 +50,9 @@ func TestStoreReportListWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Store.Reports.List(context.TODO(), helloworldtestingggg.StoreReportListParams{
-		EndingBefore:  helloworldtestingggg.F("ending_before"),
-		PageSize:      helloworldtestingggg.F(int64(0)),
-		StartingAfter: helloworldtestingggg.F("starting_after"),
+		EndingBefore:  helloworldtestingggg.String("ending_before"),
+		PageSize:      helloworldtestingggg.Int(0),
+		StartingAfter: helloworldtestingggg.String("starting_after"),
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
@@ -103,7 +103,7 @@ func TestStoreReportPauseWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"reportId",
 		helloworldtestingggg.StoreReportPauseParams{
-			IdempotencyKey: helloworldtestingggg.F("report-pause-123"),
+			IdempotencyKey: helloworldtestingggg.String("report-pause-123"),
 		},
 	)
 	if err != nil {
