@@ -29,16 +29,16 @@ func TestStoreOrderNewWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Store.Order.New(context.TODO(), helloworldtestingggg.StoreOrderNewParams{
-		ID:       helloworldtestingggg.F(int64(10)),
-		Complete: helloworldtestingggg.F(true),
-		PetID:    helloworldtestingggg.F(int64(198772)),
-		Quantity: helloworldtestingggg.F(int64(7)),
-		ShipDate: helloworldtestingggg.F(time.Now()),
-		Status:   helloworldtestingggg.F(helloworldtestingggg.StoreOrderNewParamsStatusApproved),
-		Total: helloworldtestingggg.F(shared.MoneyParam{
-			Amount:   helloworldtestingggg.F(int64(2500)),
-			Currency: helloworldtestingggg.F("USD"),
-		}),
+		ID:       helloworldtestingggg.Int(10),
+		Complete: helloworldtestingggg.Bool(true),
+		PetID:    helloworldtestingggg.Int(198772),
+		Quantity: helloworldtestingggg.Int(7),
+		ShipDate: helloworldtestingggg.Time(time.Now()),
+		Status:   helloworldtestingggg.StoreOrderNewParamsStatusApproved,
+		Total: shared.MoneyParam{
+			Amount:   2500,
+			Currency: "USD",
+		},
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
@@ -62,7 +62,7 @@ func TestStoreOrderGet(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.Store.Order.Get(context.TODO(), int64(0))
+	_, err := client.Store.Order.Get(context.TODO(), 0)
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
 		if errors.As(err, &apierr) {
@@ -85,7 +85,7 @@ func TestStoreOrderDelete(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	err := client.Store.Order.Delete(context.TODO(), int64(0))
+	err := client.Store.Order.Delete(context.TODO(), 0)
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
 		if errors.As(err, &apierr) {

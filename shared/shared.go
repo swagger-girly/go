@@ -3,112 +3,144 @@
 package shared
 
 import (
+	"encoding/json"
+
 	"github.com/swagger-girly/go/internal/apijson"
-	"github.com/swagger-girly/go/internal/param"
+	"github.com/swagger-girly/go/packages/param"
+	"github.com/swagger-girly/go/packages/respjson"
 )
 
+// aliased to make [param.APIUnion] private when embedding
+type paramUnion = param.APIUnion
+
+// aliased to make [param.APIObject] private when embedding
+type paramObj = param.APIObject
+
 type Address struct {
-	City   string      `json:"city"`
-	Geo    AddressGeo  `json:"geo"`
-	State  string      `json:"state"`
-	Street string      `json:"street"`
-	Zip    string      `json:"zip"`
-	JSON   addressJSON `json:"-"`
+	City   string     `json:"city"`
+	Geo    AddressGeo `json:"geo"`
+	State  string     `json:"state"`
+	Street string     `json:"street"`
+	Zip    string     `json:"zip"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		City        respjson.Field
+		Geo         respjson.Field
+		State       respjson.Field
+		Street      respjson.Field
+		Zip         respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-// addressJSON contains the JSON metadata for the struct [Address]
-type addressJSON struct {
-	City        apijson.Field
-	Geo         apijson.Field
-	State       apijson.Field
-	Street      apijson.Field
-	Zip         apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *Address) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r Address) RawJSON() string { return r.JSON.raw }
+func (r *Address) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r addressJSON) RawJSON() string {
-	return r.raw
+// ToParam converts this Address to a AddressParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// AddressParam.Overrides()
+func (r Address) ToParam() AddressParam {
+	return param.Override[AddressParam](json.RawMessage(r.RawJSON()))
 }
 
 type AddressGeo struct {
-	Latitude  float64        `json:"latitude" api:"required"`
-	Longitude float64        `json:"longitude" api:"required"`
-	JSON      addressGeoJSON `json:"-"`
+	Latitude  float64 `json:"latitude" api:"required"`
+	Longitude float64 `json:"longitude" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Latitude    respjson.Field
+		Longitude   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-// addressGeoJSON contains the JSON metadata for the struct [AddressGeo]
-type addressGeoJSON struct {
-	Latitude    apijson.Field
-	Longitude   apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AddressGeo) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AddressGeo) RawJSON() string { return r.JSON.raw }
+func (r *AddressGeo) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r addressGeoJSON) RawJSON() string {
-	return r.raw
-}
-
 type AddressParam struct {
-	City   param.Field[string]          `json:"city"`
-	Geo    param.Field[AddressGeoParam] `json:"geo"`
-	State  param.Field[string]          `json:"state"`
-	Street param.Field[string]          `json:"street"`
-	Zip    param.Field[string]          `json:"zip"`
+	City   param.Opt[string] `json:"city,omitzero"`
+	State  param.Opt[string] `json:"state,omitzero"`
+	Street param.Opt[string] `json:"street,omitzero"`
+	Zip    param.Opt[string] `json:"zip,omitzero"`
+	Geo    AddressGeoParam   `json:"geo,omitzero"`
+	paramObj
 }
 
 func (r AddressParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow AddressParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AddressParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
+// The properties Latitude, Longitude are required.
 type AddressGeoParam struct {
-	Latitude  param.Field[float64] `json:"latitude" api:"required"`
-	Longitude param.Field[float64] `json:"longitude" api:"required"`
+	Latitude  float64 `json:"latitude" api:"required"`
+	Longitude float64 `json:"longitude" api:"required"`
+	paramObj
 }
 
 func (r AddressGeoParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow AddressGeoParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AddressGeoParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type Money struct {
 	// Amount in minor currency units (e.g. cents).
 	Amount int64 `json:"amount" api:"required"`
 	// ISO 4217 currency code.
-	Currency string    `json:"currency" api:"required"`
-	JSON     moneyJSON `json:"-"`
+	Currency string `json:"currency" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Amount      respjson.Field
+		Currency    respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-// moneyJSON contains the JSON metadata for the struct [Money]
-type moneyJSON struct {
-	Amount      apijson.Field
-	Currency    apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *Money) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r Money) RawJSON() string { return r.JSON.raw }
+func (r *Money) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r moneyJSON) RawJSON() string {
-	return r.raw
+// ToParam converts this Money to a MoneyParam.
+//
+// Warning: the fields of the param type will not be present. ToParam should only
+// be used at the last possible moment before sending a request. Test for this with
+// MoneyParam.Overrides()
+func (r Money) ToParam() MoneyParam {
+	return param.Override[MoneyParam](json.RawMessage(r.RawJSON()))
 }
 
+// The properties Amount, Currency are required.
 type MoneyParam struct {
 	// Amount in minor currency units (e.g. cents).
-	Amount param.Field[int64] `json:"amount" api:"required"`
+	Amount int64 `json:"amount" api:"required"`
 	// ISO 4217 currency code.
-	Currency param.Field[string] `json:"currency" api:"required"`
+	Currency string `json:"currency" api:"required"`
+	paramObj
 }
 
 func (r MoneyParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+	type shadow MoneyParam
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *MoneyParam) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }

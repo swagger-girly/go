@@ -14,7 +14,6 @@ import (
 	"github.com/swagger-girly/go"
 	"github.com/swagger-girly/go/internal/testutil"
 	"github.com/swagger-girly/go/option"
-	"github.com/swagger-girly/go/shared"
 )
 
 func TestPetNewWithOptionalParams(t *testing.T) {
@@ -32,21 +31,23 @@ func TestPetNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Pet.New(context.TODO(), helloworldtestingggg.PetNewParams{
 		Pet: helloworldtestingggg.PetParam{
-			Name:               helloworldtestingggg.F("doggie"),
-			PhotoURLs:          helloworldtestingggg.F([]string{"string"}),
-			ID:                 helloworldtestingggg.F(int64(10)),
-			AcquisitionChannel: helloworldtestingggg.F(helloworldtestingggg.PetAcquisitionChannelBreeder),
-			Category: helloworldtestingggg.F(helloworldtestingggg.PetCategoryParam{
-				ID:            helloworldtestingggg.F(int64(1)),
-				Name:          helloworldtestingggg.F("Dogs"),
-				Subcategories: helloworldtestingggg.F([]interface{}{}),
-			}),
-			MicrochipID: helloworldtestingggg.F[helloworldtestingggg.PetMicrochipIDUnionParam](shared.UnionString("string")),
-			Status:      helloworldtestingggg.F(helloworldtestingggg.PetStatusAvailable),
-			Tags: helloworldtestingggg.F([]helloworldtestingggg.PetTagParam{{
-				ID:   helloworldtestingggg.F(int64(0)),
-				Name: helloworldtestingggg.F("name"),
-			}}),
+			Name:               "doggie",
+			PhotoURLs:          []string{"string"},
+			ID:                 helloworldtestingggg.Int(10),
+			AcquisitionChannel: helloworldtestingggg.PetAcquisitionChannelBreeder,
+			Category: helloworldtestingggg.PetCategoryParam{
+				ID:            helloworldtestingggg.Int(1),
+				Name:          helloworldtestingggg.String("Dogs"),
+				Subcategories: []any{},
+			},
+			MicrochipID: helloworldtestingggg.PetMicrochipIDUnionParam{
+				OfString: helloworldtestingggg.String("string"),
+			},
+			Status: helloworldtestingggg.PetStatusAvailable,
+			Tags: []helloworldtestingggg.PetTagParam{{
+				ID:   helloworldtestingggg.Int(0),
+				Name: helloworldtestingggg.String("name"),
+			}},
 		},
 	})
 	if err != nil {
@@ -71,7 +72,7 @@ func TestPetGet(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.Pet.Get(context.TODO(), int64(0))
+	_, err := client.Pet.Get(context.TODO(), 0)
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
 		if errors.As(err, &apierr) {
@@ -96,21 +97,23 @@ func TestPetUpdateWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Pet.Update(context.TODO(), helloworldtestingggg.PetUpdateParams{
 		Pet: helloworldtestingggg.PetParam{
-			Name:               helloworldtestingggg.F("doggie"),
-			PhotoURLs:          helloworldtestingggg.F([]string{"string"}),
-			ID:                 helloworldtestingggg.F(int64(10)),
-			AcquisitionChannel: helloworldtestingggg.F(helloworldtestingggg.PetAcquisitionChannelBreeder),
-			Category: helloworldtestingggg.F(helloworldtestingggg.PetCategoryParam{
-				ID:            helloworldtestingggg.F(int64(1)),
-				Name:          helloworldtestingggg.F("Dogs"),
-				Subcategories: helloworldtestingggg.F([]interface{}{}),
-			}),
-			MicrochipID: helloworldtestingggg.F[helloworldtestingggg.PetMicrochipIDUnionParam](shared.UnionString("string")),
-			Status:      helloworldtestingggg.F(helloworldtestingggg.PetStatusAvailable),
-			Tags: helloworldtestingggg.F([]helloworldtestingggg.PetTagParam{{
-				ID:   helloworldtestingggg.F(int64(0)),
-				Name: helloworldtestingggg.F("name"),
-			}}),
+			Name:               "doggie",
+			PhotoURLs:          []string{"string"},
+			ID:                 helloworldtestingggg.Int(10),
+			AcquisitionChannel: helloworldtestingggg.PetAcquisitionChannelBreeder,
+			Category: helloworldtestingggg.PetCategoryParam{
+				ID:            helloworldtestingggg.Int(1),
+				Name:          helloworldtestingggg.String("Dogs"),
+				Subcategories: []any{},
+			},
+			MicrochipID: helloworldtestingggg.PetMicrochipIDUnionParam{
+				OfString: helloworldtestingggg.String("string"),
+			},
+			Status: helloworldtestingggg.PetStatusAvailable,
+			Tags: []helloworldtestingggg.PetTagParam{{
+				ID:   helloworldtestingggg.Int(0),
+				Name: helloworldtestingggg.String("name"),
+			}},
 		},
 	})
 	if err != nil {
@@ -136,14 +139,14 @@ func TestPetListWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Pet.List(context.TODO(), helloworldtestingggg.PetListParams{
-		CreatedAt: helloworldtestingggg.F(helloworldtestingggg.PetListParamsCreatedAt{
-			Gt:  helloworldtestingggg.F(time.Now()),
-			Gte: helloworldtestingggg.F(time.Now()),
-			Lt:  helloworldtestingggg.F(time.Now()),
-			Lte: helloworldtestingggg.F(time.Now()),
-		}),
-		Cursor: helloworldtestingggg.F("cursor"),
-		Limit:  helloworldtestingggg.F(int64(0)),
+		CreatedAt: helloworldtestingggg.PetListParamsCreatedAt{
+			Gt:  helloworldtestingggg.Time(time.Now()),
+			Gte: helloworldtestingggg.Time(time.Now()),
+			Lt:  helloworldtestingggg.Time(time.Now()),
+			Lte: helloworldtestingggg.Time(time.Now()),
+		},
+		Cursor: helloworldtestingggg.String("cursor"),
+		Limit:  helloworldtestingggg.Int(0),
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
@@ -167,7 +170,7 @@ func TestPetDelete(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	err := client.Pet.Delete(context.TODO(), int64(0))
+	err := client.Pet.Delete(context.TODO(), 0)
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
 		if errors.As(err, &apierr) {
@@ -191,7 +194,7 @@ func TestPetFindByStatusWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Pet.FindByStatus(context.TODO(), helloworldtestingggg.PetFindByStatusParams{
-		Status: helloworldtestingggg.F(helloworldtestingggg.PetFindByStatusParamsStatusAvailable),
+		Status: helloworldtestingggg.PetFindByStatusParamsStatusAvailable,
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
@@ -216,7 +219,7 @@ func TestPetFindByTagsWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Pet.FindByTags(context.TODO(), helloworldtestingggg.PetFindByTagsParams{
-		Tags: helloworldtestingggg.F([]string{"string"}),
+		Tags: []string{"string"},
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
@@ -287,8 +290,8 @@ func TestPetListUnpaginatedWithOptionalParams(t *testing.T) {
 		option.WithAPIKey("My API Key"),
 	)
 	_, err := client.Pet.ListUnpaginated(context.TODO(), helloworldtestingggg.PetListUnpaginatedParams{
-		Cursor: helloworldtestingggg.F("cursor"),
-		Limit:  helloworldtestingggg.F(int64(0)),
+		Cursor: helloworldtestingggg.String("cursor"),
+		Limit:  helloworldtestingggg.Int(0),
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
@@ -312,7 +315,7 @@ func TestPetGetPremium(t *testing.T) {
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
 	)
-	_, err := client.Pet.GetPremium(context.TODO(), int64(0))
+	_, err := client.Pet.GetPremium(context.TODO(), 0)
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
 		if errors.As(err, &apierr) {
@@ -337,10 +340,10 @@ func TestPetUpdateWithFormWithOptionalParams(t *testing.T) {
 	)
 	err := client.Pet.UpdateWithForm(
 		context.TODO(),
-		int64(0),
+		0,
 		helloworldtestingggg.PetUpdateWithFormParams{
-			Name:   helloworldtestingggg.F("name"),
-			Status: helloworldtestingggg.F("status"),
+			Name:   helloworldtestingggg.String("name"),
+			Status: helloworldtestingggg.String("status"),
 		},
 	)
 	if err != nil {
@@ -367,10 +370,10 @@ func TestPetUploadImageWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Pet.UploadImage(
 		context.TODO(),
-		int64(0),
+		0,
 		io.Reader(bytes.NewBuffer([]byte("Example data"))),
 		helloworldtestingggg.PetUploadImageParams{
-			AdditionalMetadata: helloworldtestingggg.F("additionalMetadata"),
+			AdditionalMetadata: helloworldtestingggg.String("additionalMetadata"),
 		},
 	)
 	if err != nil {
