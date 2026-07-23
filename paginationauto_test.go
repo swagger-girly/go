@@ -24,6 +24,8 @@ func TestAutoPagination(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	iter := client.Pet.ListAutoPaging(context.TODO(), helloworldtestingggg.PetListParams{})
 	// The mock server isn't going to give us real pagination

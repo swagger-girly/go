@@ -25,6 +25,8 @@ func TestHealth(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Health(context.TODO())
 	if err != nil {
@@ -48,6 +50,8 @@ func TestGetRateLimits(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.GetRateLimits(context.TODO())
 	if err != nil {

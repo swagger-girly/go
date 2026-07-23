@@ -25,6 +25,8 @@ func TestMediaBinaryAndJson(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Media.BinaryAndJson(context.TODO())
 	if err != nil {
@@ -48,6 +50,8 @@ func TestMediaJsonAndXml(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Media.JsonAndXml(context.TODO())
 	if err != nil {
@@ -71,6 +75,8 @@ func TestMediaJsonFirst(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Media.JsonFirst(context.TODO())
 	if err != nil {
@@ -94,6 +100,8 @@ func TestMediaSchemaOnJson(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Media.SchemaOnJson(context.TODO())
 	if err != nil {
@@ -117,6 +125,8 @@ func TestMediaSchemaOnText(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	err := client.Media.SchemaOnText(context.TODO())
 	if err != nil {
@@ -140,6 +150,8 @@ func TestMediaTextFirst(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Media.TextFirst(context.TODO())
 	if err != nil {
@@ -163,6 +175,8 @@ func TestMediaTextOnly(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Media.TextOnly(context.TODO())
 	if err != nil {
@@ -186,6 +200,8 @@ func TestMediaVendorJson(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Media.VendorJson(context.TODO())
 	if err != nil {

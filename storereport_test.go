@@ -25,6 +25,8 @@ func TestStoreReportGet(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Store.Reports.Get(context.TODO(), "reportId")
 	if err != nil {
@@ -48,11 +50,13 @@ func TestStoreReportListWithOptionalParams(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Store.Reports.List(context.TODO(), helloworldtestingggg.StoreReportListParams{
-		EndingBefore:  helloworldtestingggg.String("ending_before"),
-		PageSize:      helloworldtestingggg.Int(0),
-		StartingAfter: helloworldtestingggg.String("starting_after"),
+		EndingBefore:  helloworldtestingggg.F("ending_before"),
+		PageSize:      helloworldtestingggg.F(int64(0)),
+		StartingAfter: helloworldtestingggg.F("starting_after"),
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
@@ -75,6 +79,8 @@ func TestStoreReportEmbed(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Store.Reports.Embed(context.TODO(), "reportId")
 	if err != nil {
@@ -98,12 +104,14 @@ func TestStoreReportPauseWithOptionalParams(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	err := client.Store.Reports.Pause(
 		context.TODO(),
 		"reportId",
 		helloworldtestingggg.StoreReportPauseParams{
-			IdempotencyKey: helloworldtestingggg.String("report-pause-123"),
+			IdempotencyKey: helloworldtestingggg.F("report-pause-123"),
 		},
 	)
 	if err != nil {

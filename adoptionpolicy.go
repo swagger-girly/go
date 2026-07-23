@@ -4,22 +4,22 @@ package helloworldtestingggg
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
+	"reflect"
 	"slices"
 	"time"
 
 	"github.com/swagger-girly/go/internal/apijson"
 	"github.com/swagger-girly/go/internal/apiquery"
+	"github.com/swagger-girly/go/internal/param"
 	"github.com/swagger-girly/go/internal/requestconfig"
 	"github.com/swagger-girly/go/option"
 	"github.com/swagger-girly/go/packages/pagination"
-	"github.com/swagger-girly/go/packages/param"
-	"github.com/swagger-girly/go/packages/respjson"
 	"github.com/swagger-girly/go/shared"
+	"github.com/tidwall/gjson"
 )
 
 // Adoption policies and applications
@@ -31,22 +31,22 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewAdoptionPolicyService] method instead.
 type AdoptionPolicyService struct {
-	options []option.RequestOption
+	Options []option.RequestOption
 }
 
 // NewAdoptionPolicyService generates a new service that applies the given options
 // to each request. These options are applied after the parent client's options (if
 // there is one), and before any request-specific options.
-func NewAdoptionPolicyService(opts ...option.RequestOption) (r AdoptionPolicyService) {
-	r = AdoptionPolicyService{}
-	r.options = opts
+func NewAdoptionPolicyService(opts ...option.RequestOption) (r *AdoptionPolicyService) {
+	r = &AdoptionPolicyService{}
+	r.Options = opts
 	return
 }
 
 // Creates an adoption policy from a set of eligibility rules, regional overrides,
 // and an optional escalation rule group.
 func (r *AdoptionPolicyService) New(ctx context.Context, body AdoptionPolicyNewParams, opts ...option.RequestOption) (res *Policy, err error) {
-	opts = slices.Concat(r.options, opts)
+	opts = slices.Concat(r.Options, opts)
 	path := "adoptions/policies"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
@@ -54,24 +54,24 @@ func (r *AdoptionPolicyService) New(ctx context.Context, body AdoptionPolicyNewP
 
 // Returns a single adoption policy.
 func (r *AdoptionPolicyService) Get(ctx context.Context, policyID string, opts ...option.RequestOption) (res *Policy, err error) {
-	opts = slices.Concat(r.options, opts)
+	opts = slices.Concat(r.Options, opts)
 	if policyID == "" {
 		err = errors.New("missing required policyId parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("adoptions/policies/%s", url.PathEscape(policyID))
+	path := fmt.Sprintf("adoptions/policies/%s", policyID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
 
 // Updates either the policy details or its lifecycle state.
 func (r *AdoptionPolicyService) Update(ctx context.Context, policyID string, body AdoptionPolicyUpdateParams, opts ...option.RequestOption) (res *Policy, err error) {
-	opts = slices.Concat(r.options, opts)
+	opts = slices.Concat(r.Options, opts)
 	if policyID == "" {
 		err = errors.New("missing required policyId parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("adoptions/policies/%s", url.PathEscape(policyID))
+	path := fmt.Sprintf("adoptions/policies/%s", policyID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPatch, path, body, &res, opts...)
 	return res, err
 }
@@ -79,7 +79,7 @@ func (r *AdoptionPolicyService) Update(ctx context.Context, policyID string, bod
 // Returns a cursor-paginated list of adoption policies.
 func (r *AdoptionPolicyService) List(ctx context.Context, query AdoptionPolicyListParams, opts ...option.RequestOption) (res *pagination.CustomCursorPage[Policy], err error) {
 	var raw *http.Response
-	opts = slices.Concat(r.options, opts)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	path := "adoptions/policies"
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
@@ -101,38 +101,28 @@ func (r *AdoptionPolicyService) ListAutoPaging(ctx context.Context, query Adopti
 
 type AdoptionRule struct {
 	// The applicant or pet attribute the rule targets.
-	//
-	// Any of "PET_STATUS", "SPECIES", "ADOPTER_AGE", "REGION", "PRIOR_ADOPTIONS",
-	// "APPLICATION_DATE".
-	Attribute RuleAttribute `json:"attribute" api:"required"`
-	// Any of "IS_ONE_OF", "IS_NOT_ONE_OF", "MATCHES", "IS_GREATER_THAN",
-	// "IS_LESS_THAN", "IS_BEFORE", "IS_AFTER".
+	Attribute RuleAttribute         `json:"attribute" api:"required"`
 	Operation AdoptionRuleOperation `json:"operation" api:"required"`
 	// A regex string, to be used with `MATCHES`
 	Value ConditionValueUnion `json:"value"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Attribute   respjson.Field
-		Operation   respjson.Field
-		Value       respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+	JSON  adoptionRuleJSON    `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r AdoptionRule) RawJSON() string { return r.JSON.raw }
-func (r *AdoptionRule) UnmarshalJSON(data []byte) error {
+// adoptionRuleJSON contains the JSON metadata for the struct [AdoptionRule]
+type adoptionRuleJSON struct {
+	Attribute   apijson.Field
+	Operation   apijson.Field
+	Value       apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AdoptionRule) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// ToParam converts this AdoptionRule to a AdoptionRuleParam.
-//
-// Warning: the fields of the param type will not be present. ToParam should only
-// be used at the last possible moment before sending a request. Test for this with
-// AdoptionRuleParam.Overrides()
-func (r AdoptionRule) ToParam() AdoptionRuleParam {
-	return param.Override[AdoptionRuleParam](json.RawMessage(r.RawJSON()))
+func (r adoptionRuleJSON) RawJSON() string {
+	return r.raw
 }
 
 type AdoptionRuleOperation string
@@ -147,127 +137,82 @@ const (
 	AdoptionRuleOperationIsAfter       AdoptionRuleOperation = "IS_AFTER"
 )
 
-// The properties Attribute, Operation are required.
+func (r AdoptionRuleOperation) IsKnown() bool {
+	switch r {
+	case AdoptionRuleOperationIsOneOf, AdoptionRuleOperationIsNotOneOf, AdoptionRuleOperationMatches, AdoptionRuleOperationIsGreaterThan, AdoptionRuleOperationIsLessThan, AdoptionRuleOperationIsBefore, AdoptionRuleOperationIsAfter:
+		return true
+	}
+	return false
+}
+
 type AdoptionRuleParam struct {
 	// The applicant or pet attribute the rule targets.
-	//
-	// Any of "PET_STATUS", "SPECIES", "ADOPTER_AGE", "REGION", "PRIOR_ADOPTIONS",
-	// "APPLICATION_DATE".
-	Attribute RuleAttribute `json:"attribute,omitzero" api:"required"`
-	// Any of "IS_ONE_OF", "IS_NOT_ONE_OF", "MATCHES", "IS_GREATER_THAN",
-	// "IS_LESS_THAN", "IS_BEFORE", "IS_AFTER".
-	Operation AdoptionRuleOperation `json:"operation,omitzero" api:"required"`
+	Attribute param.Field[RuleAttribute]         `json:"attribute" api:"required"`
+	Operation param.Field[AdoptionRuleOperation] `json:"operation" api:"required"`
 	// A regex string, to be used with `MATCHES`
-	Value ConditionValueUnionParam `json:"value,omitzero"`
-	paramObj
+	Value param.Field[ConditionValueUnionParam] `json:"value"`
 }
 
 func (r AdoptionRuleParam) MarshalJSON() (data []byte, err error) {
-	type shadow AdoptionRuleParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *AdoptionRuleParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return apijson.MarshalRoot(r)
 }
 
-// ConditionValueUnion contains all possible properties and values from [string],
-// [int64], [float64], [[]string], [time.Time].
+// A regex string, to be used with `MATCHES`
 //
-// Use the methods beginning with 'As' to cast the union to one of its variants.
+// Union satisfied by [shared.UnionString], [shared.UnionInt], [shared.UnionFloat],
+// [ConditionValueListOfStrings] or [shared.UnionTime].
+type ConditionValueUnion interface {
+	ImplementsConditionValueUnion()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*ConditionValueUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(shared.UnionString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.Number,
+			Type:       reflect.TypeOf(shared.UnionInt(0)),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.Number,
+			Type:       reflect.TypeOf(shared.UnionFloat(0)),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(ConditionValueListOfStrings{}),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(shared.UnionTime(shared.UnionTime{})),
+		},
+	)
+}
+
+type ConditionValueListOfStrings []string
+
+func (r ConditionValueListOfStrings) ImplementsConditionValueUnion() {}
+
+// A regex string, to be used with `MATCHES`
 //
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfString OfInt OfFloat OfListOfStrings OfTime]
-type ConditionValueUnion struct {
-	// This field will be present if the value is a [string] instead of an object.
-	OfString string `json:",inline"`
-	// This field will be present if the value is a [int64] instead of an object.
-	OfInt int64 `json:",inline"`
-	// This field will be present if the value is a [float64] instead of an object.
-	OfFloat float64 `json:",inline"`
-	// This field will be present if the value is a [[]string] instead of an object.
-	OfListOfStrings []string `json:",inline"`
-	// This field will be present if the value is a [time.Time] instead of an object.
-	OfTime time.Time `json:",inline"`
-	JSON   struct {
-		OfString        respjson.Field
-		OfInt           respjson.Field
-		OfFloat         respjson.Field
-		OfListOfStrings respjson.Field
-		OfTime          respjson.Field
-		raw             string
-	} `json:"-"`
+// Satisfied by [shared.UnionString], [shared.UnionInt], [shared.UnionFloat],
+// [ConditionValueListOfStringsParam], [shared.UnionTime].
+type ConditionValueUnionParam interface {
+	ImplementsConditionValueUnionParam()
 }
 
-func (u ConditionValueUnion) AsString() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
+type ConditionValueListOfStringsParam []string
 
-func (u ConditionValueUnion) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u ConditionValueUnion) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u ConditionValueUnion) AsListOfStrings() (v []string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u ConditionValueUnion) AsTime() (v time.Time) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u ConditionValueUnion) RawJSON() string { return u.JSON.raw }
-
-func (r *ConditionValueUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// ToParam converts this ConditionValueUnion to a ConditionValueUnionParam.
-//
-// Warning: the fields of the param type will not be present. ToParam should only
-// be used at the last possible moment before sending a request. Test for this with
-// ConditionValueUnionParam.Overrides()
-func (r ConditionValueUnion) ToParam() ConditionValueUnionParam {
-	return param.Override[ConditionValueUnionParam](json.RawMessage(r.RawJSON()))
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type ConditionValueUnionParam struct {
-	OfString        param.Opt[string]    `json:",omitzero,inline"`
-	OfInt           param.Opt[int64]     `json:",omitzero,inline"`
-	OfFloat         param.Opt[float64]   `json:",omitzero,inline"`
-	OfListOfStrings []string             `json:",omitzero,inline"`
-	OfTime          param.Opt[time.Time] `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u ConditionValueUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfString,
-		u.OfInt,
-		u.OfFloat,
-		u.OfListOfStrings,
-		u.OfTime)
-}
-func (u *ConditionValueUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
+func (r ConditionValueListOfStringsParam) ImplementsConditionValueUnionParam() {}
 
 type Policy struct {
-	ID        string         `json:"id" api:"required"`
-	CreatedAt time.Time      `json:"createdAt" api:"required" format:"date-time"`
-	Name      string         `json:"name" api:"required"`
-	Rules     []AdoptionRule `json:"rules" api:"required"`
-	// Any of "draft", "active", "archived".
+	ID         string           `json:"id" api:"required"`
+	CreatedAt  time.Time        `json:"createdAt" api:"required" format:"date-time"`
+	Name       string           `json:"name" api:"required"`
+	Rules      []AdoptionRule   `json:"rules" api:"required"`
 	Status     PolicyStatus     `json:"status" api:"required"`
 	Escalation PolicyEscalation `json:"escalation"`
 	FeeCap     shared.Money     `json:"feeCap"`
@@ -275,26 +220,30 @@ type Policy struct {
 	NotificationTarget PolicyNotificationTargetUnion `json:"notificationTarget"`
 	// Per-region override values keyed by region code.
 	RegionalOverrides map[string]ConditionValueUnion `json:"regionalOverrides"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		ID                 respjson.Field
-		CreatedAt          respjson.Field
-		Name               respjson.Field
-		Rules              respjson.Field
-		Status             respjson.Field
-		Escalation         respjson.Field
-		FeeCap             respjson.Field
-		NotificationTarget respjson.Field
-		RegionalOverrides  respjson.Field
-		ExtraFields        map[string]respjson.Field
-		raw                string
-	} `json:"-"`
+	JSON              policyJSON                     `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r Policy) RawJSON() string { return r.JSON.raw }
-func (r *Policy) UnmarshalJSON(data []byte) error {
+// policyJSON contains the JSON metadata for the struct [Policy]
+type policyJSON struct {
+	ID                 apijson.Field
+	CreatedAt          apijson.Field
+	Name               apijson.Field
+	Rules              apijson.Field
+	Status             apijson.Field
+	Escalation         apijson.Field
+	FeeCap             apijson.Field
+	NotificationTarget apijson.Field
+	RegionalOverrides  apijson.Field
+	raw                string
+	ExtraFields        map[string]apijson.Field
+}
+
+func (r *Policy) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r policyJSON) RawJSON() string {
+	return r.raw
 }
 
 type PolicyStatus string
@@ -305,89 +254,117 @@ const (
 	PolicyStatusArchived PolicyStatus = "archived"
 )
 
+func (r PolicyStatus) IsKnown() bool {
+	switch r {
+	case PolicyStatusDraft, PolicyStatusActive, PolicyStatusArchived:
+		return true
+	}
+	return false
+}
+
 type PolicyEscalation struct {
-	// Any of "ALL", "ANY".
-	Operator string `json:"operator" api:"required"`
+	Operator PolicyEscalationOperator `json:"operator" api:"required"`
 	// Nested rule groups; groups can recurse arbitrarily deep.
-	Groups []any          `json:"groups"`
-	Rules  []AdoptionRule `json:"rules"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Operator    respjson.Field
-		Groups      respjson.Field
-		Rules       respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+	Groups []interface{}        `json:"groups"`
+	Rules  []AdoptionRule       `json:"rules"`
+	JSON   policyEscalationJSON `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r PolicyEscalation) RawJSON() string { return r.JSON.raw }
-func (r *PolicyEscalation) UnmarshalJSON(data []byte) error {
+// policyEscalationJSON contains the JSON metadata for the struct
+// [PolicyEscalation]
+type policyEscalationJSON struct {
+	Operator    apijson.Field
+	Groups      apijson.Field
+	Rules       apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PolicyEscalation) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// PolicyNotificationTargetUnion contains all possible properties and values from
-// [string], [PolicyNotificationTargetWebhookSink].
+func (r policyEscalationJSON) RawJSON() string {
+	return r.raw
+}
+
+type PolicyEscalationOperator string
+
+const (
+	PolicyEscalationOperatorAll PolicyEscalationOperator = "ALL"
+	PolicyEscalationOperatorAny PolicyEscalationOperator = "ANY"
+)
+
+func (r PolicyEscalationOperator) IsKnown() bool {
+	switch r {
+	case PolicyEscalationOperatorAll, PolicyEscalationOperatorAny:
+		return true
+	}
+	return false
+}
+
+// Where policy decisions are delivered: a plain email address or a webhook sink.
 //
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfString]
-type PolicyNotificationTargetUnion struct {
-	// This field will be present if the value is a [string] instead of an object.
-	OfString string `json:",inline"`
-	// This field is from variant [PolicyNotificationTargetWebhookSink].
-	URL string `json:"url"`
-	// This field is from variant [PolicyNotificationTargetWebhookSink].
-	Events []string `json:"events"`
-	// This field is from variant [PolicyNotificationTargetWebhookSink].
-	Secret string `json:"secret"`
-	JSON   struct {
-		OfString respjson.Field
-		URL      respjson.Field
-		Events   respjson.Field
-		Secret   respjson.Field
-		raw      string
-	} `json:"-"`
+// Union satisfied by [shared.UnionString] or
+// [PolicyNotificationTargetWebhookSink].
+type PolicyNotificationTargetUnion interface {
+	ImplementsPolicyNotificationTargetUnion()
 }
 
-func (u PolicyNotificationTargetUnion) AsString() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u PolicyNotificationTargetUnion) AsWebhookSink() (v PolicyNotificationTargetWebhookSink) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u PolicyNotificationTargetUnion) RawJSON() string { return u.JSON.raw }
-
-func (r *PolicyNotificationTargetUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*PolicyNotificationTargetUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(shared.UnionString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(PolicyNotificationTargetWebhookSink{}),
+		},
+	)
 }
 
 type PolicyNotificationTargetWebhookSink struct {
-	URL string `json:"url" api:"required" format:"uri"`
-	// Any of "approved", "rejected", "escalated".
-	Events []string `json:"events"`
-	Secret string   `json:"secret"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		URL         respjson.Field
-		Events      respjson.Field
-		Secret      respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+	URL    string                                     `json:"url" api:"required" format:"uri"`
+	Events []PolicyNotificationTargetWebhookSinkEvent `json:"events"`
+	JSON   policyNotificationTargetWebhookSinkJSON    `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r PolicyNotificationTargetWebhookSink) RawJSON() string { return r.JSON.raw }
-func (r *PolicyNotificationTargetWebhookSink) UnmarshalJSON(data []byte) error {
+// policyNotificationTargetWebhookSinkJSON contains the JSON metadata for the
+// struct [PolicyNotificationTargetWebhookSink]
+type policyNotificationTargetWebhookSinkJSON struct {
+	URL         apijson.Field
+	Events      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PolicyNotificationTargetWebhookSink) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r policyNotificationTargetWebhookSinkJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r PolicyNotificationTargetWebhookSink) ImplementsPolicyNotificationTargetUnion() {}
+
+type PolicyNotificationTargetWebhookSinkEvent string
+
+const (
+	PolicyNotificationTargetWebhookSinkEventApproved  PolicyNotificationTargetWebhookSinkEvent = "approved"
+	PolicyNotificationTargetWebhookSinkEventRejected  PolicyNotificationTargetWebhookSinkEvent = "rejected"
+	PolicyNotificationTargetWebhookSinkEventEscalated PolicyNotificationTargetWebhookSinkEvent = "escalated"
+)
+
+func (r PolicyNotificationTargetWebhookSinkEvent) IsKnown() bool {
+	switch r {
+	case PolicyNotificationTargetWebhookSinkEventApproved, PolicyNotificationTargetWebhookSinkEventRejected, PolicyNotificationTargetWebhookSinkEventEscalated:
+		return true
+	}
+	return false
 }
 
 // The applicant or pet attribute the rule targets.
@@ -402,211 +379,253 @@ const (
 	RuleAttributeApplicationDate RuleAttribute = "APPLICATION_DATE"
 )
 
+func (r RuleAttribute) IsKnown() bool {
+	switch r {
+	case RuleAttributePetStatus, RuleAttributeSpecies, RuleAttributeAdopterAge, RuleAttributeRegion, RuleAttributePriorAdoptions, RuleAttributeApplicationDate:
+		return true
+	}
+	return false
+}
+
 type AdoptionPolicyNewParams struct {
-	Name       string                            `json:"name" api:"required"`
-	Rules      []AdoptionRuleParam               `json:"rules,omitzero" api:"required"`
-	Escalation AdoptionPolicyNewParamsEscalation `json:"escalation,omitzero"`
-	FeeCap     shared.MoneyParam                 `json:"feeCap,omitzero"`
+	Name       param.Field[string]                            `json:"name" api:"required"`
+	Rules      param.Field[[]AdoptionRuleParam]               `json:"rules" api:"required"`
+	Escalation param.Field[AdoptionPolicyNewParamsEscalation] `json:"escalation"`
+	FeeCap     param.Field[shared.MoneyParam]                 `json:"feeCap"`
 	// Where policy decisions are delivered: a plain email address or a webhook sink.
-	NotificationTarget AdoptionPolicyNewParamsNotificationTargetUnion `json:"notificationTarget,omitzero"`
-	RegionalOverrides  map[string]ConditionValueUnionParam            `json:"regionalOverrides,omitzero"`
-	paramObj
+	NotificationTarget param.Field[AdoptionPolicyNewParamsNotificationTargetUnion] `json:"notificationTarget"`
+	RegionalOverrides  param.Field[map[string]ConditionValueUnionParam]            `json:"regionalOverrides"`
 }
 
 func (r AdoptionPolicyNewParams) MarshalJSON() (data []byte, err error) {
-	type shadow AdoptionPolicyNewParams
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *AdoptionPolicyNewParams) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return apijson.MarshalRoot(r)
 }
 
-// The property Operator is required.
 type AdoptionPolicyNewParamsEscalation struct {
-	// Any of "ALL", "ANY".
-	Operator string `json:"operator,omitzero" api:"required"`
+	Operator param.Field[AdoptionPolicyNewParamsEscalationOperator] `json:"operator" api:"required"`
 	// Nested rule groups; groups can recurse arbitrarily deep.
-	Groups []any               `json:"groups,omitzero"`
-	Rules  []AdoptionRuleParam `json:"rules,omitzero"`
-	paramObj
+	Groups param.Field[[]interface{}]       `json:"groups"`
+	Rules  param.Field[[]AdoptionRuleParam] `json:"rules"`
 }
 
 func (r AdoptionPolicyNewParamsEscalation) MarshalJSON() (data []byte, err error) {
-	type shadow AdoptionPolicyNewParamsEscalation
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *AdoptionPolicyNewParamsEscalation) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return apijson.MarshalRoot(r)
 }
 
-func init() {
-	apijson.RegisterFieldValidator[AdoptionPolicyNewParamsEscalation](
-		"operator", "ALL", "ANY",
-	)
+type AdoptionPolicyNewParamsEscalationOperator string
+
+const (
+	AdoptionPolicyNewParamsEscalationOperatorAll AdoptionPolicyNewParamsEscalationOperator = "ALL"
+	AdoptionPolicyNewParamsEscalationOperatorAny AdoptionPolicyNewParamsEscalationOperator = "ANY"
+)
+
+func (r AdoptionPolicyNewParamsEscalationOperator) IsKnown() bool {
+	switch r {
+	case AdoptionPolicyNewParamsEscalationOperatorAll, AdoptionPolicyNewParamsEscalationOperatorAny:
+		return true
+	}
+	return false
 }
 
-// Only one field can be non-zero.
+// Where policy decisions are delivered: a plain email address or a webhook sink.
 //
-// Use [param.IsOmitted] to confirm if a field is set.
-type AdoptionPolicyNewParamsNotificationTargetUnion struct {
-	OfString      param.Opt[string]                                     `json:",omitzero,inline"`
-	OfWebhookSink *AdoptionPolicyNewParamsNotificationTargetWebhookSink `json:",omitzero,inline"`
-	paramUnion
+// Satisfied by [shared.UnionString],
+// [AdoptionPolicyNewParamsNotificationTargetWebhookSink].
+type AdoptionPolicyNewParamsNotificationTargetUnion interface {
+	ImplementsAdoptionPolicyNewParamsNotificationTargetUnion()
 }
 
-func (u AdoptionPolicyNewParamsNotificationTargetUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfString, u.OfWebhookSink)
-}
-func (u *AdoptionPolicyNewParamsNotificationTargetUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-// The property URL is required.
 type AdoptionPolicyNewParamsNotificationTargetWebhookSink struct {
-	URL    string            `json:"url" api:"required" format:"uri"`
-	Secret param.Opt[string] `json:"secret,omitzero"`
-	// Any of "approved", "rejected", "escalated".
-	Events []string `json:"events,omitzero"`
-	paramObj
+	URL    param.Field[string]                                                      `json:"url" api:"required" format:"uri"`
+	Events param.Field[[]AdoptionPolicyNewParamsNotificationTargetWebhookSinkEvent] `json:"events"`
+	Secret param.Field[string]                                                      `json:"secret"`
 }
 
 func (r AdoptionPolicyNewParamsNotificationTargetWebhookSink) MarshalJSON() (data []byte, err error) {
-	type shadow AdoptionPolicyNewParamsNotificationTargetWebhookSink
-	return param.MarshalObject(r, (*shadow)(&r))
+	return apijson.MarshalRoot(r)
 }
-func (r *AdoptionPolicyNewParamsNotificationTargetWebhookSink) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+
+func (r AdoptionPolicyNewParamsNotificationTargetWebhookSink) ImplementsAdoptionPolicyNewParamsNotificationTargetUnion() {
+}
+
+type AdoptionPolicyNewParamsNotificationTargetWebhookSinkEvent string
+
+const (
+	AdoptionPolicyNewParamsNotificationTargetWebhookSinkEventApproved  AdoptionPolicyNewParamsNotificationTargetWebhookSinkEvent = "approved"
+	AdoptionPolicyNewParamsNotificationTargetWebhookSinkEventRejected  AdoptionPolicyNewParamsNotificationTargetWebhookSinkEvent = "rejected"
+	AdoptionPolicyNewParamsNotificationTargetWebhookSinkEventEscalated AdoptionPolicyNewParamsNotificationTargetWebhookSinkEvent = "escalated"
+)
+
+func (r AdoptionPolicyNewParamsNotificationTargetWebhookSinkEvent) IsKnown() bool {
+	switch r {
+	case AdoptionPolicyNewParamsNotificationTargetWebhookSinkEventApproved, AdoptionPolicyNewParamsNotificationTargetWebhookSinkEventRejected, AdoptionPolicyNewParamsNotificationTargetWebhookSinkEventEscalated:
+		return true
+	}
+	return false
 }
 
 type AdoptionPolicyUpdateParams struct {
-
-	//
-	// Request body variants
-	//
-
-	// This field is a request body variant, only one variant field can be set.
-	OfAdoptionPolicyDetailsUpdate *AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdate `json:",inline"`
-	// This field is a request body variant, only one variant field can be set.
-	OfAdoptionPolicyLifecycleUpdate *AdoptionPolicyUpdateParamsBodyAdoptionPolicyLifecycleUpdate `json:",inline"`
-
-	paramObj
+	Body AdoptionPolicyUpdateParamsBodyUnion `json:"body" api:"required"`
 }
 
-func (u AdoptionPolicyUpdateParams) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfAdoptionPolicyDetailsUpdate, u.OfAdoptionPolicyLifecycleUpdate)
+func (r AdoptionPolicyUpdateParams) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r.Body)
 }
-func (r *AdoptionPolicyUpdateParams) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+
+type AdoptionPolicyUpdateParamsBody struct {
+	ActedAt            param.Field[time.Time]                            `json:"actedAt" format:"date-time"`
+	Actor              param.Field[string]                               `json:"actor"`
+	Escalation         param.Field[interface{}]                          `json:"escalation"`
+	Name               param.Field[string]                               `json:"name"`
+	NotificationTarget param.Field[interface{}]                          `json:"notificationTarget"`
+	Reason             param.Field[string]                               `json:"reason"`
+	Status             param.Field[AdoptionPolicyUpdateParamsBodyStatus] `json:"status"`
+}
+
+func (r AdoptionPolicyUpdateParamsBody) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r AdoptionPolicyUpdateParamsBody) implementsAdoptionPolicyUpdateParamsBodyUnion() {}
+
+// Satisfied by [AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdate],
+// [AdoptionPolicyUpdateParamsBodyAdoptionPolicyLifecycleUpdate],
+// [AdoptionPolicyUpdateParamsBody].
+type AdoptionPolicyUpdateParamsBodyUnion interface {
+	implementsAdoptionPolicyUpdateParamsBodyUnion()
 }
 
 type AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdate struct {
-	Name       param.Opt[string]                                                   `json:"name,omitzero"`
-	Escalation AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateEscalation `json:"escalation,omitzero"`
+	Escalation param.Field[AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateEscalation] `json:"escalation"`
+	Name       param.Field[string]                                                              `json:"name"`
 	// Where policy decisions are delivered: a plain email address or a webhook sink.
-	NotificationTarget AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetUnion `json:"notificationTarget,omitzero"`
-	paramObj
+	NotificationTarget param.Field[AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetUnion] `json:"notificationTarget"`
 }
 
 func (r AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdate) MarshalJSON() (data []byte, err error) {
-	type shadow AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdate
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdate) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return apijson.MarshalRoot(r)
 }
 
-// The property Operator is required.
+func (r AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdate) implementsAdoptionPolicyUpdateParamsBodyUnion() {
+}
+
 type AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateEscalation struct {
-	// Any of "ALL", "ANY".
-	Operator string `json:"operator,omitzero" api:"required"`
+	Operator param.Field[AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateEscalationOperator] `json:"operator" api:"required"`
 	// Nested rule groups; groups can recurse arbitrarily deep.
-	Groups []any               `json:"groups,omitzero"`
-	Rules  []AdoptionRuleParam `json:"rules,omitzero"`
-	paramObj
+	Groups param.Field[[]interface{}]       `json:"groups"`
+	Rules  param.Field[[]AdoptionRuleParam] `json:"rules"`
 }
 
 func (r AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateEscalation) MarshalJSON() (data []byte, err error) {
-	type shadow AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateEscalation
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateEscalation) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return apijson.MarshalRoot(r)
 }
 
-func init() {
-	apijson.RegisterFieldValidator[AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateEscalation](
-		"operator", "ALL", "ANY",
-	)
+type AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateEscalationOperator string
+
+const (
+	AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateEscalationOperatorAll AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateEscalationOperator = "ALL"
+	AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateEscalationOperatorAny AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateEscalationOperator = "ANY"
+)
+
+func (r AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateEscalationOperator) IsKnown() bool {
+	switch r {
+	case AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateEscalationOperatorAll, AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateEscalationOperatorAny:
+		return true
+	}
+	return false
 }
 
-// Only one field can be non-zero.
+// Where policy decisions are delivered: a plain email address or a webhook sink.
 //
-// Use [param.IsOmitted] to confirm if a field is set.
-type AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetUnion struct {
-	OfString      param.Opt[string]                                                                       `json:",omitzero,inline"`
-	OfWebhookSink *AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetWebhookSink `json:",omitzero,inline"`
-	paramUnion
+// Satisfied by [shared.UnionString],
+// [AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetWebhookSink].
+type AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetUnion interface {
+	ImplementsAdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetUnion()
 }
 
-func (u AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetUnion) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfString, u.OfWebhookSink)
-}
-func (u *AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
-}
-
-// The property URL is required.
 type AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetWebhookSink struct {
-	URL    string            `json:"url" api:"required" format:"uri"`
-	Secret param.Opt[string] `json:"secret,omitzero"`
-	// Any of "approved", "rejected", "escalated".
-	Events []string `json:"events,omitzero"`
-	paramObj
+	URL    param.Field[string]                                                                                        `json:"url" api:"required" format:"uri"`
+	Events param.Field[[]AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetWebhookSinkEvent] `json:"events"`
+	Secret param.Field[string]                                                                                        `json:"secret"`
 }
 
 func (r AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetWebhookSink) MarshalJSON() (data []byte, err error) {
-	type shadow AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetWebhookSink
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetWebhookSink) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return apijson.MarshalRoot(r)
 }
 
-// The properties Actor, Status are required.
+func (r AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetWebhookSink) ImplementsAdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetUnion() {
+}
+
+type AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetWebhookSinkEvent string
+
+const (
+	AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetWebhookSinkEventApproved  AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetWebhookSinkEvent = "approved"
+	AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetWebhookSinkEventRejected  AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetWebhookSinkEvent = "rejected"
+	AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetWebhookSinkEventEscalated AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetWebhookSinkEvent = "escalated"
+)
+
+func (r AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetWebhookSinkEvent) IsKnown() bool {
+	switch r {
+	case AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetWebhookSinkEventApproved, AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetWebhookSinkEventRejected, AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetWebhookSinkEventEscalated:
+		return true
+	}
+	return false
+}
+
 type AdoptionPolicyUpdateParamsBodyAdoptionPolicyLifecycleUpdate struct {
-	Actor string `json:"actor" api:"required"`
-	// Any of "active", "archived".
-	Status  string               `json:"status,omitzero" api:"required"`
-	ActedAt param.Opt[time.Time] `json:"actedAt,omitzero" format:"date-time"`
-	Reason  param.Opt[string]    `json:"reason,omitzero"`
-	paramObj
+	Actor   param.Field[string]                                                            `json:"actor" api:"required"`
+	Status  param.Field[AdoptionPolicyUpdateParamsBodyAdoptionPolicyLifecycleUpdateStatus] `json:"status" api:"required"`
+	ActedAt param.Field[time.Time]                                                         `json:"actedAt" format:"date-time"`
+	Reason  param.Field[string]                                                            `json:"reason"`
 }
 
 func (r AdoptionPolicyUpdateParamsBodyAdoptionPolicyLifecycleUpdate) MarshalJSON() (data []byte, err error) {
-	type shadow AdoptionPolicyUpdateParamsBodyAdoptionPolicyLifecycleUpdate
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *AdoptionPolicyUpdateParamsBodyAdoptionPolicyLifecycleUpdate) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return apijson.MarshalRoot(r)
 }
 
-func init() {
-	apijson.RegisterFieldValidator[AdoptionPolicyUpdateParamsBodyAdoptionPolicyLifecycleUpdate](
-		"status", "active", "archived",
-	)
+func (r AdoptionPolicyUpdateParamsBodyAdoptionPolicyLifecycleUpdate) implementsAdoptionPolicyUpdateParamsBodyUnion() {
+}
+
+type AdoptionPolicyUpdateParamsBodyAdoptionPolicyLifecycleUpdateStatus string
+
+const (
+	AdoptionPolicyUpdateParamsBodyAdoptionPolicyLifecycleUpdateStatusActive   AdoptionPolicyUpdateParamsBodyAdoptionPolicyLifecycleUpdateStatus = "active"
+	AdoptionPolicyUpdateParamsBodyAdoptionPolicyLifecycleUpdateStatusArchived AdoptionPolicyUpdateParamsBodyAdoptionPolicyLifecycleUpdateStatus = "archived"
+)
+
+func (r AdoptionPolicyUpdateParamsBodyAdoptionPolicyLifecycleUpdateStatus) IsKnown() bool {
+	switch r {
+	case AdoptionPolicyUpdateParamsBodyAdoptionPolicyLifecycleUpdateStatusActive, AdoptionPolicyUpdateParamsBodyAdoptionPolicyLifecycleUpdateStatusArchived:
+		return true
+	}
+	return false
+}
+
+type AdoptionPolicyUpdateParamsBodyStatus string
+
+const (
+	AdoptionPolicyUpdateParamsBodyStatusActive   AdoptionPolicyUpdateParamsBodyStatus = "active"
+	AdoptionPolicyUpdateParamsBodyStatusArchived AdoptionPolicyUpdateParamsBodyStatus = "archived"
+)
+
+func (r AdoptionPolicyUpdateParamsBodyStatus) IsKnown() bool {
+	switch r {
+	case AdoptionPolicyUpdateParamsBodyStatusActive, AdoptionPolicyUpdateParamsBodyStatusArchived:
+		return true
+	}
+	return false
 }
 
 type AdoptionPolicyListParams struct {
 	// Cursor from a previous response used to fetch the next page.
-	Cursor param.Opt[string] `query:"cursor,omitzero" json:"-"`
+	Cursor param.Field[string] `query:"cursor"`
 	// Maximum number of policies to return.
-	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
-	paramObj
+	Limit param.Field[int64] `query:"limit"`
 }
 
 // URLQuery serializes [AdoptionPolicyListParams]'s query parameters as
 // `url.Values`.
-func (r AdoptionPolicyListParams) URLQuery() (v url.Values, err error) {
+func (r AdoptionPolicyListParams) URLQuery() (v url.Values) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,

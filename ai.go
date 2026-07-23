@@ -8,10 +8,9 @@ import (
 	"slices"
 
 	"github.com/swagger-girly/go/internal/apijson"
+	"github.com/swagger-girly/go/internal/param"
 	"github.com/swagger-girly/go/internal/requestconfig"
 	"github.com/swagger-girly/go/option"
-	"github.com/swagger-girly/go/packages/param"
-	"github.com/swagger-girly/go/packages/respjson"
 )
 
 // AIService contains methods and other services that help with interacting with
@@ -21,22 +20,22 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewAIService] method instead.
 type AIService struct {
-	options []option.RequestOption
+	Options []option.RequestOption
 }
 
 // NewAIService generates a new service that applies the given options to each
 // request. These options are applied after the parent client's options (if there
 // is one), and before any request-specific options.
-func NewAIService(opts ...option.RequestOption) (r AIService) {
-	r = AIService{}
-	r.options = opts
+func NewAIService(opts ...option.RequestOption) (r *AIService) {
+	r = &AIService{}
+	r.Options = opts
 	return
 }
 
 // Casing probe replicating context.dev: glued AIAI prefix (resource ai + method
 // ai_query) over plural and non-plural synthesized element mints
 func (r *AIService) AIQuery(ctx context.Context, body AIAIQueryParams, opts ...option.RequestOption) (res *AiaiQueryResponse, err error) {
-	opts = slices.Concat(r.options, opts)
+	opts = slices.Concat(r.Options, opts)
 	path := "ai/query"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
@@ -47,159 +46,173 @@ type AiaiQueryResponse struct {
 	DataExtracted []AiaiQueryResponseDataExtracted `json:"data_extracted"`
 	// Plural array on the response side
 	MatchedRules []AiaiQueryResponseMatchedRule `json:"matched_rules"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		DataExtracted respjson.Field
-		MatchedRules  respjson.Field
-		ExtraFields   map[string]respjson.Field
-		raw           string
-	} `json:"-"`
+	JSON         aiaiQueryResponseJSON          `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r AiaiQueryResponse) RawJSON() string { return r.JSON.raw }
-func (r *AiaiQueryResponse) UnmarshalJSON(data []byte) error {
+// aiaiQueryResponseJSON contains the JSON metadata for the struct
+// [AiaiQueryResponse]
+type aiaiQueryResponseJSON struct {
+	DataExtracted apijson.Field
+	MatchedRules  apijson.Field
+	raw           string
+	ExtraFields   map[string]apijson.Field
+}
+
+func (r *AiaiQueryResponse) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiaiQueryResponseJSON) RawJSON() string {
+	return r.raw
 }
 
 type AiaiQueryResponseDataExtracted struct {
-	DatapointValue string `json:"datapoint_value"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		DatapointValue respjson.Field
-		ExtraFields    map[string]respjson.Field
-		raw            string
-	} `json:"-"`
+	DatapointValue string                             `json:"datapoint_value"`
+	JSON           aiaiQueryResponseDataExtractedJSON `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r AiaiQueryResponseDataExtracted) RawJSON() string { return r.JSON.raw }
-func (r *AiaiQueryResponseDataExtracted) UnmarshalJSON(data []byte) error {
+// aiaiQueryResponseDataExtractedJSON contains the JSON metadata for the struct
+// [AiaiQueryResponseDataExtracted]
+type aiaiQueryResponseDataExtractedJSON struct {
+	DatapointValue apijson.Field
+	raw            string
+	ExtraFields    map[string]apijson.Field
+}
+
+func (r *AiaiQueryResponseDataExtracted) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiaiQueryResponseDataExtractedJSON) RawJSON() string {
+	return r.raw
 }
 
 type AiaiQueryResponseMatchedRule struct {
-	MatchScore float64 `json:"match_score"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		MatchScore  respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+	MatchScore float64                          `json:"match_score"`
+	JSON       aiaiQueryResponseMatchedRuleJSON `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r AiaiQueryResponseMatchedRule) RawJSON() string { return r.JSON.raw }
-func (r *AiaiQueryResponseMatchedRule) UnmarshalJSON(data []byte) error {
+// aiaiQueryResponseMatchedRuleJSON contains the JSON metadata for the struct
+// [AiaiQueryResponseMatchedRule]
+type aiaiQueryResponseMatchedRuleJSON struct {
+	MatchScore  apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *AiaiQueryResponseMatchedRule) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r aiaiQueryResponseMatchedRuleJSON) RawJSON() string {
+	return r.raw
 }
 
 type AIAIQueryParams struct {
 	// Non-plural array property: singularization is a no-op (decisive probe)
-	DataToExtract []AIAIQueryParamsDataToExtract `json:"data_to_extract,omitzero" api:"required"`
+	DataToExtract param.Field[[]AiaiQueryParamsDataToExtract] `json:"data_to_extract" api:"required"`
 	// The domain name to analyze
-	Domain string `json:"domain" api:"required"`
+	Domain param.Field[string] `json:"domain" api:"required"`
 	// Digit-seam acronym parent for nested element mints
-	Authentication3DS AIAIQueryParamsAuthentication3DS `json:"authentication_3ds,omitzero"`
+	Authentication3DS param.Field[AiaiQueryParamsAuthentication3DS] `json:"authentication_3ds"`
 	// Non-plural map property with enum values (map-mint probe)
-	//
-	// Any of "string", "number", "boolean".
-	DatapointObjectSchema map[string]string `json:"datapoint_object_schema,omitzero"`
+	DatapointObjectSchema param.Field[map[string]AiaiQueryParamsDatapointObjectSchema] `json:"datapoint_object_schema"`
 	// Plural array property: singularized element mint (control probe)
-	ExtractionRules []AIAIQueryParamsExtractionRule `json:"extraction_rules,omitzero"`
-	paramObj
+	ExtractionRules param.Field[[]AiaiQueryParamsExtractionRule] `json:"extraction_rules"`
 }
 
 func (r AIAIQueryParams) MarshalJSON() (data []byte, err error) {
-	type shadow AIAIQueryParams
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *AIAIQueryParams) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return apijson.MarshalRoot(r)
 }
 
-// The property DatapointName is required.
-type AIAIQueryParamsDataToExtract struct {
-	DatapointName string `json:"datapoint_name" api:"required"`
-	// Any of "text", "number".
-	DatapointType string `json:"datapoint_type,omitzero"`
-	paramObj
+type AiaiQueryParamsDataToExtract struct {
+	DatapointName param.Field[string]                                    `json:"datapoint_name" api:"required"`
+	DatapointType param.Field[AiaiQueryParamsDataToExtractDatapointType] `json:"datapoint_type"`
 }
 
-func (r AIAIQueryParamsDataToExtract) MarshalJSON() (data []byte, err error) {
-	type shadow AIAIQueryParamsDataToExtract
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *AIAIQueryParamsDataToExtract) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+func (r AiaiQueryParamsDataToExtract) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
 }
 
-func init() {
-	apijson.RegisterFieldValidator[AIAIQueryParamsDataToExtract](
-		"datapoint_type", "text", "number",
-	)
+type AiaiQueryParamsDataToExtractDatapointType string
+
+const (
+	AiaiQueryParamsDataToExtractDatapointTypeText   AiaiQueryParamsDataToExtractDatapointType = "text"
+	AiaiQueryParamsDataToExtractDatapointTypeNumber AiaiQueryParamsDataToExtractDatapointType = "number"
+)
+
+func (r AiaiQueryParamsDataToExtractDatapointType) IsKnown() bool {
+	switch r {
+	case AiaiQueryParamsDataToExtractDatapointTypeText, AiaiQueryParamsDataToExtractDatapointTypeNumber:
+		return true
+	}
+	return false
 }
 
 // Digit-seam acronym parent for nested element mints
-type AIAIQueryParamsAuthentication3DS struct {
+type AiaiQueryParamsAuthentication3DS struct {
 	// Plural array under the 3DS seam
-	ChallengeRules []AIAIQueryParamsAuthentication3DSChallengeRule `json:"challenge_rules,omitzero"`
+	ChallengeRules param.Field[[]AiaiQueryParamsAuthentication3DsChallengeRule] `json:"challenge_rules"`
 	// Non-plural array under the 3DS seam
-	FallbackCheck []AIAIQueryParamsAuthentication3DSFallbackCheck `json:"fallback_check,omitzero"`
-	paramObj
+	FallbackCheck param.Field[[]AiaiQueryParamsAuthentication3DsFallbackCheck] `json:"fallback_check"`
 }
 
-func (r AIAIQueryParamsAuthentication3DS) MarshalJSON() (data []byte, err error) {
-	type shadow AIAIQueryParamsAuthentication3DS
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *AIAIQueryParamsAuthentication3DS) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+func (r AiaiQueryParamsAuthentication3DS) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
 }
 
-type AIAIQueryParamsAuthentication3DSChallengeRule struct {
-	ChallengeKind param.Opt[string] `json:"challenge_kind,omitzero"`
-	paramObj
+type AiaiQueryParamsAuthentication3DsChallengeRule struct {
+	ChallengeKind param.Field[string] `json:"challenge_kind"`
 }
 
-func (r AIAIQueryParamsAuthentication3DSChallengeRule) MarshalJSON() (data []byte, err error) {
-	type shadow AIAIQueryParamsAuthentication3DSChallengeRule
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *AIAIQueryParamsAuthentication3DSChallengeRule) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+func (r AiaiQueryParamsAuthentication3DsChallengeRule) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
 }
 
-type AIAIQueryParamsAuthentication3DSFallbackCheck struct {
-	CheckName param.Opt[string] `json:"check_name,omitzero"`
-	paramObj
+type AiaiQueryParamsAuthentication3DsFallbackCheck struct {
+	CheckName param.Field[string] `json:"check_name"`
 }
 
-func (r AIAIQueryParamsAuthentication3DSFallbackCheck) MarshalJSON() (data []byte, err error) {
-	type shadow AIAIQueryParamsAuthentication3DSFallbackCheck
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *AIAIQueryParamsAuthentication3DSFallbackCheck) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+func (r AiaiQueryParamsAuthentication3DsFallbackCheck) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
 }
 
-type AIAIQueryParamsExtractionRule struct {
-	RuleName param.Opt[string] `json:"rule_name,omitzero"`
-	// Any of "low", "high".
-	RuleSeverity string `json:"rule_severity,omitzero"`
-	paramObj
+type AiaiQueryParamsDatapointObjectSchema string
+
+const (
+	AiaiQueryParamsDatapointObjectSchemaString  AiaiQueryParamsDatapointObjectSchema = "string"
+	AiaiQueryParamsDatapointObjectSchemaNumber  AiaiQueryParamsDatapointObjectSchema = "number"
+	AiaiQueryParamsDatapointObjectSchemaBoolean AiaiQueryParamsDatapointObjectSchema = "boolean"
+)
+
+func (r AiaiQueryParamsDatapointObjectSchema) IsKnown() bool {
+	switch r {
+	case AiaiQueryParamsDatapointObjectSchemaString, AiaiQueryParamsDatapointObjectSchemaNumber, AiaiQueryParamsDatapointObjectSchemaBoolean:
+		return true
+	}
+	return false
 }
 
-func (r AIAIQueryParamsExtractionRule) MarshalJSON() (data []byte, err error) {
-	type shadow AIAIQueryParamsExtractionRule
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *AIAIQueryParamsExtractionRule) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+type AiaiQueryParamsExtractionRule struct {
+	RuleName     param.Field[string]                                     `json:"rule_name"`
+	RuleSeverity param.Field[AiaiQueryParamsExtractionRulesRuleSeverity] `json:"rule_severity"`
 }
 
-func init() {
-	apijson.RegisterFieldValidator[AIAIQueryParamsExtractionRule](
-		"rule_severity", "low", "high",
-	)
+func (r AiaiQueryParamsExtractionRule) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+type AiaiQueryParamsExtractionRulesRuleSeverity string
+
+const (
+	AiaiQueryParamsExtractionRulesRuleSeverityLow  AiaiQueryParamsExtractionRulesRuleSeverity = "low"
+	AiaiQueryParamsExtractionRulesRuleSeverityHigh AiaiQueryParamsExtractionRulesRuleSeverity = "high"
+)
+
+func (r AiaiQueryParamsExtractionRulesRuleSeverity) IsKnown() bool {
+	switch r {
+	case AiaiQueryParamsExtractionRulesRuleSeverityLow, AiaiQueryParamsExtractionRulesRuleSeverityHigh:
+		return true
+	}
+	return false
 }

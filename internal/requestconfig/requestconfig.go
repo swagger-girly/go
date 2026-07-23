@@ -22,6 +22,7 @@ import (
 	"github.com/swagger-girly/go/internal/apierror"
 	"github.com/swagger-girly/go/internal/apiform"
 	"github.com/swagger-girly/go/internal/apiquery"
+	"github.com/swagger-girly/go/internal/param"
 )
 
 func getDefaultHeaders() map[string]string {
@@ -87,7 +88,7 @@ type PreRequestOptionFunc func(*RequestConfig) error
 func (s RequestOptionFunc) Apply(r *RequestConfig) error    { return s(r) }
 func (s PreRequestOptionFunc) Apply(r *RequestConfig) error { return s(r) }
 
-func NewRequestConfig(ctx context.Context, method string, u string, body any, dst any, opts ...RequestOption) (*RequestConfig, error) {
+func NewRequestConfig(ctx context.Context, method string, u string, body interface{}, dst interface{}, opts ...RequestOption) (*RequestConfig, error) {
 	var reader io.Reader
 
 	contentType := "application/json"
@@ -115,11 +116,7 @@ func NewRequestConfig(ctx context.Context, method string, u string, body any, ds
 	}
 	if body, ok := body.(apiquery.Queryer); ok {
 		hasSerializationFunc = true
-		q, err := body.URLQuery()
-		if err != nil {
-			return nil, err
-		}
-		params := q.Encode()
+		params := body.URLQuery().Encode()
 		if params != "" {
 			parsed, _ := url.Parse(u)
 			if parsed.RawQuery != "" {
@@ -196,6 +193,13 @@ func NewRequestConfig(ctx context.Context, method string, u string, body any, ds
 	return &cfg, nil
 }
 
+func UseDefaultParam[T any](dst *param.Field[T], src *T) {
+	if !dst.Present && src != nil {
+		dst.Value = *src
+		dst.Present = true
+	}
+}
+
 // This interface is primarily used to describe an [*http.Client], but also
 // supports custom HTTP implementations.
 type HTTPDoer interface {
@@ -214,16 +218,18 @@ type RequestConfig struct {
 	BaseURL        *url.URL
 	// DefaultBaseURL will be used if BaseURL is not explicitly overridden using
 	// WithBaseURL.
-	DefaultBaseURL *url.URL
-	CustomHTTPDoer HTTPDoer
-	HTTPClient     *http.Client
-	Middlewares    []middleware
-	APIKey         string
-	WebhookSecret  string
+	DefaultBaseURL    *url.URL
+	CustomHTTPDoer    HTTPDoer
+	HTTPClient        *http.Client
+	Middlewares       []middleware
+	APIKey            string
+	BasicAuthUsername string
+	BasicAuthPassword string
+	WebhookSecret     string
 	// If ResponseBodyInto not nil, then we will attempt to deserialize into
 	// ResponseBodyInto. If Destination is a []byte, then it will return the body as
 	// is.
-	ResponseBodyInto any
+	ResponseBodyInto interface{}
 	// ResponseInto copies the \*http.Response of the corresponding request into the
 	// given address
 	ResponseInto **http.Response
@@ -565,7 +571,7 @@ func (cfg *RequestConfig) Execute() (err error) {
 	return nil
 }
 
-func ExecuteNewRequest(ctx context.Context, method string, u string, body any, dst any, opts ...RequestOption) error {
+func ExecuteNewRequest(ctx context.Context, method string, u string, body interface{}, dst interface{}, opts ...RequestOption) error {
 	cfg, err := NewRequestConfig(ctx, method, u, body, dst, opts...)
 	if err != nil {
 		return err
@@ -586,15 +592,17 @@ func (cfg *RequestConfig) Clone(ctx context.Context) *RequestConfig {
 		return nil
 	}
 	new := &RequestConfig{
-		MaxRetries:     cfg.MaxRetries,
-		RequestTimeout: cfg.RequestTimeout,
-		Context:        ctx,
-		Request:        req,
-		BaseURL:        cfg.BaseURL,
-		HTTPClient:     cfg.HTTPClient,
-		Middlewares:    cfg.Middlewares,
-		APIKey:         cfg.APIKey,
-		WebhookSecret:  cfg.WebhookSecret,
+		MaxRetries:        cfg.MaxRetries,
+		RequestTimeout:    cfg.RequestTimeout,
+		Context:           ctx,
+		Request:           req,
+		BaseURL:           cfg.BaseURL,
+		HTTPClient:        cfg.HTTPClient,
+		Middlewares:       cfg.Middlewares,
+		APIKey:            cfg.APIKey,
+		BasicAuthUsername: cfg.BasicAuthUsername,
+		BasicAuthPassword: cfg.BasicAuthPassword,
+		WebhookSecret:     cfg.WebhookSecret,
 	}
 
 	return new

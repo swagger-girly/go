@@ -3,13 +3,14 @@
 package helloworldtestingggg
 
 import (
-	"encoding/json"
+	"reflect"
 	"time"
 
 	"github.com/swagger-girly/go/internal/apijson"
+	"github.com/swagger-girly/go/internal/param"
 	"github.com/swagger-girly/go/option"
-	"github.com/swagger-girly/go/packages/param"
-	"github.com/swagger-girly/go/packages/respjson"
+	"github.com/swagger-girly/go/shared"
+	"github.com/tidwall/gjson"
 )
 
 // VeterinaryService contains methods and other services that help with interacting
@@ -19,15 +20,15 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewVeterinaryService] method instead.
 type VeterinaryService struct {
-	options []option.RequestOption
+	Options []option.RequestOption
 }
 
 // NewVeterinaryService generates a new service that applies the given options to
 // each request. These options are applied after the parent client's options (if
 // there is one), and before any request-specific options.
-func NewVeterinaryService(opts ...option.RequestOption) (r VeterinaryService) {
-	r = VeterinaryService{}
-	r.options = opts
+func NewVeterinaryService(opts ...option.RequestOption) (r *VeterinaryService) {
+	r = &VeterinaryService{}
+	r.Options = opts
 	return
 }
 
@@ -37,169 +38,207 @@ type MedicalSummary struct {
 	Audit        MedicalSummaryAudit       `json:"audit"`
 	Conditions   []MedicalSummaryCondition `json:"conditions"`
 	Vaccinations []VaccinationRecord       `json:"vaccinations"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		PetID        respjson.Field
-		Audit        respjson.Field
-		Conditions   respjson.Field
-		Vaccinations respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
-	} `json:"-"`
+	JSON         medicalSummaryJSON        `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r MedicalSummary) RawJSON() string { return r.JSON.raw }
-func (r *MedicalSummary) UnmarshalJSON(data []byte) error {
+// medicalSummaryJSON contains the JSON metadata for the struct [MedicalSummary]
+type medicalSummaryJSON struct {
+	PetID        apijson.Field
+	Audit        apijson.Field
+	Conditions   apijson.Field
+	Vaccinations apijson.Field
+	raw          string
+	ExtraFields  map[string]apijson.Field
+}
+
+func (r *MedicalSummary) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r medicalSummaryJSON) RawJSON() string {
+	return r.raw
 }
 
 // Provenance stamp attached to records across unrelated resources.
 type MedicalSummaryAudit struct {
-	RecordedAt time.Time `json:"recordedAt" api:"required" format:"date-time"`
-	RecordedBy string    `json:"recordedBy"`
-	// Any of "manual", "import", "system".
-	Source string `json:"source"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		RecordedAt  respjson.Field
-		RecordedBy  respjson.Field
-		Source      respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+	RecordedAt time.Time                 `json:"recordedAt" api:"required" format:"date-time"`
+	RecordedBy string                    `json:"recordedBy"`
+	Source     MedicalSummaryAuditSource `json:"source"`
+	JSON       medicalSummaryAuditJSON   `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r MedicalSummaryAudit) RawJSON() string { return r.JSON.raw }
-func (r *MedicalSummaryAudit) UnmarshalJSON(data []byte) error {
+// medicalSummaryAuditJSON contains the JSON metadata for the struct
+// [MedicalSummaryAudit]
+type medicalSummaryAuditJSON struct {
+	RecordedAt  apijson.Field
+	RecordedBy  apijson.Field
+	Source      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *MedicalSummaryAudit) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r medicalSummaryAuditJSON) RawJSON() string {
+	return r.raw
+}
+
+type MedicalSummaryAuditSource string
+
+const (
+	MedicalSummaryAuditSourceManual MedicalSummaryAuditSource = "manual"
+	MedicalSummaryAuditSourceImport MedicalSummaryAuditSource = "import"
+	MedicalSummaryAuditSourceSystem MedicalSummaryAuditSource = "system"
+)
+
+func (r MedicalSummaryAuditSource) IsKnown() bool {
+	switch r {
+	case MedicalSummaryAuditSourceManual, MedicalSummaryAuditSourceImport, MedicalSummaryAuditSourceSystem:
+		return true
+	}
+	return false
 }
 
 type MedicalSummaryCondition struct {
-	Code string `json:"code" api:"required"`
-	// Any of "mild", "moderate", "severe".
-	Severity  string                           `json:"severity"`
-	Treatment MedicalSummaryConditionTreatment `json:"treatment"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Code        respjson.Field
-		Severity    respjson.Field
-		Treatment   respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+	Code      string                            `json:"code" api:"required"`
+	Severity  MedicalSummaryConditionsSeverity  `json:"severity"`
+	Treatment MedicalSummaryConditionsTreatment `json:"treatment"`
+	JSON      medicalSummaryConditionJSON       `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r MedicalSummaryCondition) RawJSON() string { return r.JSON.raw }
-func (r *MedicalSummaryCondition) UnmarshalJSON(data []byte) error {
+// medicalSummaryConditionJSON contains the JSON metadata for the struct
+// [MedicalSummaryCondition]
+type medicalSummaryConditionJSON struct {
+	Code        apijson.Field
+	Severity    apijson.Field
+	Treatment   apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *MedicalSummaryCondition) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type MedicalSummaryConditionTreatment struct {
-	Medications []MedicalSummaryConditionTreatmentMedication `json:"medications"`
-	Plan        string                                       `json:"plan"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Medications respjson.Field
-		Plan        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+func (r medicalSummaryConditionJSON) RawJSON() string {
+	return r.raw
 }
 
-// Returns the unmodified JSON received from the API
-func (r MedicalSummaryConditionTreatment) RawJSON() string { return r.JSON.raw }
-func (r *MedicalSummaryConditionTreatment) UnmarshalJSON(data []byte) error {
+type MedicalSummaryConditionsSeverity string
+
+const (
+	MedicalSummaryConditionsSeverityMild     MedicalSummaryConditionsSeverity = "mild"
+	MedicalSummaryConditionsSeverityModerate MedicalSummaryConditionsSeverity = "moderate"
+	MedicalSummaryConditionsSeveritySevere   MedicalSummaryConditionsSeverity = "severe"
+)
+
+func (r MedicalSummaryConditionsSeverity) IsKnown() bool {
+	switch r {
+	case MedicalSummaryConditionsSeverityMild, MedicalSummaryConditionsSeverityModerate, MedicalSummaryConditionsSeveritySevere:
+		return true
+	}
+	return false
+}
+
+type MedicalSummaryConditionsTreatment struct {
+	Medications []MedicalSummaryConditionsTreatmentMedication `json:"medications"`
+	Plan        string                                        `json:"plan"`
+	JSON        medicalSummaryConditionsTreatmentJSON         `json:"-"`
+}
+
+// medicalSummaryConditionsTreatmentJSON contains the JSON metadata for the struct
+// [MedicalSummaryConditionsTreatment]
+type medicalSummaryConditionsTreatmentJSON struct {
+	Medications apijson.Field
+	Plan        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *MedicalSummaryConditionsTreatment) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type MedicalSummaryConditionTreatmentMedication struct {
+func (r medicalSummaryConditionsTreatmentJSON) RawJSON() string {
+	return r.raw
+}
+
+type MedicalSummaryConditionsTreatmentMedication struct {
 	Name string `json:"name" api:"required"`
 	// Free-form dosage text or a structured dosage.
-	Dosage MedicalSummaryConditionTreatmentMedicationDosageUnion `json:"dosage"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Name        respjson.Field
-		Dosage      respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+	Dosage MedicalSummaryConditionsTreatmentMedicationsDosageUnion `json:"dosage"`
+	JSON   medicalSummaryConditionsTreatmentMedicationJSON         `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r MedicalSummaryConditionTreatmentMedication) RawJSON() string { return r.JSON.raw }
-func (r *MedicalSummaryConditionTreatmentMedication) UnmarshalJSON(data []byte) error {
+// medicalSummaryConditionsTreatmentMedicationJSON contains the JSON metadata for
+// the struct [MedicalSummaryConditionsTreatmentMedication]
+type medicalSummaryConditionsTreatmentMedicationJSON struct {
+	Name        apijson.Field
+	Dosage      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *MedicalSummaryConditionsTreatmentMedication) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// MedicalSummaryConditionTreatmentMedicationDosageUnion contains all possible
-// properties and values from [string],
-// [MedicalSummaryConditionTreatmentMedicationDosageStructuredDosage].
+func (r medicalSummaryConditionsTreatmentMedicationJSON) RawJSON() string {
+	return r.raw
+}
+
+// Free-form dosage text or a structured dosage.
 //
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfString]
-type MedicalSummaryConditionTreatmentMedicationDosageUnion struct {
-	// This field will be present if the value is a [string] instead of an object.
-	OfString string `json:",inline"`
-	// This field is from variant
-	// [MedicalSummaryConditionTreatmentMedicationDosageStructuredDosage].
-	Amount float64 `json:"amount"`
-	// This field is from variant
-	// [MedicalSummaryConditionTreatmentMedicationDosageStructuredDosage].
-	Unit string `json:"unit"`
-	// This field is from variant
-	// [MedicalSummaryConditionTreatmentMedicationDosageStructuredDosage].
-	Frequency string `json:"frequency"`
-	JSON      struct {
-		OfString  respjson.Field
-		Amount    respjson.Field
-		Unit      respjson.Field
-		Frequency respjson.Field
-		raw       string
-	} `json:"-"`
+// Union satisfied by [shared.UnionString] or
+// [MedicalSummaryConditionsTreatmentMedicationsDosageStructuredDosage].
+type MedicalSummaryConditionsTreatmentMedicationsDosageUnion interface {
+	ImplementsMedicalSummaryConditionsTreatmentMedicationsDosageUnion()
 }
 
-func (u MedicalSummaryConditionTreatmentMedicationDosageUnion) AsString() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*MedicalSummaryConditionsTreatmentMedicationsDosageUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(shared.UnionString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(MedicalSummaryConditionsTreatmentMedicationsDosageStructuredDosage{}),
+		},
+	)
 }
 
-func (u MedicalSummaryConditionTreatmentMedicationDosageUnion) AsStructuredDosage() (v MedicalSummaryConditionTreatmentMedicationDosageStructuredDosage) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
+type MedicalSummaryConditionsTreatmentMedicationsDosageStructuredDosage struct {
+	Amount    float64                                                                `json:"amount" api:"required"`
+	Unit      string                                                                 `json:"unit" api:"required"`
+	Frequency string                                                                 `json:"frequency"`
+	JSON      medicalSummaryConditionsTreatmentMedicationsDosageStructuredDosageJSON `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (u MedicalSummaryConditionTreatmentMedicationDosageUnion) RawJSON() string { return u.JSON.raw }
+// medicalSummaryConditionsTreatmentMedicationsDosageStructuredDosageJSON contains
+// the JSON metadata for the struct
+// [MedicalSummaryConditionsTreatmentMedicationsDosageStructuredDosage]
+type medicalSummaryConditionsTreatmentMedicationsDosageStructuredDosageJSON struct {
+	Amount      apijson.Field
+	Unit        apijson.Field
+	Frequency   apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
 
-func (r *MedicalSummaryConditionTreatmentMedicationDosageUnion) UnmarshalJSON(data []byte) error {
+func (r *MedicalSummaryConditionsTreatmentMedicationsDosageStructuredDosage) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type MedicalSummaryConditionTreatmentMedicationDosageStructuredDosage struct {
-	Amount    float64 `json:"amount" api:"required"`
-	Unit      string  `json:"unit" api:"required"`
-	Frequency string  `json:"frequency"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Amount      respjson.Field
-		Unit        respjson.Field
-		Frequency   respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+func (r medicalSummaryConditionsTreatmentMedicationsDosageStructuredDosageJSON) RawJSON() string {
+	return r.raw
 }
 
-// Returns the unmodified JSON received from the API
-func (r MedicalSummaryConditionTreatmentMedicationDosageStructuredDosage) RawJSON() string {
-	return r.JSON.raw
-}
-func (r *MedicalSummaryConditionTreatmentMedicationDosageStructuredDosage) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+func (r MedicalSummaryConditionsTreatmentMedicationsDosageStructuredDosage) ImplementsMedicalSummaryConditionsTreatmentMedicationsDosageUnion() {
 }
 
 type VaccinationRecord struct {
@@ -210,249 +249,217 @@ type VaccinationRecord struct {
 	Audit           VaccinationRecordAudit             `json:"audit"`
 	BoosterSchedule []VaccinationRecordBoosterSchedule `json:"boosterSchedule"`
 	Veterinarian    VaccinationRecordVeterinarian      `json:"veterinarian"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		ID              respjson.Field
-		AdministeredAt  respjson.Field
-		Vaccine         respjson.Field
-		Audit           respjson.Field
-		BoosterSchedule respjson.Field
-		Veterinarian    respjson.Field
-		ExtraFields     map[string]respjson.Field
-		raw             string
-	} `json:"-"`
+	JSON            vaccinationRecordJSON              `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r VaccinationRecord) RawJSON() string { return r.JSON.raw }
-func (r *VaccinationRecord) UnmarshalJSON(data []byte) error {
+// vaccinationRecordJSON contains the JSON metadata for the struct
+// [VaccinationRecord]
+type vaccinationRecordJSON struct {
+	ID              apijson.Field
+	AdministeredAt  apijson.Field
+	Vaccine         apijson.Field
+	Audit           apijson.Field
+	BoosterSchedule apijson.Field
+	Veterinarian    apijson.Field
+	raw             string
+	ExtraFields     map[string]apijson.Field
+}
+
+func (r *VaccinationRecord) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// ToParam converts this VaccinationRecord to a VaccinationRecordParam.
-//
-// Warning: the fields of the param type will not be present. ToParam should only
-// be used at the last possible moment before sending a request. Test for this with
-// VaccinationRecordParam.Overrides()
-func (r VaccinationRecord) ToParam() VaccinationRecordParam {
-	return param.Override[VaccinationRecordParam](json.RawMessage(r.RawJSON()))
+func (r vaccinationRecordJSON) RawJSON() string {
+	return r.raw
 }
 
 // Provenance stamp attached to records across unrelated resources.
 type VaccinationRecordAudit struct {
-	RecordedAt time.Time `json:"recordedAt" api:"required" format:"date-time"`
-	RecordedBy string    `json:"recordedBy"`
-	// Any of "manual", "import", "system".
-	Source string `json:"source"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		RecordedAt  respjson.Field
-		RecordedBy  respjson.Field
-		Source      respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+	RecordedAt time.Time                    `json:"recordedAt" api:"required" format:"date-time"`
+	RecordedBy string                       `json:"recordedBy"`
+	Source     VaccinationRecordAuditSource `json:"source"`
+	JSON       vaccinationRecordAuditJSON   `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r VaccinationRecordAudit) RawJSON() string { return r.JSON.raw }
-func (r *VaccinationRecordAudit) UnmarshalJSON(data []byte) error {
+// vaccinationRecordAuditJSON contains the JSON metadata for the struct
+// [VaccinationRecordAudit]
+type vaccinationRecordAuditJSON struct {
+	RecordedAt  apijson.Field
+	RecordedBy  apijson.Field
+	Source      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *VaccinationRecordAudit) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r vaccinationRecordAuditJSON) RawJSON() string {
+	return r.raw
+}
+
+type VaccinationRecordAuditSource string
+
+const (
+	VaccinationRecordAuditSourceManual VaccinationRecordAuditSource = "manual"
+	VaccinationRecordAuditSourceImport VaccinationRecordAuditSource = "import"
+	VaccinationRecordAuditSourceSystem VaccinationRecordAuditSource = "system"
+)
+
+func (r VaccinationRecordAuditSource) IsKnown() bool {
+	switch r {
+	case VaccinationRecordAuditSourceManual, VaccinationRecordAuditSourceImport, VaccinationRecordAuditSourceSystem:
+		return true
+	}
+	return false
 }
 
 type VaccinationRecordBoosterSchedule struct {
 	Due       time.Time                                 `json:"due" api:"required" format:"date-time"`
 	Completed bool                                      `json:"completed"`
 	Dose      VaccinationRecordBoosterScheduleDoseUnion `json:"dose"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Due         respjson.Field
-		Completed   respjson.Field
-		Dose        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+	JSON      vaccinationRecordBoosterScheduleJSON      `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r VaccinationRecordBoosterSchedule) RawJSON() string { return r.JSON.raw }
-func (r *VaccinationRecordBoosterSchedule) UnmarshalJSON(data []byte) error {
+// vaccinationRecordBoosterScheduleJSON contains the JSON metadata for the struct
+// [VaccinationRecordBoosterSchedule]
+type vaccinationRecordBoosterScheduleJSON struct {
+	Due         apijson.Field
+	Completed   apijson.Field
+	Dose        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *VaccinationRecordBoosterSchedule) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// VaccinationRecordBoosterScheduleDoseUnion contains all possible properties and
-// values from [float64], [string].
-//
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfFloat OfString]
-type VaccinationRecordBoosterScheduleDoseUnion struct {
-	// This field will be present if the value is a [float64] instead of an object.
-	OfFloat float64 `json:",inline"`
-	// This field will be present if the value is a [string] instead of an object.
-	OfString string `json:",inline"`
-	JSON     struct {
-		OfFloat  respjson.Field
-		OfString respjson.Field
-		raw      string
-	} `json:"-"`
+func (r vaccinationRecordBoosterScheduleJSON) RawJSON() string {
+	return r.raw
 }
 
-func (u VaccinationRecordBoosterScheduleDoseUnion) AsFloat() (v float64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
+// Union satisfied by [shared.UnionFloat] or [shared.UnionString].
+type VaccinationRecordBoosterScheduleDoseUnion interface {
+	ImplementsVaccinationRecordBoosterScheduleDoseUnion()
 }
 
-func (u VaccinationRecordBoosterScheduleDoseUnion) AsString() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u VaccinationRecordBoosterScheduleDoseUnion) RawJSON() string { return u.JSON.raw }
-
-func (r *VaccinationRecordBoosterScheduleDoseUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*VaccinationRecordBoosterScheduleDoseUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.Number,
+			Type:       reflect.TypeOf(shared.UnionFloat(0)),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(shared.UnionString("")),
+		},
+	)
 }
 
 type VaccinationRecordVeterinarian struct {
 	License VaccinationRecordVeterinarianLicense `json:"license"`
 	Name    string                               `json:"name"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		License     respjson.Field
-		Name        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+	JSON    vaccinationRecordVeterinarianJSON    `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r VaccinationRecordVeterinarian) RawJSON() string { return r.JSON.raw }
-func (r *VaccinationRecordVeterinarian) UnmarshalJSON(data []byte) error {
+// vaccinationRecordVeterinarianJSON contains the JSON metadata for the struct
+// [VaccinationRecordVeterinarian]
+type vaccinationRecordVeterinarianJSON struct {
+	License     apijson.Field
+	Name        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *VaccinationRecordVeterinarian) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r vaccinationRecordVeterinarianJSON) RawJSON() string {
+	return r.raw
 }
 
 type VaccinationRecordVeterinarianLicense struct {
-	Number string `json:"number"`
-	Region string `json:"region"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Number      respjson.Field
-		Region      respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+	Number string                                   `json:"number"`
+	Region string                                   `json:"region"`
+	JSON   vaccinationRecordVeterinarianLicenseJSON `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r VaccinationRecordVeterinarianLicense) RawJSON() string { return r.JSON.raw }
-func (r *VaccinationRecordVeterinarianLicense) UnmarshalJSON(data []byte) error {
+// vaccinationRecordVeterinarianLicenseJSON contains the JSON metadata for the
+// struct [VaccinationRecordVeterinarianLicense]
+type vaccinationRecordVeterinarianLicenseJSON struct {
+	Number      apijson.Field
+	Region      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *VaccinationRecordVeterinarianLicense) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The properties ID, AdministeredAt, Vaccine are required.
+func (r vaccinationRecordVeterinarianLicenseJSON) RawJSON() string {
+	return r.raw
+}
+
 type VaccinationRecordParam struct {
-	ID             string    `json:"id" api:"required"`
-	AdministeredAt time.Time `json:"administeredAt" api:"required" format:"date-time"`
-	Vaccine        string    `json:"vaccine" api:"required"`
+	ID             param.Field[string]    `json:"id" api:"required"`
+	AdministeredAt param.Field[time.Time] `json:"administeredAt" api:"required" format:"date-time"`
+	Vaccine        param.Field[string]    `json:"vaccine" api:"required"`
 	// Provenance stamp attached to records across unrelated resources.
-	Audit           VaccinationRecordAuditParam             `json:"audit,omitzero"`
-	BoosterSchedule []VaccinationRecordBoosterScheduleParam `json:"boosterSchedule,omitzero"`
-	Veterinarian    VaccinationRecordVeterinarianParam      `json:"veterinarian,omitzero"`
-	paramObj
+	Audit           param.Field[VaccinationRecordAuditParam]             `json:"audit"`
+	BoosterSchedule param.Field[[]VaccinationRecordBoosterScheduleParam] `json:"boosterSchedule"`
+	Veterinarian    param.Field[VaccinationRecordVeterinarianParam]      `json:"veterinarian"`
 }
 
 func (r VaccinationRecordParam) MarshalJSON() (data []byte, err error) {
-	type shadow VaccinationRecordParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *VaccinationRecordParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return apijson.MarshalRoot(r)
 }
 
 // Provenance stamp attached to records across unrelated resources.
-//
-// The property RecordedAt is required.
 type VaccinationRecordAuditParam struct {
-	RecordedAt time.Time         `json:"recordedAt" api:"required" format:"date-time"`
-	RecordedBy param.Opt[string] `json:"recordedBy,omitzero"`
-	// Any of "manual", "import", "system".
-	Source string `json:"source,omitzero"`
-	paramObj
+	RecordedAt param.Field[time.Time]                    `json:"recordedAt" api:"required" format:"date-time"`
+	RecordedBy param.Field[string]                       `json:"recordedBy"`
+	Source     param.Field[VaccinationRecordAuditSource] `json:"source"`
 }
 
 func (r VaccinationRecordAuditParam) MarshalJSON() (data []byte, err error) {
-	type shadow VaccinationRecordAuditParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *VaccinationRecordAuditParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return apijson.MarshalRoot(r)
 }
 
-func init() {
-	apijson.RegisterFieldValidator[VaccinationRecordAuditParam](
-		"source", "manual", "import", "system",
-	)
-}
-
-// The property Due is required.
 type VaccinationRecordBoosterScheduleParam struct {
-	Due       time.Time                                      `json:"due" api:"required" format:"date-time"`
-	Completed param.Opt[bool]                                `json:"completed,omitzero"`
-	Dose      VaccinationRecordBoosterScheduleDoseUnionParam `json:"dose,omitzero"`
-	paramObj
+	Due       param.Field[time.Time]                                      `json:"due" api:"required" format:"date-time"`
+	Completed param.Field[bool]                                           `json:"completed"`
+	Dose      param.Field[VaccinationRecordBoosterScheduleDoseUnionParam] `json:"dose"`
 }
 
 func (r VaccinationRecordBoosterScheduleParam) MarshalJSON() (data []byte, err error) {
-	type shadow VaccinationRecordBoosterScheduleParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *VaccinationRecordBoosterScheduleParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return apijson.MarshalRoot(r)
 }
 
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type VaccinationRecordBoosterScheduleDoseUnionParam struct {
-	OfFloat  param.Opt[float64] `json:",omitzero,inline"`
-	OfString param.Opt[string]  `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u VaccinationRecordBoosterScheduleDoseUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfFloat, u.OfString)
-}
-func (u *VaccinationRecordBoosterScheduleDoseUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
+// Satisfied by [shared.UnionFloat], [shared.UnionString].
+type VaccinationRecordBoosterScheduleDoseUnionParam interface {
+	ImplementsVaccinationRecordBoosterScheduleDoseUnionParam()
 }
 
 type VaccinationRecordVeterinarianParam struct {
-	Name    param.Opt[string]                         `json:"name,omitzero"`
-	License VaccinationRecordVeterinarianLicenseParam `json:"license,omitzero"`
-	paramObj
+	License param.Field[VaccinationRecordVeterinarianLicenseParam] `json:"license"`
+	Name    param.Field[string]                                    `json:"name"`
 }
 
 func (r VaccinationRecordVeterinarianParam) MarshalJSON() (data []byte, err error) {
-	type shadow VaccinationRecordVeterinarianParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *VaccinationRecordVeterinarianParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return apijson.MarshalRoot(r)
 }
 
 type VaccinationRecordVeterinarianLicenseParam struct {
-	Number param.Opt[string] `json:"number,omitzero"`
-	Region param.Opt[string] `json:"region,omitzero"`
-	paramObj
+	Number param.Field[string] `json:"number"`
+	Region param.Field[string] `json:"region"`
 }
 
 func (r VaccinationRecordVeterinarianLicenseParam) MarshalJSON() (data []byte, err error) {
-	type shadow VaccinationRecordVeterinarianLicenseParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *VaccinationRecordVeterinarianLicenseParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return apijson.MarshalRoot(r)
 }

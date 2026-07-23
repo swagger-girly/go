@@ -26,39 +26,33 @@ func TestAdoptionPolicyNewWithOptionalParams(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Adoptions.Policies.New(context.TODO(), helloworldtestingggg.AdoptionPolicyNewParams{
-		Name: "name",
-		Rules: []helloworldtestingggg.AdoptionRuleParam{{
-			Attribute: helloworldtestingggg.RuleAttributePetStatus,
-			Operation: helloworldtestingggg.AdoptionRuleOperationIsOneOf,
-			Value: helloworldtestingggg.ConditionValueUnionParam{
-				OfString: helloworldtestingggg.String("string"),
-			},
-		}},
-		Escalation: helloworldtestingggg.AdoptionPolicyNewParamsEscalation{
-			Operator: "ALL",
-			Groups:   []any{},
-			Rules: []helloworldtestingggg.AdoptionRuleParam{{
-				Attribute: helloworldtestingggg.RuleAttributePetStatus,
-				Operation: helloworldtestingggg.AdoptionRuleOperationIsOneOf,
-				Value: helloworldtestingggg.ConditionValueUnionParam{
-					OfString: helloworldtestingggg.String("string"),
-				},
-			}},
-		},
-		FeeCap: shared.MoneyParam{
-			Amount:   2500,
-			Currency: "USD",
-		},
-		NotificationTarget: helloworldtestingggg.AdoptionPolicyNewParamsNotificationTargetUnion{
-			OfString: helloworldtestingggg.String("string"),
-		},
-		RegionalOverrides: map[string]helloworldtestingggg.ConditionValueUnionParam{
-			"foo": {
-				OfString: helloworldtestingggg.String("string"),
-			},
-		},
+		Name: helloworldtestingggg.F("name"),
+		Rules: helloworldtestingggg.F([]helloworldtestingggg.AdoptionRuleParam{{
+			Attribute: helloworldtestingggg.F(helloworldtestingggg.RuleAttributePetStatus),
+			Operation: helloworldtestingggg.F(helloworldtestingggg.AdoptionRuleOperationIsOneOf),
+			Value:     helloworldtestingggg.F[helloworldtestingggg.ConditionValueUnionParam](shared.UnionString("string")),
+		}}),
+		Escalation: helloworldtestingggg.F(helloworldtestingggg.AdoptionPolicyNewParamsEscalation{
+			Operator: helloworldtestingggg.F(helloworldtestingggg.AdoptionPolicyNewParamsEscalationOperatorAll),
+			Groups:   helloworldtestingggg.F([]interface{}{}),
+			Rules: helloworldtestingggg.F([]helloworldtestingggg.AdoptionRuleParam{{
+				Attribute: helloworldtestingggg.F(helloworldtestingggg.RuleAttributePetStatus),
+				Operation: helloworldtestingggg.F(helloworldtestingggg.AdoptionRuleOperationIsOneOf),
+				Value:     helloworldtestingggg.F[helloworldtestingggg.ConditionValueUnionParam](shared.UnionString("string")),
+			}}),
+		}),
+		FeeCap: helloworldtestingggg.F(shared.MoneyParam{
+			Amount:   helloworldtestingggg.F(int64(2500)),
+			Currency: helloworldtestingggg.F("USD"),
+		}),
+		NotificationTarget: helloworldtestingggg.F[helloworldtestingggg.AdoptionPolicyNewParamsNotificationTargetUnion](shared.UnionString("string")),
+		RegionalOverrides: helloworldtestingggg.F(map[string]helloworldtestingggg.ConditionValueUnionParam{
+			"foo": shared.UnionString("string"),
+		}),
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
@@ -81,6 +75,8 @@ func TestAdoptionPolicyGet(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Adoptions.Policies.Get(context.TODO(), "policyId")
 	if err != nil {
@@ -104,27 +100,25 @@ func TestAdoptionPolicyUpdateWithOptionalParams(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Adoptions.Policies.Update(
 		context.TODO(),
 		"policyId",
 		helloworldtestingggg.AdoptionPolicyUpdateParams{
-			OfAdoptionPolicyDetailsUpdate: &helloworldtestingggg.AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdate{
-				Escalation: helloworldtestingggg.AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateEscalation{
-					Operator: "ALL",
-					Groups:   []any{},
-					Rules: []helloworldtestingggg.AdoptionRuleParam{{
-						Attribute: helloworldtestingggg.RuleAttributePetStatus,
-						Operation: helloworldtestingggg.AdoptionRuleOperationIsOneOf,
-						Value: helloworldtestingggg.ConditionValueUnionParam{
-							OfString: helloworldtestingggg.String("string"),
-						},
-					}},
-				},
-				Name: helloworldtestingggg.String("name"),
-				NotificationTarget: helloworldtestingggg.AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetUnion{
-					OfString: helloworldtestingggg.String("string"),
-				},
+			Body: helloworldtestingggg.AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdate{
+				Escalation: helloworldtestingggg.F(helloworldtestingggg.AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateEscalation{
+					Operator: helloworldtestingggg.F(helloworldtestingggg.AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateEscalationOperatorAll),
+					Groups:   helloworldtestingggg.F([]interface{}{}),
+					Rules: helloworldtestingggg.F([]helloworldtestingggg.AdoptionRuleParam{{
+						Attribute: helloworldtestingggg.F(helloworldtestingggg.RuleAttributePetStatus),
+						Operation: helloworldtestingggg.F(helloworldtestingggg.AdoptionRuleOperationIsOneOf),
+						Value:     helloworldtestingggg.F[helloworldtestingggg.ConditionValueUnionParam](shared.UnionString("string")),
+					}}),
+				}),
+				Name:               helloworldtestingggg.F("name"),
+				NotificationTarget: helloworldtestingggg.F[helloworldtestingggg.AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetUnion](shared.UnionString("string")),
 			},
 		},
 	)
@@ -149,10 +143,12 @@ func TestAdoptionPolicyListWithOptionalParams(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Adoptions.Policies.List(context.TODO(), helloworldtestingggg.AdoptionPolicyListParams{
-		Cursor: helloworldtestingggg.String("cursor"),
-		Limit:  helloworldtestingggg.Int(0),
+		Cursor: helloworldtestingggg.F("cursor"),
+		Limit:  helloworldtestingggg.F(int64(0)),
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error

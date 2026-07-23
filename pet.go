@@ -5,27 +5,25 @@ package helloworldtestingggg
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"reflect"
 	"slices"
 	"time"
 
 	"github.com/swagger-girly/go/internal/apiform"
 	"github.com/swagger-girly/go/internal/apijson"
 	"github.com/swagger-girly/go/internal/apiquery"
-	shimjson "github.com/swagger-girly/go/internal/encoding/json"
+	"github.com/swagger-girly/go/internal/param"
 	"github.com/swagger-girly/go/internal/requestconfig"
 	"github.com/swagger-girly/go/option"
 	"github.com/swagger-girly/go/packages/pagination"
-	"github.com/swagger-girly/go/packages/param"
-	"github.com/swagger-girly/go/packages/respjson"
 	"github.com/swagger-girly/go/packages/ssestream"
 	"github.com/swagger-girly/go/shared"
-	"github.com/swagger-girly/go/shared/constant"
+	"github.com/tidwall/gjson"
 )
 
 // Everything about your Pets
@@ -37,21 +35,21 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewPetService] method instead.
 type PetService struct {
-	options []option.RequestOption
+	Options []option.RequestOption
 }
 
 // NewPetService generates a new service that applies the given options to each
 // request. These options are applied after the parent client's options (if there
 // is one), and before any request-specific options.
-func NewPetService(opts ...option.RequestOption) (r PetService) {
-	r = PetService{}
-	r.options = opts
+func NewPetService(opts ...option.RequestOption) (r *PetService) {
+	r = &PetService{}
+	r.Options = opts
 	return
 }
 
 // Add a new pet to the store
 func (r *PetService) New(ctx context.Context, body PetNewParams, opts ...option.RequestOption) (res *Pet, err error) {
-	opts = slices.Concat(r.options, opts)
+	opts = slices.Concat(r.Options, opts)
 	path := "pet"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
@@ -59,7 +57,7 @@ func (r *PetService) New(ctx context.Context, body PetNewParams, opts ...option.
 
 // Returns a single pet
 func (r *PetService) Get(ctx context.Context, petID int64, opts ...option.RequestOption) (res *Pet, err error) {
-	opts = slices.Concat(r.options, opts)
+	opts = slices.Concat(r.Options, opts)
 	path := fmt.Sprintf("pet/%v", petID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
@@ -67,7 +65,7 @@ func (r *PetService) Get(ctx context.Context, petID int64, opts ...option.Reques
 
 // Update an existing pet by Id
 func (r *PetService) Update(ctx context.Context, body PetUpdateParams, opts ...option.RequestOption) (res *Pet, err error) {
-	opts = slices.Concat(r.options, opts)
+	opts = slices.Concat(r.Options, opts)
 	path := "pet"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPut, path, body, &res, opts...)
 	return res, err
@@ -76,7 +74,7 @@ func (r *PetService) Update(ctx context.Context, body PetUpdateParams, opts ...o
 // Returns a cursor-paginated list of pets.
 func (r *PetService) List(ctx context.Context, query PetListParams, opts ...option.RequestOption) (res *pagination.CustomCursorPage[Pet], err error) {
 	var raw *http.Response
-	opts = slices.Concat(r.options, opts)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	path := "pet"
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, query, &res, opts...)
@@ -98,7 +96,7 @@ func (r *PetService) ListAutoPaging(ctx context.Context, query PetListParams, op
 
 // Deletes a pet
 func (r *PetService) Delete(ctx context.Context, petID int64, opts ...option.RequestOption) (err error) {
-	opts = slices.Concat(r.options, opts)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	path := fmt.Sprintf("pet/%v", petID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodDelete, path, nil, nil, opts...)
@@ -107,7 +105,7 @@ func (r *PetService) Delete(ctx context.Context, petID int64, opts ...option.Req
 
 // Multiple status values can be provided with comma separated strings
 func (r *PetService) FindByStatus(ctx context.Context, query PetFindByStatusParams, opts ...option.RequestOption) (res *[]Pet, err error) {
-	opts = slices.Concat(r.options, opts)
+	opts = slices.Concat(r.Options, opts)
 	path := "pet/findByStatus"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
 	return res, err
@@ -116,7 +114,7 @@ func (r *PetService) FindByStatus(ctx context.Context, query PetFindByStatusPara
 // Multiple tags can be provided with comma separated strings. Use tag1, tag2, tag3
 // for testing.
 func (r *PetService) FindByTags(ctx context.Context, query PetFindByTagsParams, opts ...option.RequestOption) (res *[]Pet, err error) {
-	opts = slices.Concat(r.options, opts)
+	opts = slices.Concat(r.Options, opts)
 	path := "pet/findByTags"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
 	return res, err
@@ -124,7 +122,7 @@ func (r *PetService) FindByTags(ctx context.Context, query PetFindByTagsParams, 
 
 // Returns a single page-shaped pet response without SDK pagination helpers.
 func (r *PetService) ListFakePage(ctx context.Context, opts ...option.RequestOption) (res *PetListFakePageResponse, err error) {
-	opts = slices.Concat(r.options, opts)
+	opts = slices.Concat(r.Options, opts)
 	path := "pet/fake-page"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
@@ -134,7 +132,7 @@ func (r *PetService) ListFakePage(ctx context.Context, opts ...option.RequestOpt
 // inferred from the config scheme.
 func (r *PetService) ListFakePageInferred(ctx context.Context, opts ...option.RequestOption) (res *pagination.XFakeSinglePage[Pet], err error) {
 	var raw *http.Response
-	opts = slices.Concat(r.options, opts)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithResponseInto(&raw)}, opts...)
 	path := "pet/fake-page-inferred"
 	cfg, err := requestconfig.NewRequestConfig(ctx, http.MethodGet, path, nil, &res, opts...)
@@ -158,7 +156,7 @@ func (r *PetService) ListFakePageInferredAutoPaging(ctx context.Context, opts ..
 // Returns the same cursor-shaped pet list response without enabling SDK pagination
 // helpers.
 func (r *PetService) ListUnpaginated(ctx context.Context, query PetListUnpaginatedParams, opts ...option.RequestOption) (res *PetListUnpaginatedResponse, err error) {
-	opts = slices.Concat(r.options, opts)
+	opts = slices.Concat(r.Options, opts)
 	path := "pet/unpaginated"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
 	return res, err
@@ -167,15 +165,27 @@ func (r *PetService) ListUnpaginated(ctx context.Context, query PetListUnpaginat
 // Returns the premium profile for a pet, extending the base pet with pedigree and
 // insurance details.
 func (r *PetService) GetPremium(ctx context.Context, petID int64, opts ...option.RequestOption) (res *PetGetPremiumResponse, err error) {
-	opts = slices.Concat(r.options, opts)
+	opts = slices.Concat(r.Options, opts)
 	path := fmt.Sprintf("pet/%v/premium", petID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
 
+// Typed query-parameter probe matrix: an object-schema query param mints a typed
+// params model, an array-of-object query param mints a singularized element type,
+// an empty object (additionalProperties:false) stays a bare object, and a scalar
+// stays scalar. Isolates the emitter query-parameter type-resolution branches so
+// object/array-of-object/empty-object params are each exercised.
+func (r *PetService) Search(ctx context.Context, query PetSearchParams, opts ...option.RequestOption) (res *[]Pet, err error) {
+	opts = slices.Concat(r.Options, opts)
+	path := "pet/search"
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
+	return res, err
+}
+
 // Updates a pet in the store with form data
 func (r *PetService) UpdateWithForm(ctx context.Context, petID int64, body PetUpdateWithFormParams, opts ...option.RequestOption) (err error) {
-	opts = slices.Concat(r.options, opts)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "*/*")}, opts...)
 	path := fmt.Sprintf("pet/%v", petID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, nil, opts...)
@@ -184,7 +194,7 @@ func (r *PetService) UpdateWithForm(ctx context.Context, petID int64, body PetUp
 
 // uploads an image
 func (r *PetService) UploadImage(ctx context.Context, petID int64, body io.Reader, params PetUploadImageParams, opts ...option.RequestOption) (res *PetUploadImageResponse, err error) {
-	opts = slices.Concat(r.options, opts)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithRequestBody("application/octet-stream", body)}, opts...)
 	path := fmt.Sprintf("pet/%v/uploadImage", petID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, nil, &res, opts...)
@@ -198,10 +208,10 @@ func (r *PetService) WatchStatusStreaming(ctx context.Context, petID int64, quer
 		raw *http.Response
 		err error
 	)
-	if !param.IsOmitted(query.LastEventID) {
-		opts = append(opts, option.WithHeader("Last-Event-ID", fmt.Sprintf("%v", query.LastEventID.Value)))
+	if query.LastEventID.Present {
+		opts = append(opts, option.WithHeader("Last-Event-ID", fmt.Sprintf("%v", query.LastEventID)))
 	}
-	opts = slices.Concat(r.options, opts)
+	opts = slices.Concat(r.Options, opts)
 	opts = append([]option.RequestOption{option.WithHeader("Accept", "text/event-stream")}, opts...)
 	path := fmt.Sprintf("pet/%v/status/stream", petID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &raw, opts...)
@@ -219,38 +229,31 @@ type Pet struct {
 	// Microchip identifier; legacy chips used numeric identifiers.
 	MicrochipID PetMicrochipIDUnion `json:"microchipId"`
 	// pet status in the store
-	//
-	// Any of "available", "pending", "sold".
 	Status PetStatus `json:"status"`
 	Tags   []PetTag  `json:"tags"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Name               respjson.Field
-		PhotoURLs          respjson.Field
-		ID                 respjson.Field
-		AcquisitionChannel respjson.Field
-		Category           respjson.Field
-		MicrochipID        respjson.Field
-		Status             respjson.Field
-		Tags               respjson.Field
-		ExtraFields        map[string]respjson.Field
-		raw                string
-	} `json:"-"`
+	JSON   petJSON   `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r Pet) RawJSON() string { return r.JSON.raw }
-func (r *Pet) UnmarshalJSON(data []byte) error {
+// petJSON contains the JSON metadata for the struct [Pet]
+type petJSON struct {
+	Name               apijson.Field
+	PhotoURLs          apijson.Field
+	ID                 apijson.Field
+	AcquisitionChannel apijson.Field
+	Category           apijson.Field
+	MicrochipID        apijson.Field
+	Status             apijson.Field
+	Tags               apijson.Field
+	raw                string
+	ExtraFields        map[string]apijson.Field
+}
+
+func (r *Pet) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// ToParam converts this Pet to a PetParam.
-//
-// Warning: the fields of the param type will not be present. ToParam should only
-// be used at the last possible moment before sending a request. Test for this with
-// PetParam.Overrides()
-func (r Pet) ToParam() PetParam {
-	return param.Override[PetParam](json.RawMessage(r.RawJSON()))
+func (r petJSON) RawJSON() string {
+	return r.raw
 }
 
 // How the pet entered the store. Open enum: known channels plus forward-compatible
@@ -264,152 +267,127 @@ const (
 	PetAcquisitionChannelTransfer  PetAcquisitionChannel = "transfer"
 )
 
+func (r PetAcquisitionChannel) IsKnown() bool {
+	switch r {
+	case PetAcquisitionChannelBreeder, PetAcquisitionChannelShelter, PetAcquisitionChannelSurrender, PetAcquisitionChannelTransfer:
+		return true
+	}
+	return false
+}
+
 type PetCategory struct {
 	ID   int64  `json:"id"`
 	Name string `json:"name"`
 	// Nested subcategories; the tree can recurse arbitrarily deep.
-	Subcategories []any `json:"subcategories"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		ID            respjson.Field
-		Name          respjson.Field
-		Subcategories respjson.Field
-		ExtraFields   map[string]respjson.Field
-		raw           string
-	} `json:"-"`
+	Subcategories []interface{}   `json:"subcategories"`
+	JSON          petCategoryJSON `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r PetCategory) RawJSON() string { return r.JSON.raw }
-func (r *PetCategory) UnmarshalJSON(data []byte) error {
+// petCategoryJSON contains the JSON metadata for the struct [PetCategory]
+type petCategoryJSON struct {
+	ID            apijson.Field
+	Name          apijson.Field
+	Subcategories apijson.Field
+	raw           string
+	ExtraFields   map[string]apijson.Field
+}
+
+func (r *PetCategory) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// PetMicrochipIDUnion contains all possible properties and values from [string],
-// [int64].
+func (r petCategoryJSON) RawJSON() string {
+	return r.raw
+}
+
+// Microchip identifier; legacy chips used numeric identifiers.
 //
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfString OfInt]
-type PetMicrochipIDUnion struct {
-	// This field will be present if the value is a [string] instead of an object.
-	OfString string `json:",inline"`
-	// This field will be present if the value is a [int64] instead of an object.
-	OfInt int64 `json:",inline"`
-	JSON  struct {
-		OfString respjson.Field
-		OfInt    respjson.Field
-		raw      string
-	} `json:"-"`
+// Union satisfied by [shared.UnionString] or [shared.UnionInt].
+type PetMicrochipIDUnion interface {
+	ImplementsPetMicrochipIDUnion()
 }
 
-func (u PetMicrochipIDUnion) AsString() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u PetMicrochipIDUnion) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u PetMicrochipIDUnion) RawJSON() string { return u.JSON.raw }
-
-func (r *PetMicrochipIDUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*PetMicrochipIDUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(shared.UnionString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.Number,
+			Type:       reflect.TypeOf(shared.UnionInt(0)),
+		},
+	)
 }
 
 type PetTag struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		ID          respjson.Field
-		Name        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+	ID   int64      `json:"id"`
+	Name string     `json:"name"`
+	JSON petTagJSON `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r PetTag) RawJSON() string { return r.JSON.raw }
-func (r *PetTag) UnmarshalJSON(data []byte) error {
+// petTagJSON contains the JSON metadata for the struct [PetTag]
+type petTagJSON struct {
+	ID          apijson.Field
+	Name        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PetTag) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The properties Name, PhotoURLs are required.
+func (r petTagJSON) RawJSON() string {
+	return r.raw
+}
+
 type PetParam struct {
-	Name      string           `json:"name" api:"required"`
-	PhotoURLs []string         `json:"photoUrls,omitzero" api:"required"`
-	ID        param.Opt[int64] `json:"id,omitzero"`
+	Name      param.Field[string]   `json:"name" api:"required"`
+	PhotoURLs param.Field[[]string] `json:"photoUrls" api:"required"`
+	ID        param.Field[int64]    `json:"id"`
 	// How the pet entered the store. Open enum: known channels plus forward-compatible
 	// free-form strings.
-	AcquisitionChannel PetAcquisitionChannel `json:"acquisitionChannel,omitzero"`
-	Category           PetCategoryParam      `json:"category,omitzero"`
+	AcquisitionChannel param.Field[PetAcquisitionChannel] `json:"acquisitionChannel"`
+	Category           param.Field[PetCategoryParam]      `json:"category"`
 	// Microchip identifier; legacy chips used numeric identifiers.
-	MicrochipID PetMicrochipIDUnionParam `json:"microchipId,omitzero"`
+	MicrochipID param.Field[PetMicrochipIDUnionParam] `json:"microchipId"`
 	// pet status in the store
-	//
-	// Any of "available", "pending", "sold".
-	Status PetStatus     `json:"status,omitzero"`
-	Tags   []PetTagParam `json:"tags,omitzero"`
-	paramObj
+	Status param.Field[PetStatus]     `json:"status"`
+	Tags   param.Field[[]PetTagParam] `json:"tags"`
 }
 
 func (r PetParam) MarshalJSON() (data []byte, err error) {
-	type shadow PetParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *PetParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return apijson.MarshalRoot(r)
 }
 
 type PetCategoryParam struct {
-	ID   param.Opt[int64]  `json:"id,omitzero"`
-	Name param.Opt[string] `json:"name,omitzero"`
+	ID   param.Field[int64]  `json:"id"`
+	Name param.Field[string] `json:"name"`
 	// Nested subcategories; the tree can recurse arbitrarily deep.
-	Subcategories []any `json:"subcategories,omitzero"`
-	paramObj
+	Subcategories param.Field[[]interface{}] `json:"subcategories"`
 }
 
 func (r PetCategoryParam) MarshalJSON() (data []byte, err error) {
-	type shadow PetCategoryParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *PetCategoryParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return apijson.MarshalRoot(r)
 }
 
-// Only one field can be non-zero.
+// Microchip identifier; legacy chips used numeric identifiers.
 //
-// Use [param.IsOmitted] to confirm if a field is set.
-type PetMicrochipIDUnionParam struct {
-	OfString param.Opt[string] `json:",omitzero,inline"`
-	OfInt    param.Opt[int64]  `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u PetMicrochipIDUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfString, u.OfInt)
-}
-func (u *PetMicrochipIDUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
+// Satisfied by [shared.UnionString], [shared.UnionInt].
+type PetMicrochipIDUnionParam interface {
+	ImplementsPetMicrochipIDUnionParam()
 }
 
 type PetTagParam struct {
-	ID   param.Opt[int64]  `json:"id,omitzero"`
-	Name param.Opt[string] `json:"name,omitzero"`
-	paramObj
+	ID   param.Field[int64]  `json:"id"`
+	Name param.Field[string] `json:"name"`
 }
 
 func (r PetTagParam) MarshalJSON() (data []byte, err error) {
-	type shadow PetTagParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *PetTagParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return apijson.MarshalRoot(r)
 }
 
 // pet status in the store
@@ -421,40 +399,58 @@ const (
 	PetStatusSold      PetStatus = "sold"
 )
 
-type PetListFakePageResponse struct {
-	Data    []Pet `json:"data" api:"required"`
-	HasMore bool  `json:"has_more" api:"required"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Data        respjson.Field
-		HasMore     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+func (r PetStatus) IsKnown() bool {
+	switch r {
+	case PetStatusAvailable, PetStatusPending, PetStatusSold:
+		return true
+	}
+	return false
 }
 
-// Returns the unmodified JSON received from the API
-func (r PetListFakePageResponse) RawJSON() string { return r.JSON.raw }
-func (r *PetListFakePageResponse) UnmarshalJSON(data []byte) error {
+type PetListFakePageResponse struct {
+	Data    []Pet                       `json:"data" api:"required"`
+	HasMore bool                        `json:"has_more" api:"required"`
+	JSON    petListFakePageResponseJSON `json:"-"`
+}
+
+// petListFakePageResponseJSON contains the JSON metadata for the struct
+// [PetListFakePageResponse]
+type petListFakePageResponseJSON struct {
+	Data        apijson.Field
+	HasMore     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PetListFakePageResponse) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r petListFakePageResponseJSON) RawJSON() string {
+	return r.raw
 }
 
 type PetListUnpaginatedResponse struct {
-	Items      []Pet  `json:"items" api:"required"`
-	NextCursor string `json:"next_cursor" api:"nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Items       respjson.Field
-		NextCursor  respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+	Items      []Pet                          `json:"items" api:"required"`
+	NextCursor string                         `json:"next_cursor" api:"nullable"`
+	JSON       petListUnpaginatedResponseJSON `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r PetListUnpaginatedResponse) RawJSON() string { return r.JSON.raw }
-func (r *PetListUnpaginatedResponse) UnmarshalJSON(data []byte) error {
+// petListUnpaginatedResponseJSON contains the JSON metadata for the struct
+// [PetListUnpaginatedResponse]
+type petListUnpaginatedResponseJSON struct {
+	Items       apijson.Field
+	NextCursor  apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PetListUnpaginatedResponse) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r petListUnpaginatedResponseJSON) RawJSON() string {
+	return r.raw
 }
 
 // A pet extended with premium-tier pedigree and insurance details.
@@ -464,463 +460,548 @@ type PetGetPremiumResponse struct {
 	CoverageLimit PetGetPremiumResponseCoverageLimitUnion `json:"coverageLimit"`
 	Insurance     PetGetPremiumResponseInsurance          `json:"insurance"`
 	Pedigree      PetGetPremiumResponsePedigree           `json:"pedigree"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		PremiumSince  respjson.Field
-		CoverageLimit respjson.Field
-		Insurance     respjson.Field
-		Pedigree      respjson.Field
-		ExtraFields   map[string]respjson.Field
-		raw           string
-	} `json:"-"`
+	JSON          petGetPremiumResponseJSON               `json:"-"`
 	Pet
 }
 
-// Returns the unmodified JSON received from the API
-func (r PetGetPremiumResponse) RawJSON() string { return r.JSON.raw }
-func (r *PetGetPremiumResponse) UnmarshalJSON(data []byte) error {
+// petGetPremiumResponseJSON contains the JSON metadata for the struct
+// [PetGetPremiumResponse]
+type petGetPremiumResponseJSON struct {
+	PremiumSince  apijson.Field
+	CoverageLimit apijson.Field
+	Insurance     apijson.Field
+	Pedigree      apijson.Field
+	raw           string
+	ExtraFields   map[string]apijson.Field
+}
+
+func (r *PetGetPremiumResponse) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// PetGetPremiumResponseCoverageLimitUnion contains all possible properties and
-// values from [int64], [PetGetPremiumResponseCoverageLimitCustomLimit].
+func (r petGetPremiumResponseJSON) RawJSON() string {
+	return r.raw
+}
+
+// Coverage limit in minor units, or a negotiated custom limit.
 //
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfInt]
-type PetGetPremiumResponseCoverageLimitUnion struct {
-	// This field will be present if the value is a [int64] instead of an object.
-	OfInt int64 `json:",inline"`
-	// This field is from variant [PetGetPremiumResponseCoverageLimitCustomLimit].
-	Amount int64 `json:"amount"`
-	// This field is from variant [PetGetPremiumResponseCoverageLimitCustomLimit].
-	Currency string `json:"currency"`
-	// This field is from variant [PetGetPremiumResponseCoverageLimitCustomLimit].
-	Negotiated bool `json:"negotiated"`
-	JSON       struct {
-		OfInt      respjson.Field
-		Amount     respjson.Field
-		Currency   respjson.Field
-		Negotiated respjson.Field
-		raw        string
-	} `json:"-"`
-}
-
-func (u PetGetPremiumResponseCoverageLimitUnion) AsInt() (v int64) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u PetGetPremiumResponseCoverageLimitUnion) AsCustomLimit() (v PetGetPremiumResponseCoverageLimitCustomLimit) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u PetGetPremiumResponseCoverageLimitUnion) RawJSON() string { return u.JSON.raw }
-
-func (r *PetGetPremiumResponseCoverageLimitUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type PetGetPremiumResponseCoverageLimitCustomLimit struct {
-	Amount     int64  `json:"amount" api:"required"`
-	Currency   string `json:"currency"`
-	Negotiated bool   `json:"negotiated"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Amount      respjson.Field
-		Currency    respjson.Field
-		Negotiated  respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r PetGetPremiumResponseCoverageLimitCustomLimit) RawJSON() string { return r.JSON.raw }
-func (r *PetGetPremiumResponseCoverageLimitCustomLimit) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type PetGetPremiumResponseInsurance struct {
-	PlanID     string       `json:"planId" api:"required"`
-	Provider   string       `json:"provider" api:"required"`
-	Deductible int64        `json:"deductible"`
-	Premium    shared.Money `json:"premium"`
-	// Any of "basic", "plus", "platinum".
-	Tier string `json:"tier"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		PlanID      respjson.Field
-		Provider    respjson.Field
-		Deductible  respjson.Field
-		Premium     respjson.Field
-		Tier        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r PetGetPremiumResponseInsurance) RawJSON() string { return r.JSON.raw }
-func (r *PetGetPremiumResponseInsurance) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type PetGetPremiumResponsePedigree struct {
-	Certified bool     `json:"certified"`
-	Lineage   []string `json:"lineage"`
-	Registry  string   `json:"registry"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Certified   respjson.Field
-		Lineage     respjson.Field
-		Registry    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r PetGetPremiumResponsePedigree) RawJSON() string { return r.JSON.raw }
-func (r *PetGetPremiumResponsePedigree) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type PetUploadImageResponse struct {
-	Code    int64  `json:"code"`
-	Message string `json:"message"`
-	Type    string `json:"type"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Code        respjson.Field
-		Message     respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r PetUploadImageResponse) RawJSON() string { return r.JSON.raw }
-func (r *PetUploadImageResponse) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// ConnectClientEventUnion contains all possible properties and values from
-// [ConnectClientEventPing], [ConnectClientEventSubscribe].
-//
-// Use the [ConnectClientEventUnion.AsAny] method to switch on the variant.
-//
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-type ConnectClientEventUnion struct {
-	// Any of "ping", "subscribe".
-	Type string `json:"type"`
-	// This field is from variant [ConnectClientEventSubscribe].
-	Status PetStatus `json:"status"`
-	JSON   struct {
-		Type   respjson.Field
-		Status respjson.Field
-		raw    string
-	} `json:"-"`
-}
-
-// anyConnectClientEvent is implemented by each variant of
-// [ConnectClientEventUnion] to add type safety for the return type of
-// [ConnectClientEventUnion.AsAny]
-type anyConnectClientEvent interface {
-	implConnectClientEventUnion()
-}
-
-func (ConnectClientEventPing) implConnectClientEventUnion()      {}
-func (ConnectClientEventSubscribe) implConnectClientEventUnion() {}
-
-// Use the following switch statement to find the correct variant
-//
-//	switch variant := ConnectClientEventUnion.AsAny().(type) {
-//	case helloworldtestingggg.ConnectClientEventPing:
-//	case helloworldtestingggg.ConnectClientEventSubscribe:
-//	default:
-//	  fmt.Errorf("no variant present")
-//	}
-func (u ConnectClientEventUnion) AsAny() anyConnectClientEvent {
-	switch u.Type {
-	case "ping":
-		return u.AsPing()
-	case "subscribe":
-		return u.AsSubscribe()
-	}
-	return nil
-}
-
-func (u ConnectClientEventUnion) AsPing() (v ConnectClientEventPing) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-func (u ConnectClientEventUnion) AsSubscribe() (v ConnectClientEventSubscribe) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
-}
-
-// Returns the unmodified JSON received from the API
-func (u ConnectClientEventUnion) RawJSON() string { return u.JSON.raw }
-
-func (r *ConnectClientEventUnion) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// ToParam converts this ConnectClientEventUnion to a ConnectClientEventUnionParam.
-//
-// Warning: the fields of the param type will not be present. ToParam should only
-// be used at the last possible moment before sending a request. Test for this with
-// ConnectClientEventUnionParam.Overrides()
-func (r ConnectClientEventUnion) ToParam() ConnectClientEventUnionParam {
-	return param.Override[ConnectClientEventUnionParam](json.RawMessage(r.RawJSON()))
-}
-
-type ConnectClientEventPing struct {
-	Type constant.Ping `json:"type" default:"ping"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ConnectClientEventPing) RawJSON() string { return r.JSON.raw }
-func (r *ConnectClientEventPing) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-type ConnectClientEventSubscribe struct {
-	// pet status in the store
-	//
-	// Any of "available", "pending", "sold".
-	Status PetStatus          `json:"status" api:"required"`
-	Type   constant.Subscribe `json:"type" default:"subscribe"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Status      respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-}
-
-// Returns the unmodified JSON received from the API
-func (r ConnectClientEventSubscribe) RawJSON() string { return r.JSON.raw }
-func (r *ConnectClientEventSubscribe) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func ConnectClientEventParamOfSubscribe(status PetStatus) ConnectClientEventUnionParam {
-	var subscribe ConnectClientEventSubscribeParam
-	subscribe.Status = status
-	return ConnectClientEventUnionParam{OfSubscribe: &subscribe}
-}
-
-// Only one field can be non-zero.
-//
-// Use [param.IsOmitted] to confirm if a field is set.
-type ConnectClientEventUnionParam struct {
-	OfPing      *ConnectClientEventPingParam      `json:",omitzero,inline"`
-	OfSubscribe *ConnectClientEventSubscribeParam `json:",omitzero,inline"`
-	paramUnion
-}
-
-func (u ConnectClientEventUnionParam) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfPing, u.OfSubscribe)
-}
-func (u *ConnectClientEventUnionParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, u)
+// Union satisfied by [shared.UnionInt] or
+// [PetGetPremiumResponseCoverageLimitCustomLimit].
+type PetGetPremiumResponseCoverageLimitUnion interface {
+	ImplementsPetGetPremiumResponseCoverageLimitUnion()
 }
 
 func init() {
-	apijson.RegisterUnion[ConnectClientEventUnionParam](
-		"type",
-		apijson.Discriminator[ConnectClientEventPingParam]("ping"),
-		apijson.Discriminator[ConnectClientEventSubscribeParam]("subscribe"),
+	apijson.RegisterUnion(
+		reflect.TypeOf((*PetGetPremiumResponseCoverageLimitUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.Number,
+			Type:       reflect.TypeOf(shared.UnionInt(0)),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(PetGetPremiumResponseCoverageLimitCustomLimit{}),
+		},
 	)
 }
 
-func NewConnectClientEventPingParam() ConnectClientEventPingParam {
-	return ConnectClientEventPingParam{
-		Type: "ping",
-	}
+type PetGetPremiumResponseCoverageLimitCustomLimit struct {
+	Amount     int64                                             `json:"amount" api:"required"`
+	Currency   string                                            `json:"currency"`
+	Negotiated bool                                              `json:"negotiated"`
+	JSON       petGetPremiumResponseCoverageLimitCustomLimitJSON `json:"-"`
 }
 
-// This struct has a constant value, construct it with
-// [NewConnectClientEventPingParam].
-type ConnectClientEventPingParam struct {
-	Type constant.Ping `json:"type" default:"ping"`
-	paramObj
+// petGetPremiumResponseCoverageLimitCustomLimitJSON contains the JSON metadata for
+// the struct [PetGetPremiumResponseCoverageLimitCustomLimit]
+type petGetPremiumResponseCoverageLimitCustomLimitJSON struct {
+	Amount      apijson.Field
+	Currency    apijson.Field
+	Negotiated  apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
 }
 
-func (r ConnectClientEventPingParam) MarshalJSON() (data []byte, err error) {
-	type shadow ConnectClientEventPingParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ConnectClientEventPingParam) UnmarshalJSON(data []byte) error {
+func (r *PetGetPremiumResponseCoverageLimitCustomLimit) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The properties Status, Type are required.
-type ConnectClientEventSubscribeParam struct {
+func (r petGetPremiumResponseCoverageLimitCustomLimitJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r PetGetPremiumResponseCoverageLimitCustomLimit) ImplementsPetGetPremiumResponseCoverageLimitUnion() {
+}
+
+type PetGetPremiumResponseInsurance struct {
+	PlanID     string                             `json:"planId" api:"required"`
+	Provider   string                             `json:"provider" api:"required"`
+	Deductible int64                              `json:"deductible"`
+	Premium    shared.Money                       `json:"premium"`
+	Tier       PetGetPremiumResponseInsuranceTier `json:"tier"`
+	JSON       petGetPremiumResponseInsuranceJSON `json:"-"`
+}
+
+// petGetPremiumResponseInsuranceJSON contains the JSON metadata for the struct
+// [PetGetPremiumResponseInsurance]
+type petGetPremiumResponseInsuranceJSON struct {
+	PlanID      apijson.Field
+	Provider    apijson.Field
+	Deductible  apijson.Field
+	Premium     apijson.Field
+	Tier        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PetGetPremiumResponseInsurance) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r petGetPremiumResponseInsuranceJSON) RawJSON() string {
+	return r.raw
+}
+
+type PetGetPremiumResponseInsuranceTier string
+
+const (
+	PetGetPremiumResponseInsuranceTierBasic    PetGetPremiumResponseInsuranceTier = "basic"
+	PetGetPremiumResponseInsuranceTierPlus     PetGetPremiumResponseInsuranceTier = "plus"
+	PetGetPremiumResponseInsuranceTierPlatinum PetGetPremiumResponseInsuranceTier = "platinum"
+)
+
+func (r PetGetPremiumResponseInsuranceTier) IsKnown() bool {
+	switch r {
+	case PetGetPremiumResponseInsuranceTierBasic, PetGetPremiumResponseInsuranceTierPlus, PetGetPremiumResponseInsuranceTierPlatinum:
+		return true
+	}
+	return false
+}
+
+type PetGetPremiumResponsePedigree struct {
+	Certified bool                              `json:"certified"`
+	Lineage   []string                          `json:"lineage"`
+	Registry  string                            `json:"registry"`
+	JSON      petGetPremiumResponsePedigreeJSON `json:"-"`
+}
+
+// petGetPremiumResponsePedigreeJSON contains the JSON metadata for the struct
+// [PetGetPremiumResponsePedigree]
+type petGetPremiumResponsePedigreeJSON struct {
+	Certified   apijson.Field
+	Lineage     apijson.Field
+	Registry    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PetGetPremiumResponsePedigree) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r petGetPremiumResponsePedigreeJSON) RawJSON() string {
+	return r.raw
+}
+
+type PetUploadImageResponse struct {
+	Code    int64                      `json:"code"`
+	Message string                     `json:"message"`
+	Type    string                     `json:"type"`
+	JSON    petUploadImageResponseJSON `json:"-"`
+}
+
+// petUploadImageResponseJSON contains the JSON metadata for the struct
+// [PetUploadImageResponse]
+type petUploadImageResponseJSON struct {
+	Code        apijson.Field
+	Message     apijson.Field
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PetUploadImageResponse) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r petUploadImageResponseJSON) RawJSON() string {
+	return r.raw
+}
+
+type ConnectClientEvent struct {
+	Type ConnectClientEventType `json:"type" api:"required"`
 	// pet status in the store
-	//
-	// Any of "available", "pending", "sold".
-	Status PetStatus `json:"status,omitzero" api:"required"`
-	// This field can be elided, and will marshal its zero value as "subscribe".
-	Type constant.Subscribe `json:"type" default:"subscribe"`
-	paramObj
+	Status PetStatus              `json:"status"`
+	JSON   connectClientEventJSON `json:"-"`
+	union  ConnectClientEventUnion
 }
 
-func (r ConnectClientEventSubscribeParam) MarshalJSON() (data []byte, err error) {
-	type shadow ConnectClientEventSubscribeParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ConnectClientEventSubscribeParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-// ConnectServerEventUnion contains all possible properties and values from
-// [ConnectServerEventPong], [ConnectServerEventStatus].
-//
-// Use the [ConnectServerEventUnion.AsAny] method to switch on the variant.
-//
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-type ConnectServerEventUnion struct {
-	// Any of "pong", "status".
-	Type string `json:"type"`
-	// This field is from variant [ConnectServerEventStatus].
-	Pet  Pet `json:"pet"`
-	JSON struct {
-		Type respjson.Field
-		Pet  respjson.Field
-		raw  string
-	} `json:"-"`
+// connectClientEventJSON contains the JSON metadata for the struct
+// [ConnectClientEvent]
+type connectClientEventJSON struct {
+	Type        apijson.Field
+	Status      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
 }
 
-// anyConnectServerEvent is implemented by each variant of
-// [ConnectServerEventUnion] to add type safety for the return type of
-// [ConnectServerEventUnion.AsAny]
-type anyConnectServerEvent interface {
-	implConnectServerEventUnion()
+func (r connectClientEventJSON) RawJSON() string {
+	return r.raw
 }
 
-func (ConnectServerEventPong) implConnectServerEventUnion()   {}
-func (ConnectServerEventStatus) implConnectServerEventUnion() {}
-
-// Use the following switch statement to find the correct variant
-//
-//	switch variant := ConnectServerEventUnion.AsAny().(type) {
-//	case helloworldtestingggg.ConnectServerEventPong:
-//	case helloworldtestingggg.ConnectServerEventStatus:
-//	default:
-//	  fmt.Errorf("no variant present")
-//	}
-func (u ConnectServerEventUnion) AsAny() anyConnectServerEvent {
-	switch u.Type {
-	case "pong":
-		return u.AsPong()
-	case "status":
-		return u.AsStatus()
+func (r *ConnectClientEvent) UnmarshalJSON(data []byte) (err error) {
+	*r = ConnectClientEvent{}
+	err = apijson.UnmarshalRoot(data, &r.union)
+	if err != nil {
+		return err
 	}
-	return nil
+	return apijson.Port(r.union, &r)
 }
 
-func (u ConnectServerEventUnion) AsPong() (v ConnectServerEventPong) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
+// AsUnion returns a [ConnectClientEventUnion] interface which you can cast to the
+// specific types for more type safety.
+//
+// Possible runtime types of the union are [ConnectClientEventPetClientPingEvent],
+// [ConnectClientEventPetClientSubscribeEvent].
+func (r ConnectClientEvent) AsUnion() ConnectClientEventUnion {
+	return r.union
 }
 
-func (u ConnectServerEventUnion) AsStatus() (v ConnectServerEventStatus) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
+// Union satisfied by [ConnectClientEventPetClientPingEvent] or
+// [ConnectClientEventPetClientSubscribeEvent].
+type ConnectClientEventUnion interface {
+	implementsConnectClientEvent()
 }
 
-// Returns the unmodified JSON received from the API
-func (u ConnectServerEventUnion) RawJSON() string { return u.JSON.raw }
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*ConnectClientEventUnion)(nil)).Elem(),
+		"type",
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ConnectClientEventPetClientPingEvent{}),
+			DiscriminatorValue: "ping",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ConnectClientEventPetClientSubscribeEvent{}),
+			DiscriminatorValue: "subscribe",
+		},
+	)
+}
 
-func (r *ConnectServerEventUnion) UnmarshalJSON(data []byte) error {
+type ConnectClientEventPetClientPingEvent struct {
+	Type ConnectClientEventPetClientPingEventType `json:"type" api:"required"`
+	JSON connectClientEventPetClientPingEventJSON `json:"-"`
+}
+
+// connectClientEventPetClientPingEventJSON contains the JSON metadata for the
+// struct [ConnectClientEventPetClientPingEvent]
+type connectClientEventPetClientPingEventJSON struct {
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConnectClientEventPetClientPingEvent) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type ConnectServerEventPong struct {
-	Type constant.Pong `json:"type" default:"pong"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+func (r connectClientEventPetClientPingEventJSON) RawJSON() string {
+	return r.raw
 }
 
-// Returns the unmodified JSON received from the API
-func (r ConnectServerEventPong) RawJSON() string { return r.JSON.raw }
-func (r *ConnectServerEventPong) UnmarshalJSON(data []byte) error {
+func (r ConnectClientEventPetClientPingEvent) implementsConnectClientEvent() {}
+
+type ConnectClientEventPetClientPingEventType string
+
+const (
+	ConnectClientEventPetClientPingEventTypePing ConnectClientEventPetClientPingEventType = "ping"
+)
+
+func (r ConnectClientEventPetClientPingEventType) IsKnown() bool {
+	switch r {
+	case ConnectClientEventPetClientPingEventTypePing:
+		return true
+	}
+	return false
+}
+
+type ConnectClientEventPetClientSubscribeEvent struct {
+	// pet status in the store
+	Status PetStatus                                     `json:"status" api:"required"`
+	Type   ConnectClientEventPetClientSubscribeEventType `json:"type" api:"required"`
+	JSON   connectClientEventPetClientSubscribeEventJSON `json:"-"`
+}
+
+// connectClientEventPetClientSubscribeEventJSON contains the JSON metadata for the
+// struct [ConnectClientEventPetClientSubscribeEvent]
+type connectClientEventPetClientSubscribeEventJSON struct {
+	Status      apijson.Field
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConnectClientEventPetClientSubscribeEvent) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type ConnectServerEventStatus struct {
-	Pet  Pet             `json:"pet" api:"required"`
-	Type constant.Status `json:"type" default:"status"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Pet         respjson.Field
-		Type        respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+func (r connectClientEventPetClientSubscribeEventJSON) RawJSON() string {
+	return r.raw
 }
 
-// Returns the unmodified JSON received from the API
-func (r ConnectServerEventStatus) RawJSON() string { return r.JSON.raw }
-func (r *ConnectServerEventStatus) UnmarshalJSON(data []byte) error {
+func (r ConnectClientEventPetClientSubscribeEvent) implementsConnectClientEvent() {}
+
+type ConnectClientEventPetClientSubscribeEventType string
+
+const (
+	ConnectClientEventPetClientSubscribeEventTypeSubscribe ConnectClientEventPetClientSubscribeEventType = "subscribe"
+)
+
+func (r ConnectClientEventPetClientSubscribeEventType) IsKnown() bool {
+	switch r {
+	case ConnectClientEventPetClientSubscribeEventTypeSubscribe:
+		return true
+	}
+	return false
+}
+
+type ConnectClientEventType string
+
+const (
+	ConnectClientEventTypePing      ConnectClientEventType = "ping"
+	ConnectClientEventTypeSubscribe ConnectClientEventType = "subscribe"
+)
+
+func (r ConnectClientEventType) IsKnown() bool {
+	switch r {
+	case ConnectClientEventTypePing, ConnectClientEventTypeSubscribe:
+		return true
+	}
+	return false
+}
+
+type ConnectClientEventParam struct {
+	Type param.Field[ConnectClientEventType] `json:"type" api:"required"`
+	// pet status in the store
+	Status param.Field[PetStatus] `json:"status"`
+}
+
+func (r ConnectClientEventParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r ConnectClientEventParam) implementsConnectClientEventUnionParam() {}
+
+// Satisfied by [ConnectClientEventPetClientPingEventParam],
+// [ConnectClientEventPetClientSubscribeEventParam], [ConnectClientEventParam].
+type ConnectClientEventUnionParam interface {
+	implementsConnectClientEventUnionParam()
+}
+
+type ConnectClientEventPetClientPingEventParam struct {
+	Type param.Field[ConnectClientEventPetClientPingEventType] `json:"type" api:"required"`
+}
+
+func (r ConnectClientEventPetClientPingEventParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r ConnectClientEventPetClientPingEventParam) implementsConnectClientEventUnionParam() {}
+
+type ConnectClientEventPetClientSubscribeEventParam struct {
+	// pet status in the store
+	Status param.Field[PetStatus]                                     `json:"status" api:"required"`
+	Type   param.Field[ConnectClientEventPetClientSubscribeEventType] `json:"type" api:"required"`
+}
+
+func (r ConnectClientEventPetClientSubscribeEventParam) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r ConnectClientEventPetClientSubscribeEventParam) implementsConnectClientEventUnionParam() {}
+
+type ConnectServerEvent struct {
+	Type  ConnectServerEventType `json:"type" api:"required"`
+	Pet   Pet                    `json:"pet"`
+	JSON  connectServerEventJSON `json:"-"`
+	union ConnectServerEventUnion
+}
+
+// connectServerEventJSON contains the JSON metadata for the struct
+// [ConnectServerEvent]
+type connectServerEventJSON struct {
+	Type        apijson.Field
+	Pet         apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r connectServerEventJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r *ConnectServerEvent) UnmarshalJSON(data []byte) (err error) {
+	*r = ConnectServerEvent{}
+	err = apijson.UnmarshalRoot(data, &r.union)
+	if err != nil {
+		return err
+	}
+	return apijson.Port(r.union, &r)
+}
+
+// AsUnion returns a [ConnectServerEventUnion] interface which you can cast to the
+// specific types for more type safety.
+//
+// Possible runtime types of the union are [ConnectServerEventPetServerPongEvent],
+// [ConnectServerEventPetServerStatusEvent].
+func (r ConnectServerEvent) AsUnion() ConnectServerEventUnion {
+	return r.union
+}
+
+// Union satisfied by [ConnectServerEventPetServerPongEvent] or
+// [ConnectServerEventPetServerStatusEvent].
+type ConnectServerEventUnion interface {
+	implementsConnectServerEvent()
+}
+
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*ConnectServerEventUnion)(nil)).Elem(),
+		"type",
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ConnectServerEventPetServerPongEvent{}),
+			DiscriminatorValue: "pong",
+		},
+		apijson.UnionVariant{
+			TypeFilter:         gjson.JSON,
+			Type:               reflect.TypeOf(ConnectServerEventPetServerStatusEvent{}),
+			DiscriminatorValue: "status",
+		},
+	)
+}
+
+type ConnectServerEventPetServerPongEvent struct {
+	Type ConnectServerEventPetServerPongEventType `json:"type" api:"required"`
+	JSON connectServerEventPetServerPongEventJSON `json:"-"`
+}
+
+// connectServerEventPetServerPongEventJSON contains the JSON metadata for the
+// struct [ConnectServerEventPetServerPongEvent]
+type connectServerEventPetServerPongEventJSON struct {
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConnectServerEventPetServerPongEvent) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r connectServerEventPetServerPongEventJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r ConnectServerEventPetServerPongEvent) implementsConnectServerEvent() {}
+
+type ConnectServerEventPetServerPongEventType string
+
+const (
+	ConnectServerEventPetServerPongEventTypePong ConnectServerEventPetServerPongEventType = "pong"
+)
+
+func (r ConnectServerEventPetServerPongEventType) IsKnown() bool {
+	switch r {
+	case ConnectServerEventPetServerPongEventTypePong:
+		return true
+	}
+	return false
+}
+
+type ConnectServerEventPetServerStatusEvent struct {
+	Pet  Pet                                        `json:"pet" api:"required"`
+	Type ConnectServerEventPetServerStatusEventType `json:"type" api:"required"`
+	JSON connectServerEventPetServerStatusEventJSON `json:"-"`
+}
+
+// connectServerEventPetServerStatusEventJSON contains the JSON metadata for the
+// struct [ConnectServerEventPetServerStatusEvent]
+type connectServerEventPetServerStatusEventJSON struct {
+	Pet         apijson.Field
+	Type        apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ConnectServerEventPetServerStatusEvent) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r connectServerEventPetServerStatusEventJSON) RawJSON() string {
+	return r.raw
+}
+
+func (r ConnectServerEventPetServerStatusEvent) implementsConnectServerEvent() {}
+
+type ConnectServerEventPetServerStatusEventType string
+
+const (
+	ConnectServerEventPetServerStatusEventTypeStatus ConnectServerEventPetServerStatusEventType = "status"
+)
+
+func (r ConnectServerEventPetServerStatusEventType) IsKnown() bool {
+	switch r {
+	case ConnectServerEventPetServerStatusEventTypeStatus:
+		return true
+	}
+	return false
+}
+
+type ConnectServerEventType string
+
+const (
+	ConnectServerEventTypePong   ConnectServerEventType = "pong"
+	ConnectServerEventTypeStatus ConnectServerEventType = "status"
+)
+
+func (r ConnectServerEventType) IsKnown() bool {
+	switch r {
+	case ConnectServerEventTypePong, ConnectServerEventTypeStatus:
+		return true
+	}
+	return false
 }
 
 type PetNewParams struct {
-	Pet PetParam
-	paramObj
+	Pet PetParam `json:"pet" api:"required"`
 }
 
 func (r PetNewParams) MarshalJSON() (data []byte, err error) {
-	return shimjson.Marshal(r.Pet)
-}
-func (r *PetNewParams) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return apijson.MarshalRoot(r.Pet)
 }
 
 type PetUpdateParams struct {
-	Pet PetParam
-	paramObj
+	Pet PetParam `json:"pet" api:"required"`
 }
 
 func (r PetUpdateParams) MarshalJSON() (data []byte, err error) {
-	return shimjson.Marshal(r.Pet)
-}
-func (r *PetUpdateParams) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return apijson.MarshalRoot(r.Pet)
 }
 
 type PetListParams struct {
-	// Cursor from a previous response used to fetch the next page.
-	Cursor param.Opt[string] `query:"cursor,omitzero" json:"-"`
-	// Maximum number of pets to return.
-	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
 	// Filter by created_at timestamp range in UTC. Accepts gt/gte/lt/lte.
-	CreatedAt PetListParamsCreatedAt `query:"created_at,omitzero" json:"-"`
-	paramObj
+	CreatedAt param.Field[PetListParamsCreatedAt] `query:"created_at"`
+	// Cursor from a previous response used to fetch the next page.
+	Cursor param.Field[string] `query:"cursor"`
+	// Maximum number of pets to return.
+	Limit param.Field[int64] `query:"limit"`
 }
 
 // URLQuery serializes [PetListParams]'s query parameters as `url.Values`.
-func (r PetListParams) URLQuery() (v url.Values, err error) {
+func (r PetListParams) URLQuery() (v url.Values) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -930,18 +1011,17 @@ func (r PetListParams) URLQuery() (v url.Values, err error) {
 // Filter by created_at timestamp range in UTC. Accepts gt/gte/lt/lte.
 type PetListParamsCreatedAt struct {
 	// Minimum value to filter by (exclusive).
-	Gt param.Opt[time.Time] `query:"gt,omitzero" format:"date-time" json:"-"`
+	Gt param.Field[time.Time] `query:"gt" format:"date-time"`
 	// Minimum value to filter by (inclusive).
-	Gte param.Opt[time.Time] `query:"gte,omitzero" format:"date-time" json:"-"`
+	Gte param.Field[time.Time] `query:"gte" format:"date-time"`
 	// Maximum value to filter by (exclusive).
-	Lt param.Opt[time.Time] `query:"lt,omitzero" format:"date-time" json:"-"`
+	Lt param.Field[time.Time] `query:"lt" format:"date-time"`
 	// Maximum value to filter by (inclusive).
-	Lte param.Opt[time.Time] `query:"lte,omitzero" format:"date-time" json:"-"`
-	paramObj
+	Lte param.Field[time.Time] `query:"lte" format:"date-time"`
 }
 
 // URLQuery serializes [PetListParamsCreatedAt]'s query parameters as `url.Values`.
-func (r PetListParamsCreatedAt) URLQuery() (v url.Values, err error) {
+func (r PetListParamsCreatedAt) URLQuery() (v url.Values) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -950,14 +1030,11 @@ func (r PetListParamsCreatedAt) URLQuery() (v url.Values, err error) {
 
 type PetFindByStatusParams struct {
 	// Status values that need to be considered for filter
-	//
-	// Any of "available", "pending", "sold".
-	Status PetFindByStatusParamsStatus `query:"status,omitzero" json:"-"`
-	paramObj
+	Status param.Field[PetFindByStatusParamsStatus] `query:"status"`
 }
 
 // URLQuery serializes [PetFindByStatusParams]'s query parameters as `url.Values`.
-func (r PetFindByStatusParams) URLQuery() (v url.Values, err error) {
+func (r PetFindByStatusParams) URLQuery() (v url.Values) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -973,14 +1050,21 @@ const (
 	PetFindByStatusParamsStatusSold      PetFindByStatusParamsStatus = "sold"
 )
 
+func (r PetFindByStatusParamsStatus) IsKnown() bool {
+	switch r {
+	case PetFindByStatusParamsStatusAvailable, PetFindByStatusParamsStatusPending, PetFindByStatusParamsStatusSold:
+		return true
+	}
+	return false
+}
+
 type PetFindByTagsParams struct {
 	// Tags to filter by
-	Tags []string `query:"tags,omitzero" json:"-"`
-	paramObj
+	Tags param.Field[[]string] `query:"tags"`
 }
 
 // URLQuery serializes [PetFindByTagsParams]'s query parameters as `url.Values`.
-func (r PetFindByTagsParams) URLQuery() (v url.Values, err error) {
+func (r PetFindByTagsParams) URLQuery() (v url.Values) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -989,32 +1073,96 @@ func (r PetFindByTagsParams) URLQuery() (v url.Values, err error) {
 
 type PetListUnpaginatedParams struct {
 	// Cursor from a previous response used to fetch the next page.
-	Cursor param.Opt[string] `query:"cursor,omitzero" json:"-"`
+	Cursor param.Field[string] `query:"cursor"`
 	// Maximum number of pets to return.
-	Limit param.Opt[int64] `query:"limit,omitzero" json:"-"`
-	paramObj
+	Limit param.Field[int64] `query:"limit"`
 }
 
 // URLQuery serializes [PetListUnpaginatedParams]'s query parameters as
 // `url.Values`.
-func (r PetListUnpaginatedParams) URLQuery() (v url.Values, err error) {
+func (r PetListUnpaginatedParams) URLQuery() (v url.Values) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
 	})
 }
 
+type PetSearchParams struct {
+	// Object-schema query parameter: mints a typed params model instead of collapsing
+	// to a bare object.
+	Filters param.Field[PetSearchParamsFilters] `query:"filters"`
+	// Scalar query parameter: stays a plain scalar (control probe).
+	MaxResults param.Field[int64] `query:"max_results"`
+	// Empty-object query parameter (additionalProperties:false): stays a bare object,
+	// exercising the empty-object branch.
+	RawFilter param.Field[interface{}] `query:"raw_filter"`
+	// Array-of-object query parameter: emitters mint a singularized element type for
+	// each item.
+	TagFilters param.Field[[]PetSearchParamsTagFilter] `query:"tag_filters"`
+}
+
+// URLQuery serializes [PetSearchParams]'s query parameters as `url.Values`.
+func (r PetSearchParams) URLQuery() (v url.Values) {
+	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
+		ArrayFormat:  apiquery.ArrayQueryFormatComma,
+		NestedFormat: apiquery.NestedQueryFormatBrackets,
+	})
+}
+
+// Object-schema query parameter: mints a typed params model instead of collapsing
+// to a bare object.
+type PetSearchParamsFilters struct {
+	Color param.Field[string] `query:"color"`
+	Size  param.Field[int64]  `query:"size"`
+}
+
+// URLQuery serializes [PetSearchParamsFilters]'s query parameters as `url.Values`.
+func (r PetSearchParamsFilters) URLQuery() (v url.Values) {
+	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
+		ArrayFormat:  apiquery.ArrayQueryFormatComma,
+		NestedFormat: apiquery.NestedQueryFormatBrackets,
+	})
+}
+
+type PetSearchParamsTagFilter struct {
+	Key   param.Field[string]                         `query:"key"`
+	Match param.Field[PetSearchParamsTagFiltersMatch] `query:"match"`
+}
+
+// URLQuery serializes [PetSearchParamsTagFilter]'s query parameters as
+// `url.Values`.
+func (r PetSearchParamsTagFilter) URLQuery() (v url.Values) {
+	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
+		ArrayFormat:  apiquery.ArrayQueryFormatComma,
+		NestedFormat: apiquery.NestedQueryFormatBrackets,
+	})
+}
+
+type PetSearchParamsTagFiltersMatch string
+
+const (
+	PetSearchParamsTagFiltersMatchExact  PetSearchParamsTagFiltersMatch = "exact"
+	PetSearchParamsTagFiltersMatchPrefix PetSearchParamsTagFiltersMatch = "prefix"
+)
+
+func (r PetSearchParamsTagFiltersMatch) IsKnown() bool {
+	switch r {
+	case PetSearchParamsTagFiltersMatchExact, PetSearchParamsTagFiltersMatchPrefix:
+		return true
+	}
+	return false
+}
+
 type PetUpdateWithFormParams struct {
 	// Name of pet that needs to be updated
-	Name param.Opt[string] `query:"name,omitzero" json:"-"`
+	Name param.Field[string] `query:"name"`
 	// Status of pet that needs to be updated
-	Status param.Opt[string] `query:"status,omitzero" json:"-"`
-	paramObj
+	Status param.Field[string] `query:"status"`
 }
 
 // URLQuery serializes [PetUpdateWithFormParams]'s query parameters as
 // `url.Values`.
-func (r PetUpdateWithFormParams) URLQuery() (v url.Values, err error) {
+func (r PetUpdateWithFormParams) URLQuery() (v url.Values) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -1023,17 +1171,13 @@ func (r PetUpdateWithFormParams) URLQuery() (v url.Values, err error) {
 
 type PetUploadImageParams struct {
 	// Additional Metadata
-	AdditionalMetadata param.Opt[string] `query:"additionalMetadata,omitzero" json:"-"`
-	paramObj
+	AdditionalMetadata param.Field[string] `query:"additionalMetadata"`
 }
 
 func (r PetUploadImageParams) MarshalMultipart() (data []byte, contentType string, err error) {
 	buf := bytes.NewBuffer(nil)
 	writer := multipart.NewWriter(buf)
 	err = apiform.MarshalRoot(r, writer)
-	if err == nil {
-		err = apiform.WriteExtras(writer, r.ExtraFields())
-	}
 	if err != nil {
 		writer.Close()
 		return nil, "", err
@@ -1046,7 +1190,7 @@ func (r PetUploadImageParams) MarshalMultipart() (data []byte, contentType strin
 }
 
 // URLQuery serializes [PetUploadImageParams]'s query parameters as `url.Values`.
-func (r PetUploadImageParams) URLQuery() (v url.Values, err error) {
+func (r PetUploadImageParams) URLQuery() (v url.Values) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
@@ -1054,6 +1198,5 @@ func (r PetUploadImageParams) URLQuery() (v url.Values, err error) {
 }
 
 type PetWatchStatusParams struct {
-	LastEventID param.Opt[string] `header:"Last-Event-ID,omitzero" json:"-"`
-	paramObj
+	LastEventID param.Field[string] `header:"Last-Event-ID"`
 }
