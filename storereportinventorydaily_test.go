@@ -26,13 +26,13 @@ func TestStoreReportInventoryDailyGet(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Store.Reports.Inventory.Daily.Get(
 		context.TODO(),
+		"reportId",
 		time.Now(),
-		helloworldtestingggg.StoreReportInventoryDailyGetParams{
-			ReportID: "reportId",
-		},
 	)
 	if err != nil {
 		var apierr *helloworldtestingggg.Error

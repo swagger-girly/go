@@ -27,104 +27,104 @@ func TestPlacementNewWithOptionalParams(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Placements.New(context.TODO(), helloworldtestingggg.PlacementNewParams{
-		ApplicationID: "applicationId",
-		InitialEvent: helloworldtestingggg.PlacementEventUnionParam{
-			OfPlacementEventPlacementTransferEvent: &helloworldtestingggg.PlacementEventPlacementTransferEventParam{
-				ID: "id",
-				Leg: helloworldtestingggg.TransferLegParam{
-					Location: shared.AddressParam{
-						City: helloworldtestingggg.String("Palo Alto"),
-						Geo: shared.AddressGeoParam{
-							Latitude:  37.4443,
-							Longitude: -122.1598,
-						},
-						State:  helloworldtestingggg.String("CA"),
-						Street: helloworldtestingggg.String("437 Lytton"),
-						Zip:    helloworldtestingggg.String("94301"),
-					},
-					Contact: helloworldtestingggg.TransferLegContactParam{
-						Name:  helloworldtestingggg.String("name"),
-						Phone: helloworldtestingggg.String("phone"),
-					},
-					Cost: shared.MoneyParam{
-						Amount:   2500,
-						Currency: "USD",
-					},
-					Window: helloworldtestingggg.TransferLegWindowParam{
-						End:   helloworldtestingggg.Time(time.Now()),
-						Start: helloworldtestingggg.Time(time.Now()),
-					},
-				},
-				OccurredAt: time.Now(),
-				Type:       "transfer",
-				Note:       helloworldtestingggg.String("note"),
-			},
-		},
-		Logistics: helloworldtestingggg.PlacementNewParamsLogistics{
-			Delivery: helloworldtestingggg.TransferLegParam{
-				Location: shared.AddressParam{
-					City: helloworldtestingggg.String("Palo Alto"),
-					Geo: shared.AddressGeoParam{
-						Latitude:  37.4443,
-						Longitude: -122.1598,
-					},
-					State:  helloworldtestingggg.String("CA"),
-					Street: helloworldtestingggg.String("437 Lytton"),
-					Zip:    helloworldtestingggg.String("94301"),
-				},
-				Contact: helloworldtestingggg.TransferLegContactParam{
-					Name:  helloworldtestingggg.String("name"),
-					Phone: helloworldtestingggg.String("phone"),
-				},
-				Cost: shared.MoneyParam{
-					Amount:   2500,
-					Currency: "USD",
-				},
-				Window: helloworldtestingggg.TransferLegWindowParam{
-					End:   helloworldtestingggg.Time(time.Now()),
-					Start: helloworldtestingggg.Time(time.Now()),
-				},
-			},
-			Handler: helloworldtestingggg.PlacementNewParamsLogisticsHandler{
-				Certification: helloworldtestingggg.PlacementNewParamsLogisticsHandlerCertification{
-					Level: "standard",
-					Audit: helloworldtestingggg.PlacementNewParamsLogisticsHandlerCertificationAudit{
-						RecordedAt: time.Now(),
-						RecordedBy: helloworldtestingggg.String("recordedBy"),
-						Source:     "manual",
-					},
-					IssuedBy: helloworldtestingggg.String("issuedBy"),
-				},
-				Name: helloworldtestingggg.String("name"),
-			},
-			Pickup: helloworldtestingggg.TransferLegParam{
-				Location: shared.AddressParam{
-					City: helloworldtestingggg.String("Palo Alto"),
-					Geo: shared.AddressGeoParam{
-						Latitude:  37.4443,
-						Longitude: -122.1598,
-					},
-					State:  helloworldtestingggg.String("CA"),
-					Street: helloworldtestingggg.String("437 Lytton"),
-					Zip:    helloworldtestingggg.String("94301"),
-				},
-				Contact: helloworldtestingggg.TransferLegContactParam{
-					Name:  helloworldtestingggg.String("name"),
-					Phone: helloworldtestingggg.String("phone"),
-				},
-				Cost: shared.MoneyParam{
-					Amount:   2500,
-					Currency: "USD",
-				},
-				Window: helloworldtestingggg.TransferLegWindowParam{
-					End:   helloworldtestingggg.Time(time.Now()),
-					Start: helloworldtestingggg.Time(time.Now()),
-				},
-			},
-		},
-		ScheduledFor: helloworldtestingggg.Time(time.Now()),
+		ApplicationID: helloworldtestingggg.F("applicationId"),
+		InitialEvent: helloworldtestingggg.F[helloworldtestingggg.PlacementEventUnionParam](helloworldtestingggg.PlacementEventPlacementTransferEventParam{
+			ID: helloworldtestingggg.F("id"),
+			Leg: helloworldtestingggg.F(helloworldtestingggg.TransferLegParam{
+				Location: helloworldtestingggg.F(shared.AddressParam{
+					City: helloworldtestingggg.F("Palo Alto"),
+					Geo: helloworldtestingggg.F(shared.AddressGeoParam{
+						Latitude:  helloworldtestingggg.F(37.444300),
+						Longitude: helloworldtestingggg.F(-122.159800),
+					}),
+					State:  helloworldtestingggg.F("CA"),
+					Street: helloworldtestingggg.F("437 Lytton"),
+					Zip:    helloworldtestingggg.F("94301"),
+				}),
+				Contact: helloworldtestingggg.F(helloworldtestingggg.TransferLegContactParam{
+					Name:  helloworldtestingggg.F("name"),
+					Phone: helloworldtestingggg.F("phone"),
+				}),
+				Cost: helloworldtestingggg.F(shared.MoneyParam{
+					Amount:   helloworldtestingggg.F(int64(2500)),
+					Currency: helloworldtestingggg.F("USD"),
+				}),
+				Window: helloworldtestingggg.F(helloworldtestingggg.TransferLegWindowParam{
+					End:   helloworldtestingggg.F(time.Now()),
+					Start: helloworldtestingggg.F(time.Now()),
+				}),
+			}),
+			OccurredAt: helloworldtestingggg.F(time.Now()),
+			Type:       helloworldtestingggg.F(helloworldtestingggg.PlacementEventPlacementTransferEventTypeTransfer),
+			Note:       helloworldtestingggg.F("note"),
+		}),
+		Logistics: helloworldtestingggg.F(helloworldtestingggg.PlacementNewParamsLogistics{
+			Delivery: helloworldtestingggg.F(helloworldtestingggg.TransferLegParam{
+				Location: helloworldtestingggg.F(shared.AddressParam{
+					City: helloworldtestingggg.F("Palo Alto"),
+					Geo: helloworldtestingggg.F(shared.AddressGeoParam{
+						Latitude:  helloworldtestingggg.F(37.444300),
+						Longitude: helloworldtestingggg.F(-122.159800),
+					}),
+					State:  helloworldtestingggg.F("CA"),
+					Street: helloworldtestingggg.F("437 Lytton"),
+					Zip:    helloworldtestingggg.F("94301"),
+				}),
+				Contact: helloworldtestingggg.F(helloworldtestingggg.TransferLegContactParam{
+					Name:  helloworldtestingggg.F("name"),
+					Phone: helloworldtestingggg.F("phone"),
+				}),
+				Cost: helloworldtestingggg.F(shared.MoneyParam{
+					Amount:   helloworldtestingggg.F(int64(2500)),
+					Currency: helloworldtestingggg.F("USD"),
+				}),
+				Window: helloworldtestingggg.F(helloworldtestingggg.TransferLegWindowParam{
+					End:   helloworldtestingggg.F(time.Now()),
+					Start: helloworldtestingggg.F(time.Now()),
+				}),
+			}),
+			Handler: helloworldtestingggg.F(helloworldtestingggg.PlacementNewParamsLogisticsHandler{
+				Certification: helloworldtestingggg.F(helloworldtestingggg.PlacementNewParamsLogisticsHandlerCertification{
+					Level: helloworldtestingggg.F(helloworldtestingggg.PlacementNewParamsLogisticsHandlerCertificationLevelStandard),
+					Audit: helloworldtestingggg.F(helloworldtestingggg.PlacementNewParamsLogisticsHandlerCertificationAudit{
+						RecordedAt: helloworldtestingggg.F(time.Now()),
+						RecordedBy: helloworldtestingggg.F("recordedBy"),
+						Source:     helloworldtestingggg.F(helloworldtestingggg.PlacementNewParamsLogisticsHandlerCertificationAuditSourceManual),
+					}),
+					IssuedBy: helloworldtestingggg.F("issuedBy"),
+				}),
+				Name: helloworldtestingggg.F("name"),
+			}),
+			Pickup: helloworldtestingggg.F(helloworldtestingggg.TransferLegParam{
+				Location: helloworldtestingggg.F(shared.AddressParam{
+					City: helloworldtestingggg.F("Palo Alto"),
+					Geo: helloworldtestingggg.F(shared.AddressGeoParam{
+						Latitude:  helloworldtestingggg.F(37.444300),
+						Longitude: helloworldtestingggg.F(-122.159800),
+					}),
+					State:  helloworldtestingggg.F("CA"),
+					Street: helloworldtestingggg.F("437 Lytton"),
+					Zip:    helloworldtestingggg.F("94301"),
+				}),
+				Contact: helloworldtestingggg.F(helloworldtestingggg.TransferLegContactParam{
+					Name:  helloworldtestingggg.F("name"),
+					Phone: helloworldtestingggg.F("phone"),
+				}),
+				Cost: helloworldtestingggg.F(shared.MoneyParam{
+					Amount:   helloworldtestingggg.F(int64(2500)),
+					Currency: helloworldtestingggg.F("USD"),
+				}),
+				Window: helloworldtestingggg.F(helloworldtestingggg.TransferLegWindowParam{
+					End:   helloworldtestingggg.F(time.Now()),
+					Start: helloworldtestingggg.F(time.Now()),
+				}),
+			}),
+		}),
+		ScheduledFor: helloworldtestingggg.F(time.Now()),
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
@@ -147,6 +147,8 @@ func TestPlacementGet(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Placements.Get(context.TODO(), "placementId")
 	if err != nil {
@@ -170,10 +172,12 @@ func TestPlacementListWithOptionalParams(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Placements.List(context.TODO(), helloworldtestingggg.PlacementListParams{
-		Cursor: helloworldtestingggg.String("cursor"),
-		Limit:  helloworldtestingggg.Int(0),
+		Cursor: helloworldtestingggg.F("cursor"),
+		Limit:  helloworldtestingggg.F(int64(0)),
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
@@ -196,42 +200,42 @@ func TestPlacementRecordEventWithOptionalParams(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Placements.RecordEvent(
 		context.TODO(),
 		"placementId",
 		helloworldtestingggg.PlacementRecordEventParams{
-			PlacementEvent: helloworldtestingggg.PlacementEventUnionParam{
-				OfPlacementEventPlacementTransferEvent: &helloworldtestingggg.PlacementEventPlacementTransferEventParam{
-					ID: "id",
-					Leg: helloworldtestingggg.TransferLegParam{
-						Location: shared.AddressParam{
-							City: helloworldtestingggg.String("Palo Alto"),
-							Geo: shared.AddressGeoParam{
-								Latitude:  37.4443,
-								Longitude: -122.1598,
-							},
-							State:  helloworldtestingggg.String("CA"),
-							Street: helloworldtestingggg.String("437 Lytton"),
-							Zip:    helloworldtestingggg.String("94301"),
-						},
-						Contact: helloworldtestingggg.TransferLegContactParam{
-							Name:  helloworldtestingggg.String("name"),
-							Phone: helloworldtestingggg.String("phone"),
-						},
-						Cost: shared.MoneyParam{
-							Amount:   2500,
-							Currency: "USD",
-						},
-						Window: helloworldtestingggg.TransferLegWindowParam{
-							End:   helloworldtestingggg.Time(time.Now()),
-							Start: helloworldtestingggg.Time(time.Now()),
-						},
-					},
-					OccurredAt: time.Now(),
-					Type:       "transfer",
-					Note:       helloworldtestingggg.String("note"),
-				},
+			PlacementEvent: helloworldtestingggg.PlacementEventPlacementTransferEventParam{
+				ID: helloworldtestingggg.F("id"),
+				Leg: helloworldtestingggg.F(helloworldtestingggg.TransferLegParam{
+					Location: helloworldtestingggg.F(shared.AddressParam{
+						City: helloworldtestingggg.F("Palo Alto"),
+						Geo: helloworldtestingggg.F(shared.AddressGeoParam{
+							Latitude:  helloworldtestingggg.F(37.444300),
+							Longitude: helloworldtestingggg.F(-122.159800),
+						}),
+						State:  helloworldtestingggg.F("CA"),
+						Street: helloworldtestingggg.F("437 Lytton"),
+						Zip:    helloworldtestingggg.F("94301"),
+					}),
+					Contact: helloworldtestingggg.F(helloworldtestingggg.TransferLegContactParam{
+						Name:  helloworldtestingggg.F("name"),
+						Phone: helloworldtestingggg.F("phone"),
+					}),
+					Cost: helloworldtestingggg.F(shared.MoneyParam{
+						Amount:   helloworldtestingggg.F(int64(2500)),
+						Currency: helloworldtestingggg.F("USD"),
+					}),
+					Window: helloworldtestingggg.F(helloworldtestingggg.TransferLegWindowParam{
+						End:   helloworldtestingggg.F(time.Now()),
+						Start: helloworldtestingggg.F(time.Now()),
+					}),
+				}),
+				OccurredAt: helloworldtestingggg.F(time.Now()),
+				Type:       helloworldtestingggg.F(helloworldtestingggg.PlacementEventPlacementTransferEventTypeTransfer),
+				Note:       helloworldtestingggg.F("note"),
 			},
 		},
 	)

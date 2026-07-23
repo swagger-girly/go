@@ -28,6 +28,8 @@ func TestUserAgentHeader(t *testing.T) {
 	var userAgent string
 	client := helloworldtestingggg.NewClient(
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 		option.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
 				fn: func(req *http.Request) (*http.Response, error) {
@@ -41,8 +43,8 @@ func TestUserAgentHeader(t *testing.T) {
 	)
 	_, _ = client.Pet.Update(context.Background(), helloworldtestingggg.PetUpdateParams{
 		Pet: helloworldtestingggg.PetParam{
-			Name:      "doggie",
-			PhotoURLs: []string{"string"},
+			Name:      helloworldtestingggg.F("doggie"),
+			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
 		},
 	})
 	if userAgent != fmt.Sprintf("HelloWorldTestingggg/Go %s", internal.PackageVersion) {
@@ -54,6 +56,8 @@ func TestRetryAfter(t *testing.T) {
 	retryCountHeaders := make([]string, 0)
 	client := helloworldtestingggg.NewClient(
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 		option.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
 				fn: func(req *http.Request) (*http.Response, error) {
@@ -70,8 +74,8 @@ func TestRetryAfter(t *testing.T) {
 	)
 	_, err := client.Pet.Update(context.Background(), helloworldtestingggg.PetUpdateParams{
 		Pet: helloworldtestingggg.PetParam{
-			Name:      "doggie",
-			PhotoURLs: []string{"string"},
+			Name:      helloworldtestingggg.F("doggie"),
+			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
 		},
 	})
 	if err == nil {
@@ -93,6 +97,8 @@ func TestDeleteRetryCountHeader(t *testing.T) {
 	retryCountHeaders := make([]string, 0)
 	client := helloworldtestingggg.NewClient(
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 		option.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
 				fn: func(req *http.Request) (*http.Response, error) {
@@ -110,8 +116,8 @@ func TestDeleteRetryCountHeader(t *testing.T) {
 	)
 	_, err := client.Pet.Update(context.Background(), helloworldtestingggg.PetUpdateParams{
 		Pet: helloworldtestingggg.PetParam{
-			Name:      "doggie",
-			PhotoURLs: []string{"string"},
+			Name:      helloworldtestingggg.F("doggie"),
+			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
 		},
 	})
 	if err == nil {
@@ -128,6 +134,8 @@ func TestOverwriteRetryCountHeader(t *testing.T) {
 	retryCountHeaders := make([]string, 0)
 	client := helloworldtestingggg.NewClient(
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 		option.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
 				fn: func(req *http.Request) (*http.Response, error) {
@@ -145,8 +153,8 @@ func TestOverwriteRetryCountHeader(t *testing.T) {
 	)
 	_, err := client.Pet.Update(context.Background(), helloworldtestingggg.PetUpdateParams{
 		Pet: helloworldtestingggg.PetParam{
-			Name:      "doggie",
-			PhotoURLs: []string{"string"},
+			Name:      helloworldtestingggg.F("doggie"),
+			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
 		},
 	})
 	if err == nil {
@@ -163,6 +171,8 @@ func TestRetryAfterMs(t *testing.T) {
 	attempts := 0
 	client := helloworldtestingggg.NewClient(
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 		option.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
 				fn: func(req *http.Request) (*http.Response, error) {
@@ -179,8 +189,8 @@ func TestRetryAfterMs(t *testing.T) {
 	)
 	_, err := client.Pet.Update(context.Background(), helloworldtestingggg.PetUpdateParams{
 		Pet: helloworldtestingggg.PetParam{
-			Name:      "doggie",
-			PhotoURLs: []string{"string"},
+			Name:      helloworldtestingggg.F("doggie"),
+			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
 		},
 	})
 	if err == nil {
@@ -194,6 +204,8 @@ func TestRetryAfterMs(t *testing.T) {
 func TestContextCancel(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 		option.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
 				fn: func(req *http.Request) (*http.Response, error) {
@@ -207,8 +219,8 @@ func TestContextCancel(t *testing.T) {
 	cancel()
 	_, err := client.Pet.Update(cancelCtx, helloworldtestingggg.PetUpdateParams{
 		Pet: helloworldtestingggg.PetParam{
-			Name:      "doggie",
-			PhotoURLs: []string{"string"},
+			Name:      helloworldtestingggg.F("doggie"),
+			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
 		},
 	})
 	if err == nil {
@@ -219,6 +231,8 @@ func TestContextCancel(t *testing.T) {
 func TestContextCancelDelay(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 		option.WithHTTPClient(&http.Client{
 			Transport: &closureTransport{
 				fn: func(req *http.Request) (*http.Response, error) {
@@ -232,8 +246,8 @@ func TestContextCancelDelay(t *testing.T) {
 	defer cancel()
 	_, err := client.Pet.Update(cancelCtx, helloworldtestingggg.PetUpdateParams{
 		Pet: helloworldtestingggg.PetParam{
-			Name:      "doggie",
-			PhotoURLs: []string{"string"},
+			Name:      helloworldtestingggg.F("doggie"),
+			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
 		},
 	})
 	if err == nil {
@@ -252,6 +266,8 @@ func TestContextDeadline(t *testing.T) {
 	go func() {
 		client := helloworldtestingggg.NewClient(
 			option.WithAPIKey("My API Key"),
+			option.WithBasicAuthUsername("My Basic Auth Username"),
+			option.WithBasicAuthPassword("My Basic Auth Password"),
 			option.WithHTTPClient(&http.Client{
 				Transport: &closureTransport{
 					fn: func(req *http.Request) (*http.Response, error) {
@@ -263,8 +279,8 @@ func TestContextDeadline(t *testing.T) {
 		)
 		_, err := client.Pet.Update(deadlineCtx, helloworldtestingggg.PetUpdateParams{
 			Pet: helloworldtestingggg.PetParam{
-				Name:      "doggie",
-				PhotoURLs: []string{"string"},
+				Name:      helloworldtestingggg.F("doggie"),
+				PhotoURLs: helloworldtestingggg.F([]string{"string"}),
 			},
 		})
 		if err == nil {
@@ -294,6 +310,8 @@ func TestContextDeadlineStreaming(t *testing.T) {
 	go func() {
 		client := helloworldtestingggg.NewClient(
 			option.WithAPIKey("My API Key"),
+			option.WithBasicAuthUsername("My Basic Auth Username"),
+			option.WithBasicAuthPassword("My Basic Auth Password"),
 			option.WithHTTPClient(&http.Client{
 				Transport: &closureTransport{
 					fn: func(req *http.Request) (*http.Response, error) {
@@ -313,7 +331,7 @@ func TestContextDeadlineStreaming(t *testing.T) {
 		)
 		stream := client.Pet.WatchStatusStreaming(
 			deadlineCtx,
-			0,
+			int64(0),
 			helloworldtestingggg.PetWatchStatusParams{},
 		)
 		for stream.Next() {
@@ -343,6 +361,8 @@ func TestContextDeadlineStreamingWithRequestTimeout(t *testing.T) {
 	go func() {
 		client := helloworldtestingggg.NewClient(
 			option.WithAPIKey("My API Key"),
+			option.WithBasicAuthUsername("My Basic Auth Username"),
+			option.WithBasicAuthPassword("My Basic Auth Password"),
 			option.WithHTTPClient(&http.Client{
 				Transport: &closureTransport{
 					fn: func(req *http.Request) (*http.Response, error) {
@@ -362,7 +382,7 @@ func TestContextDeadlineStreamingWithRequestTimeout(t *testing.T) {
 		)
 		stream := client.Pet.WatchStatusStreaming(
 			context.Background(),
-			0,
+			int64(0),
 			helloworldtestingggg.PetWatchStatusParams{},
 			option.WithRequestTimeout((100 * time.Millisecond)),
 		)

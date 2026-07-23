@@ -29,16 +29,18 @@ func TestFileUpdateWithOptionalParams(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Files.Update(
 		context.TODO(),
 		"path",
 		helloworldtestingggg.FileUpdateParams{
-			File: io.Reader(bytes.NewBuffer([]byte("Example data"))),
-			Metadata: map[string]string{
+			File: helloworldtestingggg.F(io.Reader(bytes.NewBuffer([]byte("Example data")))),
+			Metadata: helloworldtestingggg.F(map[string]string{
 				"foo": "string",
-			},
-			URL: helloworldtestingggg.String("https://example.com"),
+			}),
+			URL: helloworldtestingggg.F("https://example.com"),
 		},
 	)
 	if err != nil {
@@ -62,6 +64,8 @@ func TestFileList(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Files.List(context.TODO())
 	if err != nil {
@@ -85,6 +89,8 @@ func TestFileDelete(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	err := client.Files.Delete(context.TODO(), "path")
 	if err != nil {
@@ -108,14 +114,16 @@ func TestFileNewArchiveWithOptionalParams(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Files.NewArchive(context.TODO(), helloworldtestingggg.FileNewArchiveParams{
-		Files: []io.Reader{io.Reader(bytes.NewBuffer([]byte("Example data")))},
-		Manifest: helloworldtestingggg.FileNewArchiveParamsManifest{
-			Name:          "name",
-			Labels:        []string{"string"},
-			PreservePaths: helloworldtestingggg.Bool(true),
-		},
+		Files: helloworldtestingggg.F([]io.Reader{io.Reader(bytes.NewBuffer([]byte("Example data")))}),
+		Manifest: helloworldtestingggg.F(helloworldtestingggg.FileNewArchiveParamsManifest{
+			Name:          helloworldtestingggg.F("name"),
+			Labels:        helloworldtestingggg.F([]string{"string"}),
+			PreservePaths: helloworldtestingggg.F(true),
+		}),
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
@@ -136,6 +144,8 @@ func TestFileDownload(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	resp, err := client.Files.Download(context.TODO(), "path")
 	if err != nil {
@@ -172,16 +182,18 @@ func TestFileUploadWithOptionalParams(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Files.Upload(context.TODO(), helloworldtestingggg.FileUploadParams{
-		File:      io.Reader(bytes.NewBuffer([]byte("Example data"))),
-		ExpiresIn: helloworldtestingggg.Int(0),
-		Metadata: map[string]string{
+		File:      helloworldtestingggg.F(io.Reader(bytes.NewBuffer([]byte("Example data")))),
+		ExpiresIn: helloworldtestingggg.F(int64(0)),
+		Metadata: helloworldtestingggg.F(map[string]string{
 			"foo": "string",
-		},
-		Path:   helloworldtestingggg.String("path"),
-		Public: helloworldtestingggg.Bool(true),
-		Tags:   []string{"string"},
+		}),
+		Path:   helloworldtestingggg.F("path"),
+		Public: helloworldtestingggg.F(true),
+		Tags:   helloworldtestingggg.F([]string{"string"}),
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
@@ -204,13 +216,15 @@ func TestFileUploadDirectWithOptionalParams(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Files.UploadDirect(
 		context.TODO(),
 		io.Reader(bytes.NewBuffer([]byte("Example data"))),
 		helloworldtestingggg.FileUploadDirectParams{
-			Path:      helloworldtestingggg.String("path"),
-			XFileName: helloworldtestingggg.String("X-File-Name"),
+			Path:      helloworldtestingggg.F("path"),
+			XFileName: helloworldtestingggg.F("X-File-Name"),
 		},
 	)
 	if err != nil {

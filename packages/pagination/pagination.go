@@ -9,34 +9,31 @@ import (
 	"github.com/swagger-girly/go/internal/apijson"
 	"github.com/swagger-girly/go/internal/requestconfig"
 	"github.com/swagger-girly/go/option"
-	"github.com/swagger-girly/go/packages/param"
-	"github.com/swagger-girly/go/packages/respjson"
 )
 
-// aliased to make [param.APIUnion] private when embedding
-type paramUnion = param.APIUnion
-
-// aliased to make [param.APIObject] private when embedding
-type paramObj = param.APIObject
-
 type CustomCursorPage[T any] struct {
-	Items      []T    `json:"items"`
-	NextCursor string `json:"next_cursor" api:"nullable"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Items       respjson.Field
-		NextCursor  respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-	cfg *requestconfig.RequestConfig
-	res *http.Response
+	Items      []T                  `json:"items"`
+	NextCursor string               `json:"next_cursor" api:"nullable"`
+	JSON       customCursorPageJSON `json:"-"`
+	cfg        *requestconfig.RequestConfig
+	res        *http.Response
 }
 
-// Returns the unmodified JSON received from the API
-func (r CustomCursorPage[T]) RawJSON() string { return r.JSON.raw }
-func (r *CustomCursorPage[T]) UnmarshalJSON(data []byte) error {
+// customCursorPageJSON contains the JSON metadata for the struct
+// [CustomCursorPage[T]]
+type customCursorPageJSON struct {
+	Items       apijson.Field
+	NextCursor  apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *CustomCursorPage[T]) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r customCursorPageJSON) RawJSON() string {
+	return r.raw
 }
 
 // GetNextPage returns the next page as defined by this pagination style. When
@@ -80,7 +77,6 @@ type CustomCursorPageAutoPager[T any] struct {
 	idx  int
 	run  int
 	err  error
-	paramObj
 }
 
 func NewCustomCursorPageAutoPager[T any](page *CustomCursorPage[T], err error) *CustomCursorPageAutoPager[T] {
@@ -120,23 +116,28 @@ func (r *CustomCursorPageAutoPager[T]) Index() int {
 }
 
 type XFakeSinglePage[T any] struct {
-	Data    []T  `json:"data"`
-	HasMore bool `json:"has_more" api:"required"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Data        respjson.Field
-		HasMore     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-	cfg *requestconfig.RequestConfig
-	res *http.Response
+	Data    []T                 `json:"data"`
+	HasMore bool                `json:"has_more" api:"required"`
+	JSON    xFakeSinglePageJSON `json:"-"`
+	cfg     *requestconfig.RequestConfig
+	res     *http.Response
 }
 
-// Returns the unmodified JSON received from the API
-func (r XFakeSinglePage[T]) RawJSON() string { return r.JSON.raw }
-func (r *XFakeSinglePage[T]) UnmarshalJSON(data []byte) error {
+// xFakeSinglePageJSON contains the JSON metadata for the struct
+// [XFakeSinglePage[T]]
+type xFakeSinglePageJSON struct {
+	Data        apijson.Field
+	HasMore     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *XFakeSinglePage[T]) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r xFakeSinglePageJSON) RawJSON() string {
+	return r.raw
 }
 
 // GetNextPage returns the next page as defined by this pagination style. When
@@ -147,7 +148,7 @@ func (r *XFakeSinglePage[T]) GetNextPage() (res *XFakeSinglePage[T], err error) 
 		return nil, nil
 	}
 
-	if r.JSON.HasMore.Valid() && r.HasMore == false {
+	if !r.JSON.HasMore.IsMissing() && r.HasMore == false {
 		return nil, nil
 	}
 	// This page represents a response that isn't actually paginated at the API level
@@ -181,7 +182,6 @@ type XFakeSinglePageAutoPager[T any] struct {
 	idx  int
 	run  int
 	err  error
-	paramObj
 }
 
 func NewXFakeSinglePageAutoPager[T any](page *XFakeSinglePage[T], err error) *XFakeSinglePageAutoPager[T] {
@@ -221,23 +221,28 @@ func (r *XFakeSinglePageAutoPager[T]) Index() int {
 }
 
 type ReportCursorPage[T any] struct {
-	Data    []T  `json:"data"`
-	HasMore bool `json:"has_more" api:"required"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Data        respjson.Field
-		HasMore     respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
-	cfg *requestconfig.RequestConfig
-	res *http.Response
+	Data    []T                  `json:"data"`
+	HasMore bool                 `json:"has_more" api:"required"`
+	JSON    reportCursorPageJSON `json:"-"`
+	cfg     *requestconfig.RequestConfig
+	res     *http.Response
 }
 
-// Returns the unmodified JSON received from the API
-func (r ReportCursorPage[T]) RawJSON() string { return r.JSON.raw }
-func (r *ReportCursorPage[T]) UnmarshalJSON(data []byte) error {
+// reportCursorPageJSON contains the JSON metadata for the struct
+// [ReportCursorPage[T]]
+type reportCursorPageJSON struct {
+	Data        apijson.Field
+	HasMore     apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *ReportCursorPage[T]) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r reportCursorPageJSON) RawJSON() string {
+	return r.raw
 }
 
 // GetNextPage returns the next page as defined by this pagination style. When
@@ -248,7 +253,7 @@ func (r *ReportCursorPage[T]) GetNextPage() (res *ReportCursorPage[T], err error
 		return nil, nil
 	}
 
-	if r.JSON.HasMore.Valid() && r.HasMore == false {
+	if !r.JSON.HasMore.IsMissing() && r.HasMore == false {
 		return nil, nil
 	}
 	items := r.Data
@@ -287,7 +292,6 @@ type ReportCursorPageAutoPager[T any] struct {
 	idx  int
 	run  int
 	err  error
-	paramObj
 }
 
 func NewReportCursorPageAutoPager[T any](page *ReportCursorPage[T], err error) *ReportCursorPageAutoPager[T] {

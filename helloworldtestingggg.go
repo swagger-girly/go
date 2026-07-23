@@ -3,33 +3,37 @@
 package helloworldtestingggg
 
 import (
-	"encoding/json"
+	"reflect"
 	"time"
 
 	"github.com/swagger-girly/go/internal/apijson"
-	"github.com/swagger-girly/go/packages/respjson"
+	"github.com/swagger-girly/go/shared"
+	"github.com/tidwall/gjson"
 )
 
 type SystemHealth struct {
-	CheckedAt time.Time `json:"checkedAt" api:"required" format:"date-time"`
-	// Any of "ok", "degraded", "down".
-	Status SystemHealthStatus `json:"status" api:"required"`
+	CheckedAt time.Time          `json:"checkedAt" api:"required" format:"date-time"`
+	Status    SystemHealthStatus `json:"status" api:"required"`
 	// Per-service health keyed by service name.
 	Services map[string]SystemHealthService `json:"services"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		CheckedAt   respjson.Field
-		Status      respjson.Field
-		Services    respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+	JSON     systemHealthJSON               `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r SystemHealth) RawJSON() string { return r.JSON.raw }
-func (r *SystemHealth) UnmarshalJSON(data []byte) error {
+// systemHealthJSON contains the JSON metadata for the struct [SystemHealth]
+type systemHealthJSON struct {
+	CheckedAt   apijson.Field
+	Status      apijson.Field
+	Services    apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *SystemHealth) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r systemHealthJSON) RawJSON() string {
+	return r.raw
 }
 
 type SystemHealthStatus string
@@ -40,159 +44,193 @@ const (
 	SystemHealthStatusDown     SystemHealthStatus = "down"
 )
 
+func (r SystemHealthStatus) IsKnown() bool {
+	switch r {
+	case SystemHealthStatusOk, SystemHealthStatusDegraded, SystemHealthStatusDown:
+		return true
+	}
+	return false
+}
+
 type SystemHealthService struct {
-	// Any of "ok", "degraded", "down".
-	Status       string                          `json:"status" api:"required"`
-	LastIncident SystemHealthServiceLastIncident `json:"lastIncident"`
-	LatencyMs    int64                           `json:"latencyMs"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Status       respjson.Field
-		LastIncident respjson.Field
-		LatencyMs    respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
-	} `json:"-"`
+	Status       SystemHealthServicesStatus       `json:"status" api:"required"`
+	LastIncident SystemHealthServicesLastIncident `json:"lastIncident"`
+	LatencyMs    int64                            `json:"latencyMs"`
+	JSON         systemHealthServiceJSON          `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r SystemHealthService) RawJSON() string { return r.JSON.raw }
-func (r *SystemHealthService) UnmarshalJSON(data []byte) error {
+// systemHealthServiceJSON contains the JSON metadata for the struct
+// [SystemHealthService]
+type systemHealthServiceJSON struct {
+	Status       apijson.Field
+	LastIncident apijson.Field
+	LatencyMs    apijson.Field
+	raw          string
+	ExtraFields  map[string]apijson.Field
+}
+
+func (r *SystemHealthService) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type SystemHealthServiceLastIncident struct {
-	OpenedAt   time.Time                                      `json:"openedAt" format:"date-time"`
-	Resolution SystemHealthServiceLastIncidentResolutionUnion `json:"resolution"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		OpenedAt    respjson.Field
-		Resolution  respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+func (r systemHealthServiceJSON) RawJSON() string {
+	return r.raw
 }
 
-// Returns the unmodified JSON received from the API
-func (r SystemHealthServiceLastIncident) RawJSON() string { return r.JSON.raw }
-func (r *SystemHealthServiceLastIncident) UnmarshalJSON(data []byte) error {
+type SystemHealthServicesStatus string
+
+const (
+	SystemHealthServicesStatusOk       SystemHealthServicesStatus = "ok"
+	SystemHealthServicesStatusDegraded SystemHealthServicesStatus = "degraded"
+	SystemHealthServicesStatusDown     SystemHealthServicesStatus = "down"
+)
+
+func (r SystemHealthServicesStatus) IsKnown() bool {
+	switch r {
+	case SystemHealthServicesStatusOk, SystemHealthServicesStatusDegraded, SystemHealthServicesStatusDown:
+		return true
+	}
+	return false
+}
+
+type SystemHealthServicesLastIncident struct {
+	OpenedAt   time.Time                                       `json:"openedAt" format:"date-time"`
+	Resolution SystemHealthServicesLastIncidentResolutionUnion `json:"resolution"`
+	JSON       systemHealthServicesLastIncidentJSON            `json:"-"`
+}
+
+// systemHealthServicesLastIncidentJSON contains the JSON metadata for the struct
+// [SystemHealthServicesLastIncident]
+type systemHealthServicesLastIncidentJSON struct {
+	OpenedAt    apijson.Field
+	Resolution  apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *SystemHealthServicesLastIncident) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// SystemHealthServiceLastIncidentResolutionUnion contains all possible properties
-// and values from [string],
-// [SystemHealthServiceLastIncidentResolutionIncidentReference].
-//
-// Use the methods beginning with 'As' to cast the union to one of its variants.
-//
-// If the underlying value is not a json object, one of the following properties
-// will be valid: OfString]
-type SystemHealthServiceLastIncidentResolutionUnion struct {
-	// This field will be present if the value is a [string] instead of an object.
-	OfString string `json:",inline"`
-	// This field is from variant
-	// [SystemHealthServiceLastIncidentResolutionIncidentReference].
-	IncidentID string `json:"incidentId"`
-	// This field is from variant
-	// [SystemHealthServiceLastIncidentResolutionIncidentReference].
-	URL  string `json:"url"`
-	JSON struct {
-		OfString   respjson.Field
-		IncidentID respjson.Field
-		URL        respjson.Field
-		raw        string
-	} `json:"-"`
+func (r systemHealthServicesLastIncidentJSON) RawJSON() string {
+	return r.raw
 }
 
-func (u SystemHealthServiceLastIncidentResolutionUnion) AsString() (v string) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
+// Union satisfied by [shared.UnionString] or
+// [SystemHealthServicesLastIncidentResolutionIncidentReference].
+type SystemHealthServicesLastIncidentResolutionUnion interface {
+	ImplementsSystemHealthServicesLastIncidentResolutionUnion()
 }
 
-func (u SystemHealthServiceLastIncidentResolutionUnion) AsIncidentReference() (v SystemHealthServiceLastIncidentResolutionIncidentReference) {
-	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
-	return
+func init() {
+	apijson.RegisterUnion(
+		reflect.TypeOf((*SystemHealthServicesLastIncidentResolutionUnion)(nil)).Elem(),
+		"",
+		apijson.UnionVariant{
+			TypeFilter: gjson.String,
+			Type:       reflect.TypeOf(shared.UnionString("")),
+		},
+		apijson.UnionVariant{
+			TypeFilter: gjson.JSON,
+			Type:       reflect.TypeOf(SystemHealthServicesLastIncidentResolutionIncidentReference{}),
+		},
+	)
 }
 
-// Returns the unmodified JSON received from the API
-func (u SystemHealthServiceLastIncidentResolutionUnion) RawJSON() string { return u.JSON.raw }
+type SystemHealthServicesLastIncidentResolutionIncidentReference struct {
+	IncidentID string                                                          `json:"incidentId" api:"required"`
+	URL        string                                                          `json:"url" format:"uri"`
+	JSON       systemHealthServicesLastIncidentResolutionIncidentReferenceJSON `json:"-"`
+}
 
-func (r *SystemHealthServiceLastIncidentResolutionUnion) UnmarshalJSON(data []byte) error {
+// systemHealthServicesLastIncidentResolutionIncidentReferenceJSON contains the
+// JSON metadata for the struct
+// [SystemHealthServicesLastIncidentResolutionIncidentReference]
+type systemHealthServicesLastIncidentResolutionIncidentReferenceJSON struct {
+	IncidentID  apijson.Field
+	URL         apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *SystemHealthServicesLastIncidentResolutionIncidentReference) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type SystemHealthServiceLastIncidentResolutionIncidentReference struct {
-	IncidentID string `json:"incidentId" api:"required"`
-	URL        string `json:"url" format:"uri"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		IncidentID  respjson.Field
-		URL         respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+func (r systemHealthServicesLastIncidentResolutionIncidentReferenceJSON) RawJSON() string {
+	return r.raw
 }
 
-// Returns the unmodified JSON received from the API
-func (r SystemHealthServiceLastIncidentResolutionIncidentReference) RawJSON() string {
-	return r.JSON.raw
-}
-func (r *SystemHealthServiceLastIncidentResolutionIncidentReference) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+func (r SystemHealthServicesLastIncidentResolutionIncidentReference) ImplementsSystemHealthServicesLastIncidentResolutionUnion() {
 }
 
 type GetRateLimitsResponse struct {
 	Remaining int64                       `json:"remaining" api:"required"`
 	ResetAt   time.Time                   `json:"resetAt" api:"required" format:"date-time"`
 	Tiers     []GetRateLimitsResponseTier `json:"tiers"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Remaining   respjson.Field
-		ResetAt     respjson.Field
-		Tiers       respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+	JSON      getRateLimitsResponseJSON   `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r GetRateLimitsResponse) RawJSON() string { return r.JSON.raw }
-func (r *GetRateLimitsResponse) UnmarshalJSON(data []byte) error {
+// getRateLimitsResponseJSON contains the JSON metadata for the struct
+// [GetRateLimitsResponse]
+type getRateLimitsResponseJSON struct {
+	Remaining   apijson.Field
+	ResetAt     apijson.Field
+	Tiers       apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *GetRateLimitsResponse) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r getRateLimitsResponseJSON) RawJSON() string {
+	return r.raw
 }
 
 type GetRateLimitsResponseTier struct {
-	Name  string                         `json:"name" api:"required"`
-	Quota GetRateLimitsResponseTierQuota `json:"quota"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Name        respjson.Field
-		Quota       respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+	Name  string                          `json:"name" api:"required"`
+	Quota GetRateLimitsResponseTiersQuota `json:"quota"`
+	JSON  getRateLimitsResponseTierJSON   `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r GetRateLimitsResponseTier) RawJSON() string { return r.JSON.raw }
-func (r *GetRateLimitsResponseTier) UnmarshalJSON(data []byte) error {
+// getRateLimitsResponseTierJSON contains the JSON metadata for the struct
+// [GetRateLimitsResponseTier]
+type getRateLimitsResponseTierJSON struct {
+	Name        apijson.Field
+	Quota       apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *GetRateLimitsResponseTier) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-type GetRateLimitsResponseTierQuota struct {
-	Requests int64  `json:"requests"`
-	Window   string `json:"window"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Requests    respjson.Field
-		Window      respjson.Field
-		ExtraFields map[string]respjson.Field
-		raw         string
-	} `json:"-"`
+func (r getRateLimitsResponseTierJSON) RawJSON() string {
+	return r.raw
 }
 
-// Returns the unmodified JSON received from the API
-func (r GetRateLimitsResponseTierQuota) RawJSON() string { return r.JSON.raw }
-func (r *GetRateLimitsResponseTierQuota) UnmarshalJSON(data []byte) error {
+type GetRateLimitsResponseTiersQuota struct {
+	Requests int64                               `json:"requests"`
+	Window   string                              `json:"window"`
+	JSON     getRateLimitsResponseTiersQuotaJSON `json:"-"`
+}
+
+// getRateLimitsResponseTiersQuotaJSON contains the JSON metadata for the struct
+// [GetRateLimitsResponseTiersQuota]
+type getRateLimitsResponseTiersQuotaJSON struct {
+	Requests    apijson.Field
+	Window      apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *GetRateLimitsResponseTiersQuota) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r getRateLimitsResponseTiersQuotaJSON) RawJSON() string {
+	return r.raw
 }

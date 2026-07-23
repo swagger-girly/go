@@ -25,25 +25,27 @@ func TestProfileNewWithOptionalParams(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Profiles.New(context.TODO(), helloworldtestingggg.ProfileNewParams{
 		ProfileCreateRequest: helloworldtestingggg.ProfileCreateRequestParam{
-			DisplayName:  "Ada Lovelace",
-			Email:        helloworldtestingggg.String("ada@example.com"),
-			GovernmentID: helloworldtestingggg.String("governmentId"),
-			Metadata: map[string]string{
+			DisplayName:  helloworldtestingggg.F("Ada Lovelace"),
+			Email:        helloworldtestingggg.F("ada@example.com"),
+			GovernmentID: helloworldtestingggg.F("governmentId"),
+			Metadata: helloworldtestingggg.F(map[string]string{
 				"crm_id": "crm_123",
-			},
-			Preferences: helloworldtestingggg.ProfileCreateRequestPreferencesParam{
-				Alerts: map[string]bool{
+			}),
+			Preferences: helloworldtestingggg.F(helloworldtestingggg.ProfileCreateRequestPreferencesParam{
+				Alerts: helloworldtestingggg.F(map[string]bool{
 					"inventory": true,
-				},
-				Newsletter:    helloworldtestingggg.Bool(true),
-				ScoreByRegion: map[string]any{},
-			},
-			SecretNote: helloworldtestingggg.String("verified manually"),
+				}),
+				Newsletter:    helloworldtestingggg.F(true),
+				ScoreByRegion: helloworldtestingggg.F[any](map[string]interface{}{}),
+			}),
+			SecretNote: helloworldtestingggg.F("verified manually"),
 		},
-		IdempotencyKey: helloworldtestingggg.String("profile-create-123"),
+		IdempotencyKey: helloworldtestingggg.F("profile-create-123"),
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
@@ -66,6 +68,8 @@ func TestProfileGet(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Profiles.Get(context.TODO(), "profileId")
 	if err != nil {
@@ -89,26 +93,28 @@ func TestProfileUpdateWithOptionalParams(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Profiles.Update(
 		context.TODO(),
 		"profileId",
 		helloworldtestingggg.ProfileUpdateParams{
-			OfProfileDetailsUpdate: &helloworldtestingggg.ProfileUpdateParamsBodyProfileDetailsUpdate{
-				DisplayName: helloworldtestingggg.String("displayName"),
-				Email:       helloworldtestingggg.String("email"),
-				Metadata: map[string]string{
+			Body: helloworldtestingggg.ProfileUpdateParamsBodyProfileDetailsUpdate{
+				DisplayName: helloworldtestingggg.F("displayName"),
+				Email:       helloworldtestingggg.F("email"),
+				Metadata: helloworldtestingggg.F(map[string]string{
 					"foo": "string",
-				},
-				Preferences: helloworldtestingggg.ProfileUpdateParamsBodyProfileDetailsUpdatePreferences{
-					Alerts: map[string]bool{
+				}),
+				Preferences: helloworldtestingggg.F(helloworldtestingggg.ProfileUpdateParamsBodyProfileDetailsUpdatePreferences{
+					Alerts: helloworldtestingggg.F(map[string]bool{
 						"foo": true,
-					},
-					Newsletter:    helloworldtestingggg.Bool(true),
-					ScoreByRegion: map[string]any{},
-				},
+					}),
+					Newsletter:    helloworldtestingggg.F(true),
+					ScoreByRegion: helloworldtestingggg.F[any](map[string]interface{}{}),
+				}),
 			},
-			IdempotencyKey: helloworldtestingggg.String("profile-update-123"),
+			IdempotencyKey: helloworldtestingggg.F("profile-update-123"),
 		},
 	)
 	if err != nil {
@@ -132,10 +138,12 @@ func TestProfileLegacySearchWithOptionalParams(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Profiles.LegacySearch(context.TODO(), helloworldtestingggg.ProfileLegacySearchParams{
-		IncludeArchived: helloworldtestingggg.Bool(true),
-		Q:               helloworldtestingggg.String("q"),
+		IncludeArchived: helloworldtestingggg.F(true),
+		Q:               helloworldtestingggg.F("q"),
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error

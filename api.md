@@ -36,8 +36,8 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetListUnpaginatedResponse">PetListUnpaginatedResponse</a>
 - <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetGetPremiumResponse">PetGetPremiumResponse</a>
 - <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetUploadImageResponse">PetUploadImageResponse</a>
-- <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#ConnectClientEventUnion">ConnectClientEventUnion</a>
-- <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#ConnectServerEventUnion">ConnectServerEventUnion</a>
+- <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#ConnectClientEvent">ConnectClientEvent</a>
+- <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#ConnectServerEvent">ConnectServerEvent</a>
 
 Methods:
 
@@ -52,6 +52,7 @@ Methods:
 - <code title="get /pet/fake-page-inferred">client.Pet.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetService.ListFakePageInferred">ListFakePageInferred</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>) (\*<a href="https://pkg.go.dev/github.com/swagger-girly/go/packages/pagination">pagination</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go/packages/pagination#XFakeSinglePage">XFakeSinglePage</a>[<a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#Pet">Pet</a>], <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="get /pet/unpaginated">client.Pet.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetService.ListUnpaginated">ListUnpaginated</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetListUnpaginatedParams">PetListUnpaginatedParams</a>) (\*<a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetListUnpaginatedResponse">PetListUnpaginatedResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="get /pet/{petId}/premium">client.Pet.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetService.GetPremium">GetPremium</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, petID <a href="https://pkg.go.dev/builtin#int64">int64</a>) (\*<a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetGetPremiumResponse">PetGetPremiumResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /pet/search">client.Pet.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetService.Search">Search</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetSearchParams">PetSearchParams</a>) (\*[]<a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#Pet">Pet</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="post /pet/{petId}">client.Pet.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetService.UpdateWithForm">UpdateWithForm</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, petID <a href="https://pkg.go.dev/builtin#int64">int64</a>, body <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetUpdateWithFormParams">PetUpdateWithFormParams</a>) <a href="https://pkg.go.dev/builtin#error">error</a></code>
 - <code title="post /pet/{petId}/uploadImage">client.Pet.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetService.UploadImage">UploadImage</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, petID <a href="https://pkg.go.dev/builtin#int64">int64</a>, body <a href="https://pkg.go.dev/builtin#io.Reader">io.Reader</a>, params <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetUploadImageParams">PetUploadImageParams</a>) (\*<a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetUploadImageResponse">PetUploadImageResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="get /pet/{petId}/status/stream">client.Pet.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetService.WatchStatus">WatchStatus</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, petID <a href="https://pkg.go.dev/builtin#int64">int64</a>, query <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetWatchStatusParams">PetWatchStatusParams</a>) (\*<a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#Pet">Pet</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
@@ -96,13 +97,13 @@ Methods:
 Response Types:
 
 - <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#Application">Application</a>
-- <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#AdoptionGetDecisionResponseUnion">AdoptionGetDecisionResponseUnion</a>
+- <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#AdoptionGetDecisionResponse">AdoptionGetDecisionResponse</a>
 
 Methods:
 
 - <code title="post /adoptions/applications">client.Adoptions.<a href="https://pkg.go.dev/github.com/swagger-girly/go#AdoptionService.New">New</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#AdoptionNewParams">AdoptionNewParams</a>) (\*<a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#Application">Application</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="get /adoptions/applications/{applicationId}">client.Adoptions.<a href="https://pkg.go.dev/github.com/swagger-girly/go#AdoptionService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, applicationID <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#Application">Application</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
-- <code title="get /adoptions/applications/{applicationId}/decision">client.Adoptions.<a href="https://pkg.go.dev/github.com/swagger-girly/go#AdoptionService.GetDecision">GetDecision</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, applicationID <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#AdoptionGetDecisionResponseUnion">AdoptionGetDecisionResponseUnion</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /adoptions/applications/{applicationId}/decision">client.Adoptions.<a href="https://pkg.go.dev/github.com/swagger-girly/go#AdoptionService.GetDecision">GetDecision</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, applicationID <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#AdoptionGetDecisionResponse">AdoptionGetDecisionResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
 ## Policies
 
@@ -136,7 +137,7 @@ Params Types:
 Response Types:
 
 - <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#Placement">Placement</a>
-- <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PlacementEventUnion">PlacementEventUnion</a>
+- <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PlacementEvent">PlacementEvent</a>
 - <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#TransferLeg">TransferLeg</a>
 
 Methods:
@@ -164,11 +165,23 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetCreatedWebhookEvent">PetCreatedWebhookEvent</a>
 - <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetUpdatedWebhookEvent">PetUpdatedWebhookEvent</a>
 - <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetInventoryLowWebhookEvent">PetInventoryLowWebhookEvent</a>
-- <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetModerationWebhookEventUnion">PetModerationWebhookEventUnion</a>
+- <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetModerationWebhookEvent">PetModerationWebhookEvent</a>
 - <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#StoreReportGeneratedWebhookEvent">StoreReportGeneratedWebhookEvent</a>
 - <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#AdoptionsPolicyChangedWebhookEvent">AdoptionsPolicyChangedWebhookEvent</a>
 - <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PlacementEventRecordedWebhookEvent">PlacementEventRecordedWebhookEvent</a>
-- <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#ParsedWebhookEventUnion">ParsedWebhookEventUnion</a>
+- <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#ParsedWebhookEvent">ParsedWebhookEvent</a>
+
+# Notifications
+
+## Webhooks
+
+Response Types:
+
+- <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetCreatedWebhookEvent">PetCreatedWebhookEvent</a>
+- <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetUpdatedWebhookEvent">PetUpdatedWebhookEvent</a>
+- <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetInventoryLowWebhookEvent">PetInventoryLowWebhookEvent</a>
+- <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#PetModerationWebhookEvent">PetModerationWebhookEvent</a>
+- <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#ParsePetWebhookEvent">ParsePetWebhookEvent</a>
 
 # Store
 
@@ -219,7 +232,7 @@ Methods:
 
 Methods:
 
-- <code title="get /store/reports/{reportId}/inventory/daily/{date}">client.Store.Reports.Inventory.Daily.<a href="https://pkg.go.dev/github.com/swagger-girly/go#StoreReportInventoryDailyService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, date <a href="https://pkg.go.dev/builtin#time.Time">time.Time</a>, query <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#StoreReportInventoryDailyGetParams">StoreReportInventoryDailyGetParams</a>) (\*<a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#DailyInventory">DailyInventory</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /store/reports/{reportId}/inventory/daily/{date}">client.Store.Reports.Inventory.Daily.<a href="https://pkg.go.dev/github.com/swagger-girly/go#StoreReportInventoryDailyService.Get">Get</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, reportID <a href="https://pkg.go.dev/builtin#string">string</a>, date <a href="https://pkg.go.dev/builtin#time.Time">time.Time</a>) (\*<a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#DailyInventory">DailyInventory</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
 # User
 
@@ -228,7 +241,7 @@ Response Types:
 - <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#UserNewResponse">UserNewResponse</a>
 - <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#UserGetResponse">UserGetResponse</a>
 - <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#UserNewWithListResponse">UserNewWithListResponse</a>
-- <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#UserVerifyIdentityResponseUnion">UserVerifyIdentityResponseUnion</a>
+- <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#UserVerifyIdentityResponse">UserVerifyIdentityResponse</a>
 
 Methods:
 
@@ -239,7 +252,7 @@ Methods:
 - <code title="post /user/createWithList">client.User.<a href="https://pkg.go.dev/github.com/swagger-girly/go#UserService.NewWithList">NewWithList</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, body <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#UserNewWithListParams">UserNewWithListParams</a>) (\*<a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#UserNewWithListResponse">UserNewWithListResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="get /user/login">client.User.<a href="https://pkg.go.dev/github.com/swagger-girly/go#UserService.Login">Login</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, query <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#UserLoginParams">UserLoginParams</a>) (\*<a href="https://pkg.go.dev/builtin#string">string</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 - <code title="get /user/logout">client.User.<a href="https://pkg.go.dev/github.com/swagger-girly/go#UserService.Logout">Logout</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>) <a href="https://pkg.go.dev/builtin#error">error</a></code>
-- <code title="post /user/{username}/verifyIdentity">client.User.<a href="https://pkg.go.dev/github.com/swagger-girly/go#UserService.VerifyIdentity">VerifyIdentity</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, username <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#UserVerifyIdentityResponseUnion">UserVerifyIdentityResponseUnion</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="post /user/{username}/verifyIdentity">client.User.<a href="https://pkg.go.dev/github.com/swagger-girly/go#UserService.VerifyIdentity">VerifyIdentity</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, username <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#UserVerifyIdentityResponse">UserVerifyIdentityResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
 # AI
 

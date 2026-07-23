@@ -24,6 +24,8 @@ func TestManualPagination(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	page, err := client.Pet.List(context.TODO(), helloworldtestingggg.PetListParams{})
 	if err != nil {

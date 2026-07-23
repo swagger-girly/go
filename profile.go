@@ -13,11 +13,9 @@ import (
 
 	"github.com/swagger-girly/go/internal/apijson"
 	"github.com/swagger-girly/go/internal/apiquery"
-	shimjson "github.com/swagger-girly/go/internal/encoding/json"
+	"github.com/swagger-girly/go/internal/param"
 	"github.com/swagger-girly/go/internal/requestconfig"
 	"github.com/swagger-girly/go/option"
-	"github.com/swagger-girly/go/packages/param"
-	"github.com/swagger-girly/go/packages/respjson"
 )
 
 // Pet owner profile and compliance operations
@@ -29,25 +27,25 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewProfileService] method instead.
 type ProfileService struct {
-	options []option.RequestOption
+	Options []option.RequestOption
 }
 
 // NewProfileService generates a new service that applies the given options to each
 // request. These options are applied after the parent client's options (if there
 // is one), and before any request-specific options.
-func NewProfileService(opts ...option.RequestOption) (r ProfileService) {
-	r = ProfileService{}
-	r.options = opts
+func NewProfileService(opts ...option.RequestOption) (r *ProfileService) {
+	r = &ProfileService{}
+	r.Options = opts
 	return
 }
 
 // Creates a pet owner profile with nested preferences, metadata maps, and
 // compliance-only write fields.
 func (r *ProfileService) New(ctx context.Context, params ProfileNewParams, opts ...option.RequestOption) (res *Profile, err error) {
-	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
+	if params.IdempotencyKey.Present {
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey)))
 	}
-	opts = slices.Concat(r.options, opts)
+	opts = slices.Concat(r.Options, opts)
 	path := "profiles"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, params, &res, opts...)
 	return res, err
@@ -56,27 +54,27 @@ func (r *ProfileService) New(ctx context.Context, params ProfileNewParams, opts 
 // Returns a profile with read-only version fields and nullable contact
 // preferences.
 func (r *ProfileService) Get(ctx context.Context, profileID string, opts ...option.RequestOption) (res *Profile, err error) {
-	opts = slices.Concat(r.options, opts)
+	opts = slices.Concat(r.Options, opts)
 	if profileID == "" {
 		err = errors.New("missing required profileId parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("profiles/%s", url.PathEscape(profileID))
+	path := fmt.Sprintf("profiles/%s", profileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
 
 // Updates either public profile details or archival state.
 func (r *ProfileService) Update(ctx context.Context, profileID string, params ProfileUpdateParams, opts ...option.RequestOption) (res *Profile, err error) {
-	if !param.IsOmitted(params.IdempotencyKey) {
-		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey.Value)))
+	if params.IdempotencyKey.Present {
+		opts = append(opts, option.WithHeader("Idempotency-Key", fmt.Sprintf("%v", params.IdempotencyKey)))
 	}
-	opts = slices.Concat(r.options, opts)
+	opts = slices.Concat(r.Options, opts)
 	if profileID == "" {
 		err = errors.New("missing required profileId parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("profiles/%s", url.PathEscape(profileID))
+	path := fmt.Sprintf("profiles/%s", profileID)
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPatch, path, params, &res, opts...)
 	return res, err
 }
@@ -85,7 +83,7 @@ func (r *ProfileService) Update(ctx context.Context, profileID string, params Pr
 //
 // Deprecated: deprecated
 func (r *ProfileService) LegacySearch(ctx context.Context, query ProfileLegacySearchParams, opts ...option.RequestOption) (res *[]Profile, err error) {
-	opts = slices.Concat(r.options, opts)
+	opts = slices.Concat(r.Options, opts)
 	path := "profiles/legacy-search"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, query, &res, opts...)
 	return res, err
@@ -98,8 +96,8 @@ type Profile struct {
 	UpdatedAt   time.Time `json:"updatedAt" api:"required" format:"date-time"`
 	Version     int64     `json:"version" api:"required"`
 	// Free-form audit metadata retained from integrations.
-	AuditTrail map[string]any `json:"auditTrail"`
-	Email      string         `json:"email" api:"nullable"`
+	AuditTrail map[string]interface{} `json:"auditTrail"`
+	Email      string                 `json:"email" api:"nullable"`
 	// Deprecated external profile code.
 	//
 	// Deprecated: deprecated
@@ -107,185 +105,199 @@ type Profile struct {
 	Metadata     map[string]string  `json:"metadata"`
 	PhoneNumbers []string           `json:"phoneNumbers" api:"nullable"`
 	Preferences  ProfilePreferences `json:"preferences"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		ID           respjson.Field
-		CreatedAt    respjson.Field
-		DisplayName  respjson.Field
-		UpdatedAt    respjson.Field
-		Version      respjson.Field
-		AuditTrail   respjson.Field
-		Email        respjson.Field
-		LegacyCode   respjson.Field
-		Metadata     respjson.Field
-		PhoneNumbers respjson.Field
-		Preferences  respjson.Field
-		ExtraFields  map[string]respjson.Field
-		raw          string
-	} `json:"-"`
+	JSON         profileJSON        `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r Profile) RawJSON() string { return r.JSON.raw }
-func (r *Profile) UnmarshalJSON(data []byte) error {
+// profileJSON contains the JSON metadata for the struct [Profile]
+type profileJSON struct {
+	ID           apijson.Field
+	CreatedAt    apijson.Field
+	DisplayName  apijson.Field
+	UpdatedAt    apijson.Field
+	Version      apijson.Field
+	AuditTrail   apijson.Field
+	Email        apijson.Field
+	LegacyCode   apijson.Field
+	Metadata     apijson.Field
+	PhoneNumbers apijson.Field
+	Preferences  apijson.Field
+	raw          string
+	ExtraFields  map[string]apijson.Field
+}
+
+func (r *Profile) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r profileJSON) RawJSON() string {
+	return r.raw
 }
 
 type ProfilePreferences struct {
-	Alerts        map[string]bool `json:"alerts"`
-	Newsletter    bool            `json:"newsletter"`
-	ScoreByRegion any             `json:"scoreByRegion"`
-	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
-	JSON struct {
-		Alerts        respjson.Field
-		Newsletter    respjson.Field
-		ScoreByRegion respjson.Field
-		ExtraFields   map[string]respjson.Field
-		raw           string
-	} `json:"-"`
+	Alerts        map[string]bool        `json:"alerts"`
+	Newsletter    bool                   `json:"newsletter"`
+	ScoreByRegion interface{}            `json:"scoreByRegion"`
+	JSON          profilePreferencesJSON `json:"-"`
 }
 
-// Returns the unmodified JSON received from the API
-func (r ProfilePreferences) RawJSON() string { return r.JSON.raw }
-func (r *ProfilePreferences) UnmarshalJSON(data []byte) error {
+// profilePreferencesJSON contains the JSON metadata for the struct
+// [ProfilePreferences]
+type profilePreferencesJSON struct {
+	Alerts        apijson.Field
+	Newsletter    apijson.Field
+	ScoreByRegion apijson.Field
+	raw           string
+	ExtraFields   map[string]apijson.Field
+}
+
+func (r *ProfilePreferences) UnmarshalJSON(data []byte) (err error) {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-// The property DisplayName is required.
+func (r profilePreferencesJSON) RawJSON() string {
+	return r.raw
+}
+
 type ProfileCreateRequestParam struct {
-	DisplayName string            `json:"displayName" api:"required"`
-	Email       param.Opt[string] `json:"email,omitzero"`
+	DisplayName param.Field[string] `json:"displayName" api:"required"`
+	Email       param.Field[string] `json:"email"`
 	// Compliance identifier used only during profile creation.
-	GovernmentID param.Opt[string] `json:"governmentId,omitzero"`
+	GovernmentID param.Field[string]                               `json:"governmentId"`
+	Metadata     param.Field[map[string]string]                    `json:"metadata"`
+	Preferences  param.Field[ProfileCreateRequestPreferencesParam] `json:"preferences"`
 	// Internal note that must not be emitted in profile responses.
-	SecretNote  param.Opt[string]                    `json:"secretNote,omitzero"`
-	Metadata    map[string]string                    `json:"metadata,omitzero"`
-	Preferences ProfileCreateRequestPreferencesParam `json:"preferences,omitzero"`
-	paramObj
+	SecretNote param.Field[string] `json:"secretNote"`
 }
 
 func (r ProfileCreateRequestParam) MarshalJSON() (data []byte, err error) {
-	type shadow ProfileCreateRequestParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ProfileCreateRequestParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return apijson.MarshalRoot(r)
 }
 
 type ProfileCreateRequestPreferencesParam struct {
-	Newsletter    param.Opt[bool] `json:"newsletter,omitzero"`
-	Alerts        map[string]bool `json:"alerts,omitzero"`
-	ScoreByRegion any             `json:"scoreByRegion,omitzero"`
-	paramObj
+	Alerts        param.Field[map[string]bool] `json:"alerts"`
+	Newsletter    param.Field[bool]            `json:"newsletter"`
+	ScoreByRegion param.Field[interface{}]     `json:"scoreByRegion"`
 }
 
 func (r ProfileCreateRequestPreferencesParam) MarshalJSON() (data []byte, err error) {
-	type shadow ProfileCreateRequestPreferencesParam
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ProfileCreateRequestPreferencesParam) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return apijson.MarshalRoot(r)
 }
 
 type ProfileNewParams struct {
-	ProfileCreateRequest ProfileCreateRequestParam
-	IdempotencyKey       param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
-	paramObj
+	ProfileCreateRequest ProfileCreateRequestParam `json:"profile_create_request" api:"required"`
+	IdempotencyKey       param.Field[string]       `header:"Idempotency-Key"`
 }
 
 func (r ProfileNewParams) MarshalJSON() (data []byte, err error) {
-	return shimjson.Marshal(r.ProfileCreateRequest)
-}
-func (r *ProfileNewParams) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return apijson.MarshalRoot(r.ProfileCreateRequest)
 }
 
 type ProfileUpdateParams struct {
-
-	//
-	// Request body variants
-	//
-
-	// This field is a request body variant, only one variant field can be set.
-	OfProfileDetailsUpdate *ProfileUpdateParamsBodyProfileDetailsUpdate `json:",inline"`
-	// This field is a request body variant, only one variant field can be set.
-	OfProfileArchiveUpdate *ProfileUpdateParamsBodyProfileArchiveUpdate `json:",inline"`
-
-	IdempotencyKey param.Opt[string] `header:"Idempotency-Key,omitzero" json:"-"`
-	paramObj
+	Body           ProfileUpdateParamsBodyUnion `json:"body" api:"required"`
+	IdempotencyKey param.Field[string]          `header:"Idempotency-Key"`
 }
 
-func (u ProfileUpdateParams) MarshalJSON() ([]byte, error) {
-	return param.MarshalUnion(u, u.OfProfileDetailsUpdate, u.OfProfileArchiveUpdate)
+func (r ProfileUpdateParams) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r.Body)
 }
-func (r *ProfileUpdateParams) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+
+type ProfileUpdateParamsBody struct {
+	ArchivedAt     param.Field[time.Time]                             `json:"archivedAt" format:"date-time"`
+	ArchivedReason param.Field[ProfileUpdateParamsBodyArchivedReason] `json:"archivedReason"`
+	DisplayName    param.Field[string]                                `json:"displayName"`
+	Email          param.Field[string]                                `json:"email"`
+	Metadata       param.Field[interface{}]                           `json:"metadata"`
+	Preferences    param.Field[interface{}]                           `json:"preferences"`
+}
+
+func (r ProfileUpdateParamsBody) MarshalJSON() (data []byte, err error) {
+	return apijson.MarshalRoot(r)
+}
+
+func (r ProfileUpdateParamsBody) implementsProfileUpdateParamsBodyUnion() {}
+
+// Satisfied by [ProfileUpdateParamsBodyProfileDetailsUpdate],
+// [ProfileUpdateParamsBodyProfileArchiveUpdate], [ProfileUpdateParamsBody].
+type ProfileUpdateParamsBodyUnion interface {
+	implementsProfileUpdateParamsBodyUnion()
 }
 
 type ProfileUpdateParamsBodyProfileDetailsUpdate struct {
-	Email       param.Opt[string]                                      `json:"email,omitzero"`
-	DisplayName param.Opt[string]                                      `json:"displayName,omitzero"`
-	Metadata    map[string]string                                      `json:"metadata,omitzero"`
-	Preferences ProfileUpdateParamsBodyProfileDetailsUpdatePreferences `json:"preferences,omitzero"`
-	paramObj
+	DisplayName param.Field[string]                                                 `json:"displayName"`
+	Email       param.Field[string]                                                 `json:"email"`
+	Metadata    param.Field[map[string]string]                                      `json:"metadata"`
+	Preferences param.Field[ProfileUpdateParamsBodyProfileDetailsUpdatePreferences] `json:"preferences"`
 }
 
 func (r ProfileUpdateParamsBodyProfileDetailsUpdate) MarshalJSON() (data []byte, err error) {
-	type shadow ProfileUpdateParamsBodyProfileDetailsUpdate
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ProfileUpdateParamsBodyProfileDetailsUpdate) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return apijson.MarshalRoot(r)
 }
 
+func (r ProfileUpdateParamsBodyProfileDetailsUpdate) implementsProfileUpdateParamsBodyUnion() {}
+
 type ProfileUpdateParamsBodyProfileDetailsUpdatePreferences struct {
-	Newsletter    param.Opt[bool] `json:"newsletter,omitzero"`
-	Alerts        map[string]bool `json:"alerts,omitzero"`
-	ScoreByRegion any             `json:"scoreByRegion,omitzero"`
-	paramObj
+	Alerts        param.Field[map[string]bool] `json:"alerts"`
+	Newsletter    param.Field[bool]            `json:"newsletter"`
+	ScoreByRegion param.Field[interface{}]     `json:"scoreByRegion"`
 }
 
 func (r ProfileUpdateParamsBodyProfileDetailsUpdatePreferences) MarshalJSON() (data []byte, err error) {
-	type shadow ProfileUpdateParamsBodyProfileDetailsUpdatePreferences
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ProfileUpdateParamsBodyProfileDetailsUpdatePreferences) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return apijson.MarshalRoot(r)
 }
 
-// The properties ArchivedAt, ArchivedReason are required.
 type ProfileUpdateParamsBodyProfileArchiveUpdate struct {
-	ArchivedAt time.Time `json:"archivedAt" api:"required" format:"date-time"`
-	// Any of "duplicate", "requested", "policy_violation".
-	ArchivedReason string `json:"archivedReason,omitzero" api:"required"`
-	paramObj
+	ArchivedAt     param.Field[time.Time]                                                 `json:"archivedAt" api:"required" format:"date-time"`
+	ArchivedReason param.Field[ProfileUpdateParamsBodyProfileArchiveUpdateArchivedReason] `json:"archivedReason" api:"required"`
 }
 
 func (r ProfileUpdateParamsBodyProfileArchiveUpdate) MarshalJSON() (data []byte, err error) {
-	type shadow ProfileUpdateParamsBodyProfileArchiveUpdate
-	return param.MarshalObject(r, (*shadow)(&r))
-}
-func (r *ProfileUpdateParamsBodyProfileArchiveUpdate) UnmarshalJSON(data []byte) error {
-	return apijson.UnmarshalRoot(data, r)
+	return apijson.MarshalRoot(r)
 }
 
-func init() {
-	apijson.RegisterFieldValidator[ProfileUpdateParamsBodyProfileArchiveUpdate](
-		"archivedReason", "duplicate", "requested", "policy_violation",
-	)
+func (r ProfileUpdateParamsBodyProfileArchiveUpdate) implementsProfileUpdateParamsBodyUnion() {}
+
+type ProfileUpdateParamsBodyProfileArchiveUpdateArchivedReason string
+
+const (
+	ProfileUpdateParamsBodyProfileArchiveUpdateArchivedReasonDuplicate       ProfileUpdateParamsBodyProfileArchiveUpdateArchivedReason = "duplicate"
+	ProfileUpdateParamsBodyProfileArchiveUpdateArchivedReasonRequested       ProfileUpdateParamsBodyProfileArchiveUpdateArchivedReason = "requested"
+	ProfileUpdateParamsBodyProfileArchiveUpdateArchivedReasonPolicyViolation ProfileUpdateParamsBodyProfileArchiveUpdateArchivedReason = "policy_violation"
+)
+
+func (r ProfileUpdateParamsBodyProfileArchiveUpdateArchivedReason) IsKnown() bool {
+	switch r {
+	case ProfileUpdateParamsBodyProfileArchiveUpdateArchivedReasonDuplicate, ProfileUpdateParamsBodyProfileArchiveUpdateArchivedReasonRequested, ProfileUpdateParamsBodyProfileArchiveUpdateArchivedReasonPolicyViolation:
+		return true
+	}
+	return false
+}
+
+type ProfileUpdateParamsBodyArchivedReason string
+
+const (
+	ProfileUpdateParamsBodyArchivedReasonDuplicate       ProfileUpdateParamsBodyArchivedReason = "duplicate"
+	ProfileUpdateParamsBodyArchivedReasonRequested       ProfileUpdateParamsBodyArchivedReason = "requested"
+	ProfileUpdateParamsBodyArchivedReasonPolicyViolation ProfileUpdateParamsBodyArchivedReason = "policy_violation"
+)
+
+func (r ProfileUpdateParamsBodyArchivedReason) IsKnown() bool {
+	switch r {
+	case ProfileUpdateParamsBodyArchivedReasonDuplicate, ProfileUpdateParamsBodyArchivedReasonRequested, ProfileUpdateParamsBodyArchivedReasonPolicyViolation:
+		return true
+	}
+	return false
 }
 
 type ProfileLegacySearchParams struct {
 	// Whether archived profiles should be included.
-	IncludeArchived param.Opt[bool] `query:"include_archived,omitzero" json:"-"`
+	IncludeArchived param.Field[bool] `query:"include_archived"`
 	// Legacy free-text search string.
-	Q param.Opt[string] `query:"q,omitzero" json:"-"`
-	paramObj
+	Q param.Field[string] `query:"q"`
 }
 
 // URLQuery serializes [ProfileLegacySearchParams]'s query parameters as
 // `url.Values`.
-func (r ProfileLegacySearchParams) URLQuery() (v url.Values, err error) {
+func (r ProfileLegacySearchParams) URLQuery() (v url.Values) {
 	return apiquery.MarshalWithSettings(r, apiquery.QuerySettings{
 		ArrayFormat:  apiquery.ArrayQueryFormatComma,
 		NestedFormat: apiquery.NestedQueryFormatBrackets,
