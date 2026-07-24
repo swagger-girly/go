@@ -153,6 +153,15 @@ func (r *PetService) ListFakePageInferredAutoPaging(ctx context.Context, opts ..
 	return pagination.NewXFakeSinglePageAutoPager(r.ListFakePageInferred(ctx, opts...))
 }
 
+// Returns a bare top-level array of inline objects so generators must mint a
+// distinct element type instead of reusing the response alias name.
+func (r *PetService) ListLeaderboard(ctx context.Context, opts ...option.RequestOption) (res *[]PetListLeaderboardResponse, err error) {
+	opts = slices.Concat(r.Options, opts)
+	path := "pet/leaderboard"
+	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
+	return res, err
+}
+
 // Returns the same cursor-shaped pet list response without enabling SDK pagination
 // helpers.
 func (r *PetService) ListUnpaginated(ctx context.Context, query PetListUnpaginatedParams, opts ...option.RequestOption) (res *PetListUnpaginatedResponse, err error) {
@@ -427,6 +436,79 @@ func (r *PetListFakePageResponse) UnmarshalJSON(data []byte) (err error) {
 }
 
 func (r petListFakePageResponseJSON) RawJSON() string {
+	return r.raw
+}
+
+type PetListLeaderboardResponse struct {
+	// Ranked pet ID
+	PetID int64                           `json:"petId" api:"required"`
+	Badge PetListLeaderboardResponseBadge `json:"badge"`
+	// Leaderboard position
+	Rank int64 `json:"rank"`
+	// Adoption return on investment
+	Roi  PetListLeaderboardResponseRoi  `json:"roi"`
+	JSON petListLeaderboardResponseJSON `json:"-"`
+}
+
+// petListLeaderboardResponseJSON contains the JSON metadata for the struct
+// [PetListLeaderboardResponse]
+type petListLeaderboardResponseJSON struct {
+	PetID       apijson.Field
+	Badge       apijson.Field
+	Rank        apijson.Field
+	Roi         apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PetListLeaderboardResponse) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r petListLeaderboardResponseJSON) RawJSON() string {
+	return r.raw
+}
+
+type PetListLeaderboardResponseBadge struct {
+	JSON petListLeaderboardResponseBadgeJSON `json:"-"`
+}
+
+// petListLeaderboardResponseBadgeJSON contains the JSON metadata for the struct
+// [PetListLeaderboardResponseBadge]
+type petListLeaderboardResponseBadgeJSON struct {
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PetListLeaderboardResponseBadge) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r petListLeaderboardResponseBadgeJSON) RawJSON() string {
+	return r.raw
+}
+
+// Adoption return on investment
+type PetListLeaderboardResponseRoi struct {
+	Currency string                            `json:"currency"`
+	Times    float64                           `json:"times"`
+	JSON     petListLeaderboardResponseRoiJSON `json:"-"`
+}
+
+// petListLeaderboardResponseRoiJSON contains the JSON metadata for the struct
+// [PetListLeaderboardResponseRoi]
+type petListLeaderboardResponseRoiJSON struct {
+	Currency    apijson.Field
+	Times       apijson.Field
+	raw         string
+	ExtraFields map[string]apijson.Field
+}
+
+func (r *PetListLeaderboardResponseRoi) UnmarshalJSON(data []byte) (err error) {
+	return apijson.UnmarshalRoot(data, r)
+}
+
+func (r petListLeaderboardResponseRoiJSON) RawJSON() string {
 	return r.raw
 }
 
