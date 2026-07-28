@@ -190,10 +190,12 @@ Response Types:
 Response Types:
 
 - <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#StoreListInventoryResponse">StoreListInventoryResponse</a>
+- <a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#StoreGetActivityResponse">StoreGetActivityResponse</a>
 
 Methods:
 
 - <code title="get /store/inventory">client.Store.<a href="https://pkg.go.dev/github.com/swagger-girly/go#StoreService.ListInventory">ListInventory</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>) (\*<a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#StoreListInventoryResponse">StoreListInventoryResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
+- <code title="get /store/activity/{activityId}">client.Store.<a href="https://pkg.go.dev/github.com/swagger-girly/go#StoreService.GetActivity">GetActivity</a>(ctx <a href="https://pkg.go.dev/context">context</a>.<a href="https://pkg.go.dev/context#Context">Context</a>, activityID <a href="https://pkg.go.dev/builtin#string">string</a>) (\*<a href="https://pkg.go.dev/github.com/swagger-girly/go">helloworldtestingggg</a>.<a href="https://pkg.go.dev/github.com/swagger-girly/go#StoreGetActivityResponse">StoreGetActivityResponse</a>, <a href="https://pkg.go.dev/builtin#error">error</a>)</code>
 
 ## Order
 
