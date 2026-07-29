@@ -3,28 +3,45 @@
 package shared
 
 import (
+	"github.com/swagger-girly/go"
 	"github.com/swagger-girly/go/internal/apijson"
 	"github.com/swagger-girly/go/internal/param"
 )
 
 type Address struct {
-	City   string      `json:"city"`
-	Geo    AddressGeo  `json:"geo"`
-	State  string      `json:"state"`
-	Street string      `json:"street"`
-	Zip    string      `json:"zip"`
-	JSON   addressJSON `json:"-"`
+	City            string                    `json:"city"`
+	Geo             AddressGeo                `json:"geo"`
+	RelatedCategory interface{}               `json:"relatedCategory"`
+	RelatedCustomer interface{}               `json:"relatedCustomer"`
+	RelatedMoney    *Money                    `json:"relatedMoney"`
+	RelatedOrder    interface{}               `json:"relatedOrder"`
+	RelatedPet      *helloworldtestingggg.Pet `json:"relatedPet"`
+	RelatedShelter  interface{}               `json:"relatedShelter"`
+	RelatedTag      interface{}               `json:"relatedTag"`
+	RelatedUser     interface{}               `json:"relatedUser"`
+	State           string                    `json:"state"`
+	Street          string                    `json:"street"`
+	Zip             string                    `json:"zip"`
+	JSON            addressJSON               `json:"-"`
 }
 
 // addressJSON contains the JSON metadata for the struct [Address]
 type addressJSON struct {
-	City        apijson.Field
-	Geo         apijson.Field
-	State       apijson.Field
-	Street      apijson.Field
-	Zip         apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	City            apijson.Field
+	Geo             apijson.Field
+	RelatedCategory apijson.Field
+	RelatedCustomer apijson.Field
+	RelatedMoney    apijson.Field
+	RelatedOrder    apijson.Field
+	RelatedPet      apijson.Field
+	RelatedShelter  apijson.Field
+	RelatedTag      apijson.Field
+	RelatedUser     apijson.Field
+	State           apijson.Field
+	Street          apijson.Field
+	Zip             apijson.Field
+	raw             string
+	ExtraFields     map[string]apijson.Field
 }
 
 func (r *Address) UnmarshalJSON(data []byte) (err error) {
@@ -58,11 +75,19 @@ func (r addressGeoJSON) RawJSON() string {
 }
 
 type AddressParam struct {
-	City   param.Field[string]          `json:"city"`
-	Geo    param.Field[AddressGeoParam] `json:"geo"`
-	State  param.Field[string]          `json:"state"`
-	Street param.Field[string]          `json:"street"`
-	Zip    param.Field[string]          `json:"zip"`
+	City            param.Field[string]                        `json:"city"`
+	Geo             param.Field[AddressGeoParam]               `json:"geo"`
+	RelatedCategory param.Field[interface{}]                   `json:"relatedCategory"`
+	RelatedCustomer param.Field[interface{}]                   `json:"relatedCustomer"`
+	RelatedMoney    param.Field[MoneyParam]                    `json:"relatedMoney"`
+	RelatedOrder    param.Field[interface{}]                   `json:"relatedOrder"`
+	RelatedPet      param.Field[helloworldtestingggg.PetParam] `json:"relatedPet"`
+	RelatedShelter  param.Field[interface{}]                   `json:"relatedShelter"`
+	RelatedTag      param.Field[interface{}]                   `json:"relatedTag"`
+	RelatedUser     param.Field[interface{}]                   `json:"relatedUser"`
+	State           param.Field[string]                        `json:"state"`
+	Street          param.Field[string]                        `json:"street"`
+	Zip             param.Field[string]                        `json:"zip"`
 }
 
 func (r AddressParam) MarshalJSON() (data []byte, err error) {
@@ -82,16 +107,32 @@ type Money struct {
 	// Amount in minor currency units (e.g. cents).
 	Amount int64 `json:"amount" api:"required"`
 	// ISO 4217 currency code.
-	Currency string    `json:"currency" api:"required"`
-	JSON     moneyJSON `json:"-"`
+	Currency        string                    `json:"currency" api:"required"`
+	RelatedAddress  *Address                  `json:"relatedAddress"`
+	RelatedCategory interface{}               `json:"relatedCategory"`
+	RelatedCustomer interface{}               `json:"relatedCustomer"`
+	RelatedOrder    interface{}               `json:"relatedOrder"`
+	RelatedPet      *helloworldtestingggg.Pet `json:"relatedPet"`
+	RelatedShelter  interface{}               `json:"relatedShelter"`
+	RelatedTag      interface{}               `json:"relatedTag"`
+	RelatedUser     interface{}               `json:"relatedUser"`
+	JSON            moneyJSON                 `json:"-"`
 }
 
 // moneyJSON contains the JSON metadata for the struct [Money]
 type moneyJSON struct {
-	Amount      apijson.Field
-	Currency    apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	Amount          apijson.Field
+	Currency        apijson.Field
+	RelatedAddress  apijson.Field
+	RelatedCategory apijson.Field
+	RelatedCustomer apijson.Field
+	RelatedOrder    apijson.Field
+	RelatedPet      apijson.Field
+	RelatedShelter  apijson.Field
+	RelatedTag      apijson.Field
+	RelatedUser     apijson.Field
+	raw             string
+	ExtraFields     map[string]apijson.Field
 }
 
 func (r *Money) UnmarshalJSON(data []byte) (err error) {
@@ -106,7 +147,15 @@ type MoneyParam struct {
 	// Amount in minor currency units (e.g. cents).
 	Amount param.Field[int64] `json:"amount" api:"required"`
 	// ISO 4217 currency code.
-	Currency param.Field[string] `json:"currency" api:"required"`
+	Currency        param.Field[string]                        `json:"currency" api:"required"`
+	RelatedAddress  param.Field[AddressParam]                  `json:"relatedAddress"`
+	RelatedCategory param.Field[interface{}]                   `json:"relatedCategory"`
+	RelatedCustomer param.Field[interface{}]                   `json:"relatedCustomer"`
+	RelatedOrder    param.Field[interface{}]                   `json:"relatedOrder"`
+	RelatedPet      param.Field[helloworldtestingggg.PetParam] `json:"relatedPet"`
+	RelatedShelter  param.Field[interface{}]                   `json:"relatedShelter"`
+	RelatedTag      param.Field[interface{}]                   `json:"relatedTag"`
+	RelatedUser     param.Field[interface{}]                   `json:"relatedUser"`
 }
 
 func (r MoneyParam) MarshalJSON() (data []byte, err error) {

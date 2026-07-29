@@ -20,7 +20,7 @@ func TestNotificationWebhookParsePet(t *testing.T) {
 		option.WithBasicAuthUsername("My Basic Auth Username"),
 		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
-	payload := []byte(`{"pet":{"name":"doggie","photoUrls":["string"],"id":10,"acquisitionChannel":"breeder","category":{"id":1,"name":"Dogs","subcategories":[]},"microchipId":"string","status":"available","tags":[{"id":0,"name":"name"}]},"type":"pet.created"}`)
+	payload := []byte(`{"pet":{"name":"doggie","photoUrls":["string"],"id":10,"acquisitionChannel":"breeder","category":{},"microchipId":"string","relatedAddress":{"city":"Palo Alto","geo":{"latitude":37.4443,"longitude":-122.1598},"relatedCategory":{},"relatedCustomer":{},"relatedMoney":{"amount":2500,"currency":"USD","relatedCategory":{},"relatedCustomer":{},"relatedOrder":{},"relatedShelter":{},"relatedTag":{},"relatedUser":{}},"relatedOrder":{},"relatedShelter":{},"relatedTag":{},"relatedUser":{},"state":"CA","street":"437 Lytton","zip":"94301"},"relatedCategory":{},"relatedCustomer":{},"relatedMoney":{"amount":2500,"currency":"USD","relatedCategory":{},"relatedCustomer":{},"relatedOrder":{},"relatedShelter":{},"relatedTag":{},"relatedUser":{}},"relatedOrder":{},"relatedShelter":{},"relatedUser":{},"status":"available","tags":[{}]},"type":"pet.created"}`)
 	wh, err := standardwebhooks.NewWebhook("whsec_c2VjcmV0Cg==")
 	if err != nil {
 		t.Fatal("Failed to sign test webhook message", err)

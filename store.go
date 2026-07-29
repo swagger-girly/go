@@ -78,18 +78,31 @@ type StoreGetActivityResponse struct {
 	AcquisitionChannel interface{} `json:"acquisitionChannel"`
 	ActivityID         string      `json:"activityId"`
 	ArchivedReason     string      `json:"archivedReason"`
-	// This field can have the runtime type of [PetCategory].
+	// This field can have the runtime type of [interface{}].
 	Category interface{}                    `json:"category"`
 	Family   StoreGetActivityResponseFamily `json:"family"`
 	// This field can have the runtime type of [PetMicrochipIDUnion].
 	MicrochipID interface{} `json:"microchipId"`
 	Name        string      `json:"name"`
 	// This field can have the runtime type of [[]string].
-	PhotoURLs  interface{} `json:"photoUrls"`
-	RecordedAt time.Time   `json:"recordedAt" format:"date-time"`
+	PhotoURLs      interface{}    `json:"photoUrls"`
+	RecordedAt     time.Time      `json:"recordedAt" format:"date-time"`
+	RelatedAddress shared.Address `json:"relatedAddress"`
+	// This field can have the runtime type of [interface{}].
+	RelatedCategory interface{} `json:"relatedCategory"`
+	// This field can have the runtime type of [interface{}].
+	RelatedCustomer interface{}  `json:"relatedCustomer"`
+	RelatedMoney    shared.Money `json:"relatedMoney"`
+	// This field can have the runtime type of [interface{}].
+	RelatedOrder interface{} `json:"relatedOrder"`
+	RelatedPet   Pet         `json:"relatedPet"`
+	// This field can have the runtime type of [interface{}].
+	RelatedShelter interface{} `json:"relatedShelter"`
+	// This field can have the runtime type of [interface{}].
+	RelatedUser interface{} `json:"relatedUser"`
 	// pet status in the store
 	Status PetStatus `json:"status" api:"nullable"`
-	// This field can have the runtime type of [[]PetTag].
+	// This field can have the runtime type of [[]interface{}].
 	Tags interface{} `json:"tags"`
 	// This field can have the runtime type of
 	// [StoreGetActivityResponseStoreActivityTransferredTransferredTo].
@@ -111,6 +124,14 @@ type storeGetActivityResponseJSON struct {
 	Name               apijson.Field
 	PhotoURLs          apijson.Field
 	RecordedAt         apijson.Field
+	RelatedAddress     apijson.Field
+	RelatedCategory    apijson.Field
+	RelatedCustomer    apijson.Field
+	RelatedMoney       apijson.Field
+	RelatedOrder       apijson.Field
+	RelatedPet         apijson.Field
+	RelatedShelter     apijson.Field
+	RelatedUser        apijson.Field
 	Status             apijson.Field
 	Tags               apijson.Field
 	TransferredTo      apijson.Field
@@ -412,23 +433,39 @@ func (r StoreGetActivityResponseStoreActivityTransferredFamily) IsKnown() bool {
 }
 
 type StoreGetActivityResponseStoreActivityTransferredTransferredTo struct {
-	Name     string                                                                `json:"name" api:"required"`
-	Address  shared.Address                                                        `json:"address"`
-	Contact  StoreGetActivityResponseStoreActivityTransferredTransferredToContact  `json:"contact"`
-	Location StoreGetActivityResponseStoreActivityTransferredTransferredToLocation `json:"location"`
-	JSON     storeGetActivityResponseStoreActivityTransferredTransferredToJSON     `json:"-"`
+	Name            string                                                                `json:"name" api:"required"`
+	Address         shared.Address                                                        `json:"address"`
+	Contact         StoreGetActivityResponseStoreActivityTransferredTransferredToContact  `json:"contact"`
+	Location        StoreGetActivityResponseStoreActivityTransferredTransferredToLocation `json:"location"`
+	RelatedAddress  shared.Address                                                        `json:"relatedAddress"`
+	RelatedCategory interface{}                                                           `json:"relatedCategory"`
+	RelatedCustomer interface{}                                                           `json:"relatedCustomer"`
+	RelatedMoney    shared.Money                                                          `json:"relatedMoney"`
+	RelatedOrder    interface{}                                                           `json:"relatedOrder"`
+	RelatedPet      Pet                                                                   `json:"relatedPet"`
+	RelatedTag      interface{}                                                           `json:"relatedTag"`
+	RelatedUser     interface{}                                                           `json:"relatedUser"`
+	JSON            storeGetActivityResponseStoreActivityTransferredTransferredToJSON     `json:"-"`
 }
 
 // storeGetActivityResponseStoreActivityTransferredTransferredToJSON contains the
 // JSON metadata for the struct
 // [StoreGetActivityResponseStoreActivityTransferredTransferredTo]
 type storeGetActivityResponseStoreActivityTransferredTransferredToJSON struct {
-	Name        apijson.Field
-	Address     apijson.Field
-	Contact     apijson.Field
-	Location    apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	Name            apijson.Field
+	Address         apijson.Field
+	Contact         apijson.Field
+	Location        apijson.Field
+	RelatedAddress  apijson.Field
+	RelatedCategory apijson.Field
+	RelatedCustomer apijson.Field
+	RelatedMoney    apijson.Field
+	RelatedOrder    apijson.Field
+	RelatedPet      apijson.Field
+	RelatedTag      apijson.Field
+	RelatedUser     apijson.Field
+	raw             string
+	ExtraFields     map[string]apijson.Field
 }
 
 func (r *StoreGetActivityResponseStoreActivityTransferredTransferredTo) UnmarshalJSON(data []byte) (err error) {
