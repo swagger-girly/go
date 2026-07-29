@@ -65,11 +65,19 @@ func (r *StoreOrderService) Delete(ctx context.Context, orderID int64, opts ...o
 }
 
 type StoreOrderNewResponse struct {
-	ID       int64     `json:"id"`
-	Complete bool      `json:"complete"`
-	PetID    int64     `json:"petId"`
-	Quantity int64     `json:"quantity"`
-	ShipDate time.Time `json:"shipDate" format:"date-time"`
+	ID              int64          `json:"id"`
+	Complete        bool           `json:"complete"`
+	PetID           int64          `json:"petId"`
+	Quantity        int64          `json:"quantity"`
+	RelatedAddress  shared.Address `json:"relatedAddress"`
+	RelatedCategory interface{}    `json:"relatedCategory"`
+	RelatedCustomer interface{}    `json:"relatedCustomer"`
+	RelatedMoney    shared.Money   `json:"relatedMoney"`
+	RelatedPet      Pet            `json:"relatedPet"`
+	RelatedShelter  interface{}    `json:"relatedShelter"`
+	RelatedTag      interface{}    `json:"relatedTag"`
+	RelatedUser     interface{}    `json:"relatedUser"`
+	ShipDate        time.Time      `json:"shipDate" format:"date-time"`
 	// Order Status
 	Status StoreOrderNewResponseStatus `json:"status"`
 	Total  shared.Money                `json:"total"`
@@ -79,15 +87,23 @@ type StoreOrderNewResponse struct {
 // storeOrderNewResponseJSON contains the JSON metadata for the struct
 // [StoreOrderNewResponse]
 type storeOrderNewResponseJSON struct {
-	ID          apijson.Field
-	Complete    apijson.Field
-	PetID       apijson.Field
-	Quantity    apijson.Field
-	ShipDate    apijson.Field
-	Status      apijson.Field
-	Total       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	ID              apijson.Field
+	Complete        apijson.Field
+	PetID           apijson.Field
+	Quantity        apijson.Field
+	RelatedAddress  apijson.Field
+	RelatedCategory apijson.Field
+	RelatedCustomer apijson.Field
+	RelatedMoney    apijson.Field
+	RelatedPet      apijson.Field
+	RelatedShelter  apijson.Field
+	RelatedTag      apijson.Field
+	RelatedUser     apijson.Field
+	ShipDate        apijson.Field
+	Status          apijson.Field
+	Total           apijson.Field
+	raw             string
+	ExtraFields     map[string]apijson.Field
 }
 
 func (r *StoreOrderNewResponse) UnmarshalJSON(data []byte) (err error) {
@@ -116,11 +132,19 @@ func (r StoreOrderNewResponseStatus) IsKnown() bool {
 }
 
 type StoreOrderGetResponse struct {
-	ID       int64     `json:"id"`
-	Complete bool      `json:"complete"`
-	PetID    int64     `json:"petId"`
-	Quantity int64     `json:"quantity"`
-	ShipDate time.Time `json:"shipDate" format:"date-time"`
+	ID              int64          `json:"id"`
+	Complete        bool           `json:"complete"`
+	PetID           int64          `json:"petId"`
+	Quantity        int64          `json:"quantity"`
+	RelatedAddress  shared.Address `json:"relatedAddress"`
+	RelatedCategory interface{}    `json:"relatedCategory"`
+	RelatedCustomer interface{}    `json:"relatedCustomer"`
+	RelatedMoney    shared.Money   `json:"relatedMoney"`
+	RelatedPet      Pet            `json:"relatedPet"`
+	RelatedShelter  interface{}    `json:"relatedShelter"`
+	RelatedTag      interface{}    `json:"relatedTag"`
+	RelatedUser     interface{}    `json:"relatedUser"`
+	ShipDate        time.Time      `json:"shipDate" format:"date-time"`
 	// Order Status
 	Status StoreOrderGetResponseStatus `json:"status"`
 	Total  shared.Money                `json:"total"`
@@ -130,15 +154,23 @@ type StoreOrderGetResponse struct {
 // storeOrderGetResponseJSON contains the JSON metadata for the struct
 // [StoreOrderGetResponse]
 type storeOrderGetResponseJSON struct {
-	ID          apijson.Field
-	Complete    apijson.Field
-	PetID       apijson.Field
-	Quantity    apijson.Field
-	ShipDate    apijson.Field
-	Status      apijson.Field
-	Total       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	ID              apijson.Field
+	Complete        apijson.Field
+	PetID           apijson.Field
+	Quantity        apijson.Field
+	RelatedAddress  apijson.Field
+	RelatedCategory apijson.Field
+	RelatedCustomer apijson.Field
+	RelatedMoney    apijson.Field
+	RelatedPet      apijson.Field
+	RelatedShelter  apijson.Field
+	RelatedTag      apijson.Field
+	RelatedUser     apijson.Field
+	ShipDate        apijson.Field
+	Status          apijson.Field
+	Total           apijson.Field
+	raw             string
+	ExtraFields     map[string]apijson.Field
 }
 
 func (r *StoreOrderGetResponse) UnmarshalJSON(data []byte) (err error) {
@@ -167,11 +199,19 @@ func (r StoreOrderGetResponseStatus) IsKnown() bool {
 }
 
 type StoreOrderNewParams struct {
-	ID       param.Field[int64]     `json:"id"`
-	Complete param.Field[bool]      `json:"complete"`
-	PetID    param.Field[int64]     `json:"petId"`
-	Quantity param.Field[int64]     `json:"quantity"`
-	ShipDate param.Field[time.Time] `json:"shipDate" format:"date-time"`
+	ID              param.Field[int64]               `json:"id"`
+	Complete        param.Field[bool]                `json:"complete"`
+	PetID           param.Field[int64]               `json:"petId"`
+	Quantity        param.Field[int64]               `json:"quantity"`
+	RelatedAddress  param.Field[shared.AddressParam] `json:"relatedAddress"`
+	RelatedCategory param.Field[interface{}]         `json:"relatedCategory"`
+	RelatedCustomer param.Field[interface{}]         `json:"relatedCustomer"`
+	RelatedMoney    param.Field[shared.MoneyParam]   `json:"relatedMoney"`
+	RelatedPet      param.Field[PetParam]            `json:"relatedPet"`
+	RelatedShelter  param.Field[interface{}]         `json:"relatedShelter"`
+	RelatedTag      param.Field[interface{}]         `json:"relatedTag"`
+	RelatedUser     param.Field[interface{}]         `json:"relatedUser"`
+	ShipDate        param.Field[time.Time]           `json:"shipDate" format:"date-time"`
 	// Order Status
 	Status param.Field[StoreOrderNewParamsStatus] `json:"status"`
 	Total  param.Field[shared.MoneyParam]         `json:"total"`

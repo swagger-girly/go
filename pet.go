@@ -234,13 +234,21 @@ type Pet struct {
 	// How the pet entered the store. Open enum: known channels plus forward-compatible
 	// free-form strings.
 	AcquisitionChannel PetAcquisitionChannel `json:"acquisitionChannel"`
-	Category           PetCategory           `json:"category"`
+	Category           interface{}           `json:"category"`
 	// Microchip identifier; legacy chips used numeric identifiers.
-	MicrochipID PetMicrochipIDUnion `json:"microchipId"`
+	MicrochipID     PetMicrochipIDUnion `json:"microchipId"`
+	RelatedAddress  *shared.Address     `json:"relatedAddress"`
+	RelatedCategory interface{}         `json:"relatedCategory"`
+	RelatedCustomer interface{}         `json:"relatedCustomer"`
+	RelatedMoney    *shared.Money       `json:"relatedMoney"`
+	RelatedOrder    interface{}         `json:"relatedOrder"`
+	RelatedPet      *Pet                `json:"relatedPet"`
+	RelatedShelter  interface{}         `json:"relatedShelter"`
+	RelatedUser     interface{}         `json:"relatedUser"`
 	// pet status in the store
-	Status PetStatus `json:"status"`
-	Tags   []PetTag  `json:"tags"`
-	JSON   petJSON   `json:"-"`
+	Status PetStatus     `json:"status"`
+	Tags   []interface{} `json:"tags"`
+	JSON   petJSON       `json:"-"`
 }
 
 // petJSON contains the JSON metadata for the struct [Pet]
@@ -251,6 +259,14 @@ type petJSON struct {
 	AcquisitionChannel apijson.Field
 	Category           apijson.Field
 	MicrochipID        apijson.Field
+	RelatedAddress     apijson.Field
+	RelatedCategory    apijson.Field
+	RelatedCustomer    apijson.Field
+	RelatedMoney       apijson.Field
+	RelatedOrder       apijson.Field
+	RelatedPet         apijson.Field
+	RelatedShelter     apijson.Field
+	RelatedUser        apijson.Field
 	Status             apijson.Field
 	Tags               apijson.Field
 	raw                string
@@ -284,31 +300,6 @@ func (r PetAcquisitionChannel) IsKnown() bool {
 	return false
 }
 
-type PetCategory struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
-	// Nested subcategories; the tree can recurse arbitrarily deep.
-	Subcategories []interface{}   `json:"subcategories"`
-	JSON          petCategoryJSON `json:"-"`
-}
-
-// petCategoryJSON contains the JSON metadata for the struct [PetCategory]
-type petCategoryJSON struct {
-	ID            apijson.Field
-	Name          apijson.Field
-	Subcategories apijson.Field
-	raw           string
-	ExtraFields   map[string]apijson.Field
-}
-
-func (r *PetCategory) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r petCategoryJSON) RawJSON() string {
-	return r.raw
-}
-
 // Microchip identifier; legacy chips used numeric identifiers.
 //
 // Union satisfied by [shared.UnionString] or [shared.UnionInt].
@@ -331,28 +322,6 @@ func init() {
 	)
 }
 
-type PetTag struct {
-	ID   int64      `json:"id"`
-	Name string     `json:"name"`
-	JSON petTagJSON `json:"-"`
-}
-
-// petTagJSON contains the JSON metadata for the struct [PetTag]
-type petTagJSON struct {
-	ID          apijson.Field
-	Name        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *PetTag) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r petTagJSON) RawJSON() string {
-	return r.raw
-}
-
 type PetParam struct {
 	Name      param.Field[string]   `json:"name" api:"required"`
 	PhotoURLs param.Field[[]string] `json:"photoUrls" api:"required"`
@@ -360,26 +329,23 @@ type PetParam struct {
 	// How the pet entered the store. Open enum: known channels plus forward-compatible
 	// free-form strings.
 	AcquisitionChannel param.Field[PetAcquisitionChannel] `json:"acquisitionChannel"`
-	Category           param.Field[PetCategoryParam]      `json:"category"`
+	Category           param.Field[interface{}]           `json:"category"`
 	// Microchip identifier; legacy chips used numeric identifiers.
-	MicrochipID param.Field[PetMicrochipIDUnionParam] `json:"microchipId"`
+	MicrochipID     param.Field[PetMicrochipIDUnionParam] `json:"microchipId"`
+	RelatedAddress  param.Field[shared.AddressParam]      `json:"relatedAddress"`
+	RelatedCategory param.Field[interface{}]              `json:"relatedCategory"`
+	RelatedCustomer param.Field[interface{}]              `json:"relatedCustomer"`
+	RelatedMoney    param.Field[shared.MoneyParam]        `json:"relatedMoney"`
+	RelatedOrder    param.Field[interface{}]              `json:"relatedOrder"`
+	RelatedPet      param.Field[*PetParam]                `json:"relatedPet"`
+	RelatedShelter  param.Field[interface{}]              `json:"relatedShelter"`
+	RelatedUser     param.Field[interface{}]              `json:"relatedUser"`
 	// pet status in the store
 	Status param.Field[PetStatus]     `json:"status"`
-	Tags   param.Field[[]PetTagParam] `json:"tags"`
+	Tags   param.Field[[]interface{}] `json:"tags"`
 }
 
 func (r PetParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-type PetCategoryParam struct {
-	ID   param.Field[int64]  `json:"id"`
-	Name param.Field[string] `json:"name"`
-	// Nested subcategories; the tree can recurse arbitrarily deep.
-	Subcategories param.Field[[]interface{}] `json:"subcategories"`
-}
-
-func (r PetCategoryParam) MarshalJSON() (data []byte, err error) {
 	return apijson.MarshalRoot(r)
 }
 
@@ -388,15 +354,6 @@ func (r PetCategoryParam) MarshalJSON() (data []byte, err error) {
 // Satisfied by [shared.UnionString], [shared.UnionInt].
 type PetMicrochipIDUnionParam interface {
 	ImplementsPetMicrochipIDUnionParam()
-}
-
-type PetTagParam struct {
-	ID   param.Field[int64]  `json:"id"`
-	Name param.Field[string] `json:"name"`
-}
-
-func (r PetTagParam) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
 }
 
 // pet status in the store

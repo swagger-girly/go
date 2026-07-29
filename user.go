@@ -16,6 +16,7 @@ import (
 	"github.com/swagger-girly/go/internal/param"
 	"github.com/swagger-girly/go/internal/requestconfig"
 	"github.com/swagger-girly/go/option"
+	"github.com/swagger-girly/go/shared"
 	"github.com/tidwall/gjson"
 )
 
@@ -127,13 +128,21 @@ func (r *UserService) VerifyIdentity(ctx context.Context, username string, opts 
 }
 
 type UserNewResponse struct {
-	ID        int64  `json:"id"`
-	Email     string `json:"email"`
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
-	Password  string `json:"password"`
-	Phone     string `json:"phone"`
-	Username  string `json:"username"`
+	ID              int64          `json:"id"`
+	Email           string         `json:"email"`
+	FirstName       string         `json:"firstName"`
+	LastName        string         `json:"lastName"`
+	Password        string         `json:"password"`
+	Phone           string         `json:"phone"`
+	RelatedAddress  shared.Address `json:"relatedAddress"`
+	RelatedCategory interface{}    `json:"relatedCategory"`
+	RelatedCustomer interface{}    `json:"relatedCustomer"`
+	RelatedMoney    shared.Money   `json:"relatedMoney"`
+	RelatedOrder    interface{}    `json:"relatedOrder"`
+	RelatedPet      Pet            `json:"relatedPet"`
+	RelatedShelter  interface{}    `json:"relatedShelter"`
+	RelatedTag      interface{}    `json:"relatedTag"`
+	Username        string         `json:"username"`
 	// User Status
 	UserStatus int64               `json:"userStatus"`
 	JSON       userNewResponseJSON `json:"-"`
@@ -141,16 +150,24 @@ type UserNewResponse struct {
 
 // userNewResponseJSON contains the JSON metadata for the struct [UserNewResponse]
 type userNewResponseJSON struct {
-	ID          apijson.Field
-	Email       apijson.Field
-	FirstName   apijson.Field
-	LastName    apijson.Field
-	Password    apijson.Field
-	Phone       apijson.Field
-	Username    apijson.Field
-	UserStatus  apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	ID              apijson.Field
+	Email           apijson.Field
+	FirstName       apijson.Field
+	LastName        apijson.Field
+	Password        apijson.Field
+	Phone           apijson.Field
+	RelatedAddress  apijson.Field
+	RelatedCategory apijson.Field
+	RelatedCustomer apijson.Field
+	RelatedMoney    apijson.Field
+	RelatedOrder    apijson.Field
+	RelatedPet      apijson.Field
+	RelatedShelter  apijson.Field
+	RelatedTag      apijson.Field
+	Username        apijson.Field
+	UserStatus      apijson.Field
+	raw             string
+	ExtraFields     map[string]apijson.Field
 }
 
 func (r *UserNewResponse) UnmarshalJSON(data []byte) (err error) {
@@ -162,13 +179,21 @@ func (r userNewResponseJSON) RawJSON() string {
 }
 
 type UserGetResponse struct {
-	ID        int64  `json:"id"`
-	Email     string `json:"email"`
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
-	Password  string `json:"password"`
-	Phone     string `json:"phone"`
-	Username  string `json:"username"`
+	ID              int64          `json:"id"`
+	Email           string         `json:"email"`
+	FirstName       string         `json:"firstName"`
+	LastName        string         `json:"lastName"`
+	Password        string         `json:"password"`
+	Phone           string         `json:"phone"`
+	RelatedAddress  shared.Address `json:"relatedAddress"`
+	RelatedCategory interface{}    `json:"relatedCategory"`
+	RelatedCustomer interface{}    `json:"relatedCustomer"`
+	RelatedMoney    shared.Money   `json:"relatedMoney"`
+	RelatedOrder    interface{}    `json:"relatedOrder"`
+	RelatedPet      Pet            `json:"relatedPet"`
+	RelatedShelter  interface{}    `json:"relatedShelter"`
+	RelatedTag      interface{}    `json:"relatedTag"`
+	Username        string         `json:"username"`
 	// User Status
 	UserStatus int64               `json:"userStatus"`
 	JSON       userGetResponseJSON `json:"-"`
@@ -176,16 +201,24 @@ type UserGetResponse struct {
 
 // userGetResponseJSON contains the JSON metadata for the struct [UserGetResponse]
 type userGetResponseJSON struct {
-	ID          apijson.Field
-	Email       apijson.Field
-	FirstName   apijson.Field
-	LastName    apijson.Field
-	Password    apijson.Field
-	Phone       apijson.Field
-	Username    apijson.Field
-	UserStatus  apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	ID              apijson.Field
+	Email           apijson.Field
+	FirstName       apijson.Field
+	LastName        apijson.Field
+	Password        apijson.Field
+	Phone           apijson.Field
+	RelatedAddress  apijson.Field
+	RelatedCategory apijson.Field
+	RelatedCustomer apijson.Field
+	RelatedMoney    apijson.Field
+	RelatedOrder    apijson.Field
+	RelatedPet      apijson.Field
+	RelatedShelter  apijson.Field
+	RelatedTag      apijson.Field
+	Username        apijson.Field
+	UserStatus      apijson.Field
+	raw             string
+	ExtraFields     map[string]apijson.Field
 }
 
 func (r *UserGetResponse) UnmarshalJSON(data []byte) (err error) {
@@ -197,13 +230,21 @@ func (r userGetResponseJSON) RawJSON() string {
 }
 
 type UserNewWithListResponse struct {
-	ID        int64  `json:"id"`
-	Email     string `json:"email"`
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
-	Password  string `json:"password"`
-	Phone     string `json:"phone"`
-	Username  string `json:"username"`
+	ID              int64          `json:"id"`
+	Email           string         `json:"email"`
+	FirstName       string         `json:"firstName"`
+	LastName        string         `json:"lastName"`
+	Password        string         `json:"password"`
+	Phone           string         `json:"phone"`
+	RelatedAddress  shared.Address `json:"relatedAddress"`
+	RelatedCategory interface{}    `json:"relatedCategory"`
+	RelatedCustomer interface{}    `json:"relatedCustomer"`
+	RelatedMoney    shared.Money   `json:"relatedMoney"`
+	RelatedOrder    interface{}    `json:"relatedOrder"`
+	RelatedPet      Pet            `json:"relatedPet"`
+	RelatedShelter  interface{}    `json:"relatedShelter"`
+	RelatedTag      interface{}    `json:"relatedTag"`
+	Username        string         `json:"username"`
 	// User Status
 	UserStatus int64                       `json:"userStatus"`
 	JSON       userNewWithListResponseJSON `json:"-"`
@@ -212,16 +253,24 @@ type UserNewWithListResponse struct {
 // userNewWithListResponseJSON contains the JSON metadata for the struct
 // [UserNewWithListResponse]
 type userNewWithListResponseJSON struct {
-	ID          apijson.Field
-	Email       apijson.Field
-	FirstName   apijson.Field
-	LastName    apijson.Field
-	Password    apijson.Field
-	Phone       apijson.Field
-	Username    apijson.Field
-	UserStatus  apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	ID              apijson.Field
+	Email           apijson.Field
+	FirstName       apijson.Field
+	LastName        apijson.Field
+	Password        apijson.Field
+	Phone           apijson.Field
+	RelatedAddress  apijson.Field
+	RelatedCategory apijson.Field
+	RelatedCustomer apijson.Field
+	RelatedMoney    apijson.Field
+	RelatedOrder    apijson.Field
+	RelatedPet      apijson.Field
+	RelatedShelter  apijson.Field
+	RelatedTag      apijson.Field
+	Username        apijson.Field
+	UserStatus      apijson.Field
+	raw             string
+	ExtraFields     map[string]apijson.Field
 }
 
 func (r *UserNewWithListResponse) UnmarshalJSON(data []byte) (err error) {
@@ -480,13 +529,21 @@ func (r userVerifyIdentityResponseBasicVerificationJSON) RawJSON() string {
 func (r UserVerifyIdentityResponseBasicVerification) implementsUserVerifyIdentityResponse() {}
 
 type UserNewParams struct {
-	ID        param.Field[int64]  `json:"id"`
-	Email     param.Field[string] `json:"email"`
-	FirstName param.Field[string] `json:"firstName"`
-	LastName  param.Field[string] `json:"lastName"`
-	Password  param.Field[string] `json:"password"`
-	Phone     param.Field[string] `json:"phone"`
-	Username  param.Field[string] `json:"username"`
+	ID              param.Field[int64]               `json:"id"`
+	Email           param.Field[string]              `json:"email"`
+	FirstName       param.Field[string]              `json:"firstName"`
+	LastName        param.Field[string]              `json:"lastName"`
+	Password        param.Field[string]              `json:"password"`
+	Phone           param.Field[string]              `json:"phone"`
+	RelatedAddress  param.Field[shared.AddressParam] `json:"relatedAddress"`
+	RelatedCategory param.Field[interface{}]         `json:"relatedCategory"`
+	RelatedCustomer param.Field[interface{}]         `json:"relatedCustomer"`
+	RelatedMoney    param.Field[shared.MoneyParam]   `json:"relatedMoney"`
+	RelatedOrder    param.Field[interface{}]         `json:"relatedOrder"`
+	RelatedPet      param.Field[PetParam]            `json:"relatedPet"`
+	RelatedShelter  param.Field[interface{}]         `json:"relatedShelter"`
+	RelatedTag      param.Field[interface{}]         `json:"relatedTag"`
+	Username        param.Field[string]              `json:"username"`
 	// User Status
 	UserStatus param.Field[int64] `json:"userStatus"`
 }
@@ -496,13 +553,21 @@ func (r UserNewParams) MarshalJSON() (data []byte, err error) {
 }
 
 type UserUpdateParams struct {
-	ID        param.Field[int64]  `json:"id"`
-	Email     param.Field[string] `json:"email"`
-	FirstName param.Field[string] `json:"firstName"`
-	LastName  param.Field[string] `json:"lastName"`
-	Password  param.Field[string] `json:"password"`
-	Phone     param.Field[string] `json:"phone"`
-	Username  param.Field[string] `json:"username"`
+	ID              param.Field[int64]               `json:"id"`
+	Email           param.Field[string]              `json:"email"`
+	FirstName       param.Field[string]              `json:"firstName"`
+	LastName        param.Field[string]              `json:"lastName"`
+	Password        param.Field[string]              `json:"password"`
+	Phone           param.Field[string]              `json:"phone"`
+	RelatedAddress  param.Field[shared.AddressParam] `json:"relatedAddress"`
+	RelatedCategory param.Field[interface{}]         `json:"relatedCategory"`
+	RelatedCustomer param.Field[interface{}]         `json:"relatedCustomer"`
+	RelatedMoney    param.Field[shared.MoneyParam]   `json:"relatedMoney"`
+	RelatedOrder    param.Field[interface{}]         `json:"relatedOrder"`
+	RelatedPet      param.Field[PetParam]            `json:"relatedPet"`
+	RelatedShelter  param.Field[interface{}]         `json:"relatedShelter"`
+	RelatedTag      param.Field[interface{}]         `json:"relatedTag"`
+	Username        param.Field[string]              `json:"username"`
 	// User Status
 	UserStatus param.Field[int64] `json:"userStatus"`
 }
@@ -520,13 +585,21 @@ func (r UserNewWithListParams) MarshalJSON() (data []byte, err error) {
 }
 
 type UserNewWithListParamsBody struct {
-	ID        param.Field[int64]  `json:"id"`
-	Email     param.Field[string] `json:"email"`
-	FirstName param.Field[string] `json:"firstName"`
-	LastName  param.Field[string] `json:"lastName"`
-	Password  param.Field[string] `json:"password"`
-	Phone     param.Field[string] `json:"phone"`
-	Username  param.Field[string] `json:"username"`
+	ID              param.Field[int64]               `json:"id"`
+	Email           param.Field[string]              `json:"email"`
+	FirstName       param.Field[string]              `json:"firstName"`
+	LastName        param.Field[string]              `json:"lastName"`
+	Password        param.Field[string]              `json:"password"`
+	Phone           param.Field[string]              `json:"phone"`
+	RelatedAddress  param.Field[shared.AddressParam] `json:"relatedAddress"`
+	RelatedCategory param.Field[interface{}]         `json:"relatedCategory"`
+	RelatedCustomer param.Field[interface{}]         `json:"relatedCustomer"`
+	RelatedMoney    param.Field[shared.MoneyParam]   `json:"relatedMoney"`
+	RelatedOrder    param.Field[interface{}]         `json:"relatedOrder"`
+	RelatedPet      param.Field[PetParam]            `json:"relatedPet"`
+	RelatedShelter  param.Field[interface{}]         `json:"relatedShelter"`
+	RelatedTag      param.Field[interface{}]         `json:"relatedTag"`
+	Username        param.Field[string]              `json:"username"`
 	// User Status
 	UserStatus param.Field[int64] `json:"userStatus"`
 }

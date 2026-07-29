@@ -276,22 +276,38 @@ func (r ApplicationApplicantOrganizationApplicantApplicantType) IsKnown() bool {
 }
 
 type ApplicationApplicantOrganizationApplicantShelter struct {
-	Name     string                                                   `json:"name" api:"required"`
-	Address  shared.Address                                           `json:"address"`
-	Contact  ApplicationApplicantOrganizationApplicantShelterContact  `json:"contact"`
-	Location ApplicationApplicantOrganizationApplicantShelterLocation `json:"location"`
-	JSON     applicationApplicantOrganizationApplicantShelterJSON     `json:"-"`
+	Name            string                                                   `json:"name" api:"required"`
+	Address         *shared.Address                                          `json:"address"`
+	Contact         ApplicationApplicantOrganizationApplicantShelterContact  `json:"contact"`
+	Location        ApplicationApplicantOrganizationApplicantShelterLocation `json:"location"`
+	RelatedAddress  *shared.Address                                          `json:"relatedAddress"`
+	RelatedCategory interface{}                                              `json:"relatedCategory"`
+	RelatedCustomer interface{}                                              `json:"relatedCustomer"`
+	RelatedMoney    *shared.Money                                            `json:"relatedMoney"`
+	RelatedOrder    interface{}                                              `json:"relatedOrder"`
+	RelatedPet      *Pet                                                     `json:"relatedPet"`
+	RelatedTag      interface{}                                              `json:"relatedTag"`
+	RelatedUser     interface{}                                              `json:"relatedUser"`
+	JSON            applicationApplicantOrganizationApplicantShelterJSON     `json:"-"`
 }
 
 // applicationApplicantOrganizationApplicantShelterJSON contains the JSON metadata
 // for the struct [ApplicationApplicantOrganizationApplicantShelter]
 type applicationApplicantOrganizationApplicantShelterJSON struct {
-	Name        apijson.Field
-	Address     apijson.Field
-	Contact     apijson.Field
-	Location    apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	Name            apijson.Field
+	Address         apijson.Field
+	Contact         apijson.Field
+	Location        apijson.Field
+	RelatedAddress  apijson.Field
+	RelatedCategory apijson.Field
+	RelatedCustomer apijson.Field
+	RelatedMoney    apijson.Field
+	RelatedOrder    apijson.Field
+	RelatedPet      apijson.Field
+	RelatedTag      apijson.Field
+	RelatedUser     apijson.Field
+	raw             string
+	ExtraFields     map[string]apijson.Field
 }
 
 func (r *ApplicationApplicantOrganizationApplicantShelter) UnmarshalJSON(data []byte) (err error) {
@@ -1432,10 +1448,18 @@ func (r AdoptionNewParamsBodyOrganizationApplicantApplicantType) IsKnown() bool 
 }
 
 type AdoptionNewParamsBodyOrganizationApplicantShelter struct {
-	Name     param.Field[string]                                                    `json:"name" api:"required"`
-	Address  param.Field[shared.AddressParam]                                       `json:"address"`
-	Contact  param.Field[AdoptionNewParamsBodyOrganizationApplicantShelterContact]  `json:"contact"`
-	Location param.Field[AdoptionNewParamsBodyOrganizationApplicantShelterLocation] `json:"location"`
+	Name            param.Field[string]                                                    `json:"name" api:"required"`
+	Address         param.Field[shared.AddressParam]                                       `json:"address"`
+	Contact         param.Field[AdoptionNewParamsBodyOrganizationApplicantShelterContact]  `json:"contact"`
+	Location        param.Field[AdoptionNewParamsBodyOrganizationApplicantShelterLocation] `json:"location"`
+	RelatedAddress  param.Field[shared.AddressParam]                                       `json:"relatedAddress"`
+	RelatedCategory param.Field[interface{}]                                               `json:"relatedCategory"`
+	RelatedCustomer param.Field[interface{}]                                               `json:"relatedCustomer"`
+	RelatedMoney    param.Field[shared.MoneyParam]                                         `json:"relatedMoney"`
+	RelatedOrder    param.Field[interface{}]                                               `json:"relatedOrder"`
+	RelatedPet      param.Field[PetParam]                                                  `json:"relatedPet"`
+	RelatedTag      param.Field[interface{}]                                               `json:"relatedTag"`
+	RelatedUser     param.Field[interface{}]                                               `json:"relatedUser"`
 }
 
 func (r AdoptionNewParamsBodyOrganizationApplicantShelter) MarshalJSON() (data []byte, err error) {

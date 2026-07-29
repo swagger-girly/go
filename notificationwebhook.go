@@ -218,11 +218,19 @@ func (r PetInventoryLowWebhookEventType) IsKnown() bool {
 }
 
 type PetInventoryLowWebhookEventLastOrder struct {
-	ID       int64     `json:"id"`
-	Complete bool      `json:"complete"`
-	PetID    int64     `json:"petId"`
-	Quantity int64     `json:"quantity"`
-	ShipDate time.Time `json:"shipDate" format:"date-time"`
+	ID              int64          `json:"id"`
+	Complete        bool           `json:"complete"`
+	PetID           int64          `json:"petId"`
+	Quantity        int64          `json:"quantity"`
+	RelatedAddress  shared.Address `json:"relatedAddress"`
+	RelatedCategory interface{}    `json:"relatedCategory"`
+	RelatedCustomer interface{}    `json:"relatedCustomer"`
+	RelatedMoney    shared.Money   `json:"relatedMoney"`
+	RelatedPet      Pet            `json:"relatedPet"`
+	RelatedShelter  interface{}    `json:"relatedShelter"`
+	RelatedTag      interface{}    `json:"relatedTag"`
+	RelatedUser     interface{}    `json:"relatedUser"`
+	ShipDate        time.Time      `json:"shipDate" format:"date-time"`
 	// Order Status
 	Status PetInventoryLowWebhookEventLastOrderStatus `json:"status"`
 	Total  shared.Money                               `json:"total"`
@@ -232,15 +240,23 @@ type PetInventoryLowWebhookEventLastOrder struct {
 // petInventoryLowWebhookEventLastOrderJSON contains the JSON metadata for the
 // struct [PetInventoryLowWebhookEventLastOrder]
 type petInventoryLowWebhookEventLastOrderJSON struct {
-	ID          apijson.Field
-	Complete    apijson.Field
-	PetID       apijson.Field
-	Quantity    apijson.Field
-	ShipDate    apijson.Field
-	Status      apijson.Field
-	Total       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	ID              apijson.Field
+	Complete        apijson.Field
+	PetID           apijson.Field
+	Quantity        apijson.Field
+	RelatedAddress  apijson.Field
+	RelatedCategory apijson.Field
+	RelatedCustomer apijson.Field
+	RelatedMoney    apijson.Field
+	RelatedPet      apijson.Field
+	RelatedShelter  apijson.Field
+	RelatedTag      apijson.Field
+	RelatedUser     apijson.Field
+	ShipDate        apijson.Field
+	Status          apijson.Field
+	Total           apijson.Field
+	raw             string
+	ExtraFields     map[string]apijson.Field
 }
 
 func (r *PetInventoryLowWebhookEventLastOrder) UnmarshalJSON(data []byte) (err error) {
@@ -463,13 +479,21 @@ func (r petModerationWebhookEventPetModerationRejectedEventReviewNoteJSON) RawJS
 }
 
 type PetModerationWebhookEventPetModerationRejectedEventReviewNotesReviewer struct {
-	ID        int64  `json:"id"`
-	Email     string `json:"email"`
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
-	Password  string `json:"password"`
-	Phone     string `json:"phone"`
-	Username  string `json:"username"`
+	ID              int64          `json:"id"`
+	Email           string         `json:"email"`
+	FirstName       string         `json:"firstName"`
+	LastName        string         `json:"lastName"`
+	Password        string         `json:"password"`
+	Phone           string         `json:"phone"`
+	RelatedAddress  shared.Address `json:"relatedAddress"`
+	RelatedCategory interface{}    `json:"relatedCategory"`
+	RelatedCustomer interface{}    `json:"relatedCustomer"`
+	RelatedMoney    shared.Money   `json:"relatedMoney"`
+	RelatedOrder    interface{}    `json:"relatedOrder"`
+	RelatedPet      Pet            `json:"relatedPet"`
+	RelatedShelter  interface{}    `json:"relatedShelter"`
+	RelatedTag      interface{}    `json:"relatedTag"`
+	Username        string         `json:"username"`
 	// User Status
 	UserStatus int64                                                                      `json:"userStatus"`
 	JSON       petModerationWebhookEventPetModerationRejectedEventReviewNotesReviewerJSON `json:"-"`
@@ -479,16 +503,24 @@ type PetModerationWebhookEventPetModerationRejectedEventReviewNotesReviewer stru
 // contains the JSON metadata for the struct
 // [PetModerationWebhookEventPetModerationRejectedEventReviewNotesReviewer]
 type petModerationWebhookEventPetModerationRejectedEventReviewNotesReviewerJSON struct {
-	ID          apijson.Field
-	Email       apijson.Field
-	FirstName   apijson.Field
-	LastName    apijson.Field
-	Password    apijson.Field
-	Phone       apijson.Field
-	Username    apijson.Field
-	UserStatus  apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	ID              apijson.Field
+	Email           apijson.Field
+	FirstName       apijson.Field
+	LastName        apijson.Field
+	Password        apijson.Field
+	Phone           apijson.Field
+	RelatedAddress  apijson.Field
+	RelatedCategory apijson.Field
+	RelatedCustomer apijson.Field
+	RelatedMoney    apijson.Field
+	RelatedOrder    apijson.Field
+	RelatedPet      apijson.Field
+	RelatedShelter  apijson.Field
+	RelatedTag      apijson.Field
+	Username        apijson.Field
+	UserStatus      apijson.Field
+	raw             string
+	ExtraFields     map[string]apijson.Field
 }
 
 func (r *PetModerationWebhookEventPetModerationRejectedEventReviewNotesReviewer) UnmarshalJSON(data []byte) (err error) {
@@ -756,13 +788,21 @@ func (r parsePetWebhookEventPetModerationRejectedEventReviewNoteJSON) RawJSON() 
 }
 
 type ParsePetWebhookEventPetModerationRejectedEventReviewNotesReviewer struct {
-	ID        int64  `json:"id"`
-	Email     string `json:"email"`
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
-	Password  string `json:"password"`
-	Phone     string `json:"phone"`
-	Username  string `json:"username"`
+	ID              int64          `json:"id"`
+	Email           string         `json:"email"`
+	FirstName       string         `json:"firstName"`
+	LastName        string         `json:"lastName"`
+	Password        string         `json:"password"`
+	Phone           string         `json:"phone"`
+	RelatedAddress  shared.Address `json:"relatedAddress"`
+	RelatedCategory interface{}    `json:"relatedCategory"`
+	RelatedCustomer interface{}    `json:"relatedCustomer"`
+	RelatedMoney    shared.Money   `json:"relatedMoney"`
+	RelatedOrder    interface{}    `json:"relatedOrder"`
+	RelatedPet      Pet            `json:"relatedPet"`
+	RelatedShelter  interface{}    `json:"relatedShelter"`
+	RelatedTag      interface{}    `json:"relatedTag"`
+	Username        string         `json:"username"`
 	// User Status
 	UserStatus int64                                                                 `json:"userStatus"`
 	JSON       parsePetWebhookEventPetModerationRejectedEventReviewNotesReviewerJSON `json:"-"`
@@ -772,16 +812,24 @@ type ParsePetWebhookEventPetModerationRejectedEventReviewNotesReviewer struct {
 // the JSON metadata for the struct
 // [ParsePetWebhookEventPetModerationRejectedEventReviewNotesReviewer]
 type parsePetWebhookEventPetModerationRejectedEventReviewNotesReviewerJSON struct {
-	ID          apijson.Field
-	Email       apijson.Field
-	FirstName   apijson.Field
-	LastName    apijson.Field
-	Password    apijson.Field
-	Phone       apijson.Field
-	Username    apijson.Field
-	UserStatus  apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	ID              apijson.Field
+	Email           apijson.Field
+	FirstName       apijson.Field
+	LastName        apijson.Field
+	Password        apijson.Field
+	Phone           apijson.Field
+	RelatedAddress  apijson.Field
+	RelatedCategory apijson.Field
+	RelatedCustomer apijson.Field
+	RelatedMoney    apijson.Field
+	RelatedOrder    apijson.Field
+	RelatedPet      apijson.Field
+	RelatedShelter  apijson.Field
+	RelatedTag      apijson.Field
+	Username        apijson.Field
+	UserStatus      apijson.Field
+	raw             string
+	ExtraFields     map[string]apijson.Field
 }
 
 func (r *ParsePetWebhookEventPetModerationRejectedEventReviewNotesReviewer) UnmarshalJSON(data []byte) (err error) {
