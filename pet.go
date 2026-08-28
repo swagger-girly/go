@@ -400,22 +400,28 @@ type PetListLeaderboardResponse struct {
 	// Ranked pet ID
 	PetID int64                           `json:"petId" api:"required"`
 	Badge PetListLeaderboardResponseBadge `json:"badge"`
+	// Docs anchor for the badge a leaderboard entry was awarded.
+	DocsRef PetListLeaderboardResponseDocsRef `json:"docsRef"`
 	// Leaderboard position
 	Rank int64 `json:"rank"`
 	// Adoption return on investment
-	Roi  PetListLeaderboardResponseRoi  `json:"roi"`
-	JSON petListLeaderboardResponseJSON `json:"-"`
+	Roi PetListLeaderboardResponseRoi `json:"roi"`
+	// Consecutive days on the leaderboard.
+	SevenDayStreak int64                          `json:"streak7d"`
+	JSON           petListLeaderboardResponseJSON `json:"-"`
 }
 
 // petListLeaderboardResponseJSON contains the JSON metadata for the struct
 // [PetListLeaderboardResponse]
 type petListLeaderboardResponseJSON struct {
-	PetID       apijson.Field
-	Badge       apijson.Field
-	Rank        apijson.Field
-	Roi         apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+	PetID          apijson.Field
+	Badge          apijson.Field
+	DocsRef        apijson.Field
+	Rank           apijson.Field
+	Roi            apijson.Field
+	SevenDayStreak apijson.Field
+	raw            string
+	ExtraFields    map[string]apijson.Field
 }
 
 func (r *PetListLeaderboardResponse) UnmarshalJSON(data []byte) (err error) {
@@ -443,6 +449,22 @@ func (r *PetListLeaderboardResponseBadge) UnmarshalJSON(data []byte) (err error)
 
 func (r petListLeaderboardResponseBadgeJSON) RawJSON() string {
 	return r.raw
+}
+
+// Docs anchor for the badge a leaderboard entry was awarded.
+type PetListLeaderboardResponseDocsRef string
+
+const (
+	PetListLeaderboardResponseDocsRefTopAdopter PetListLeaderboardResponseDocsRef = "https://docs.petstore.example/leaderboard#top-adopter"
+	PetListLeaderboardResponseDocsRefRisingStar PetListLeaderboardResponseDocsRef = "https://docs.petstore.example/leaderboard#rising-star"
+)
+
+func (r PetListLeaderboardResponseDocsRef) IsKnown() bool {
+	switch r {
+	case PetListLeaderboardResponseDocsRefTopAdopter, PetListLeaderboardResponseDocsRefRisingStar:
+		return true
+	}
+	return false
 }
 
 // Adoption return on investment
