@@ -43,8 +43,8 @@ func TestUserAgentHeader(t *testing.T) {
 	)
 	_, _ = client.Pet.Update(context.Background(), helloworldtestingggg.PetUpdateParams{
 		Pet: helloworldtestingggg.PetParam{
-			Name:      helloworldtestingggg.F("doggie"),
-			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
+			Name:      "doggie",
+			PhotoURLs: []string{"string"},
 		},
 	})
 	if userAgent != fmt.Sprintf("HelloWorldTestingggg/Go %s", internal.PackageVersion) {
@@ -74,8 +74,8 @@ func TestRetryAfter(t *testing.T) {
 	)
 	_, err := client.Pet.Update(context.Background(), helloworldtestingggg.PetUpdateParams{
 		Pet: helloworldtestingggg.PetParam{
-			Name:      helloworldtestingggg.F("doggie"),
-			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
+			Name:      "doggie",
+			PhotoURLs: []string{"string"},
 		},
 	})
 	if err == nil {
@@ -116,8 +116,8 @@ func TestDeleteRetryCountHeader(t *testing.T) {
 	)
 	_, err := client.Pet.Update(context.Background(), helloworldtestingggg.PetUpdateParams{
 		Pet: helloworldtestingggg.PetParam{
-			Name:      helloworldtestingggg.F("doggie"),
-			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
+			Name:      "doggie",
+			PhotoURLs: []string{"string"},
 		},
 	})
 	if err == nil {
@@ -153,8 +153,8 @@ func TestOverwriteRetryCountHeader(t *testing.T) {
 	)
 	_, err := client.Pet.Update(context.Background(), helloworldtestingggg.PetUpdateParams{
 		Pet: helloworldtestingggg.PetParam{
-			Name:      helloworldtestingggg.F("doggie"),
-			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
+			Name:      "doggie",
+			PhotoURLs: []string{"string"},
 		},
 	})
 	if err == nil {
@@ -189,8 +189,8 @@ func TestRetryAfterMs(t *testing.T) {
 	)
 	_, err := client.Pet.Update(context.Background(), helloworldtestingggg.PetUpdateParams{
 		Pet: helloworldtestingggg.PetParam{
-			Name:      helloworldtestingggg.F("doggie"),
-			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
+			Name:      "doggie",
+			PhotoURLs: []string{"string"},
 		},
 	})
 	if err == nil {
@@ -219,8 +219,8 @@ func TestContextCancel(t *testing.T) {
 	cancel()
 	_, err := client.Pet.Update(cancelCtx, helloworldtestingggg.PetUpdateParams{
 		Pet: helloworldtestingggg.PetParam{
-			Name:      helloworldtestingggg.F("doggie"),
-			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
+			Name:      "doggie",
+			PhotoURLs: []string{"string"},
 		},
 	})
 	if err == nil {
@@ -246,8 +246,8 @@ func TestContextCancelDelay(t *testing.T) {
 	defer cancel()
 	_, err := client.Pet.Update(cancelCtx, helloworldtestingggg.PetUpdateParams{
 		Pet: helloworldtestingggg.PetParam{
-			Name:      helloworldtestingggg.F("doggie"),
-			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
+			Name:      "doggie",
+			PhotoURLs: []string{"string"},
 		},
 	})
 	if err == nil {
@@ -279,8 +279,8 @@ func TestContextDeadline(t *testing.T) {
 		)
 		_, err := client.Pet.Update(deadlineCtx, helloworldtestingggg.PetUpdateParams{
 			Pet: helloworldtestingggg.PetParam{
-				Name:      helloworldtestingggg.F("doggie"),
-				PhotoURLs: helloworldtestingggg.F([]string{"string"}),
+				Name:      "doggie",
+				PhotoURLs: []string{"string"},
 			},
 		})
 		if err == nil {
@@ -331,7 +331,7 @@ func TestContextDeadlineStreaming(t *testing.T) {
 		)
 		stream := client.Pet.WatchStatusStreaming(
 			deadlineCtx,
-			int64(0),
+			0,
 			helloworldtestingggg.PetWatchStatusParams{},
 		)
 		for stream.Next() {
@@ -382,7 +382,7 @@ func TestContextDeadlineStreamingWithRequestTimeout(t *testing.T) {
 		)
 		stream := client.Pet.WatchStatusStreaming(
 			context.Background(),
-			int64(0),
+			0,
 			helloworldtestingggg.PetWatchStatusParams{},
 			option.WithRequestTimeout((100 * time.Millisecond)),
 		)

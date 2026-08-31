@@ -17,26 +17,26 @@ import (
 // interacting with the hello-world-testingggg API. You should not instantiate this
 // client directly, and instead use the [NewClient] method instead.
 type Client struct {
-	Options []option.RequestOption
+	options []option.RequestOption
 	// Everything about your Pets
-	Pet *PetService
+	Pet PetService
 	// File storage operations
-	Files *FileService
+	Files FileService
 	// Pet owner profile and compliance operations
-	Profiles *ProfileService
+	Profiles ProfileService
 	// Adoption policies and applications
-	Adoptions *AdoptionService
+	Adoptions AdoptionService
 	// Post-adoption placement tracking
-	Placements    *PlacementService
-	Veterinary    *VeterinaryService
-	Webhooks      *WebhookService
-	Notifications *NotificationService
+	Placements    PlacementService
+	Veterinary    VeterinaryService
+	Webhooks      WebhookService
+	Notifications NotificationService
 	// Access to Petstore orders
-	Store *StoreService
+	Store StoreService
 	// Operations about user
-	User  *UserService
-	AI    *AIService
-	Media *MediaService
+	User  UserService
+	AI    AIService
+	Media MediaService
 }
 
 // DefaultClientOptions read from the environment (API_KEY, BASIC_AUTH_USERNAME,
@@ -75,10 +75,10 @@ func DefaultClientOptions() []option.RequestOption {
 // PETSTORE_WEBHOOK_SECRET, HELLO_WORLD_TESTINGGGG_BASE_URL). The option passed in
 // as arguments are applied after these default arguments, and all option will be
 // passed down to the services and requests that this client makes.
-func NewClient(opts ...option.RequestOption) (r *Client) {
+func NewClient(opts ...option.RequestOption) (r Client) {
 	opts = append(DefaultClientOptions(), opts...)
 
-	r = &Client{Options: opts}
+	r = Client{options: opts}
 
 	r.Pet = NewPetService(opts...)
 	r.Files = NewFileService(opts...)
@@ -127,47 +127,47 @@ func NewClient(opts ...option.RequestOption) (r *Client) {
 //
 // For even greater flexibility, see [option.WithResponseInto] and
 // [option.WithResponseBodyInto].
-func (r *Client) Execute(ctx context.Context, method string, path string, params interface{}, res interface{}, opts ...option.RequestOption) error {
-	opts = slices.Concat(r.Options, opts)
+func (r *Client) Execute(ctx context.Context, method string, path string, params any, res any, opts ...option.RequestOption) error {
+	opts = slices.Concat(r.options, opts)
 	return requestconfig.ExecuteNewRequest(ctx, method, path, params, res, opts...)
 }
 
 // Get makes a GET request with the given URL, params, and optionally deserializes
 // to a response. See [Execute] documentation on the params and response.
-func (r *Client) Get(ctx context.Context, path string, params interface{}, res interface{}, opts ...option.RequestOption) error {
+func (r *Client) Get(ctx context.Context, path string, params any, res any, opts ...option.RequestOption) error {
 	return r.Execute(ctx, http.MethodGet, path, params, res, opts...)
 }
 
 // Post makes a POST request with the given URL, params, and optionally
 // deserializes to a response. See [Execute] documentation on the params and
 // response.
-func (r *Client) Post(ctx context.Context, path string, params interface{}, res interface{}, opts ...option.RequestOption) error {
+func (r *Client) Post(ctx context.Context, path string, params any, res any, opts ...option.RequestOption) error {
 	return r.Execute(ctx, http.MethodPost, path, params, res, opts...)
 }
 
 // Put makes a PUT request with the given URL, params, and optionally deserializes
 // to a response. See [Execute] documentation on the params and response.
-func (r *Client) Put(ctx context.Context, path string, params interface{}, res interface{}, opts ...option.RequestOption) error {
+func (r *Client) Put(ctx context.Context, path string, params any, res any, opts ...option.RequestOption) error {
 	return r.Execute(ctx, http.MethodPut, path, params, res, opts...)
 }
 
 // Patch makes a PATCH request with the given URL, params, and optionally
 // deserializes to a response. See [Execute] documentation on the params and
 // response.
-func (r *Client) Patch(ctx context.Context, path string, params interface{}, res interface{}, opts ...option.RequestOption) error {
+func (r *Client) Patch(ctx context.Context, path string, params any, res any, opts ...option.RequestOption) error {
 	return r.Execute(ctx, http.MethodPatch, path, params, res, opts...)
 }
 
 // Delete makes a DELETE request with the given URL, params, and optionally
 // deserializes to a response. See [Execute] documentation on the params and
 // response.
-func (r *Client) Delete(ctx context.Context, path string, params interface{}, res interface{}, opts ...option.RequestOption) error {
+func (r *Client) Delete(ctx context.Context, path string, params any, res any, opts ...option.RequestOption) error {
 	return r.Execute(ctx, http.MethodDelete, path, params, res, opts...)
 }
 
 // Returns the current API health, including per-service statuses.
 func (r *Client) Health(ctx context.Context, opts ...option.RequestOption) (res *SystemHealth, err error) {
-	opts = slices.Concat(r.Options, opts)
+	opts = slices.Concat(r.options, opts)
 	path := "health"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
@@ -175,7 +175,7 @@ func (r *Client) Health(ctx context.Context, opts ...option.RequestOption) (res 
 
 // Returns the caller's current rate-limit budget.
 func (r *Client) GetRateLimits(ctx context.Context, opts ...option.RequestOption) (res *GetRateLimitsResponse, err error) {
-	opts = slices.Concat(r.Options, opts)
+	opts = slices.Concat(r.options, opts)
 	path := "rate_limits"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err

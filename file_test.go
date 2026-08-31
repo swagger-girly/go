@@ -36,11 +36,11 @@ func TestFileUpdateWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"path",
 		helloworldtestingggg.FileUpdateParams{
-			File: helloworldtestingggg.F(io.Reader(bytes.NewBuffer([]byte("Example data")))),
-			Metadata: helloworldtestingggg.F(map[string]string{
+			File: io.Reader(bytes.NewBuffer([]byte("Example data"))),
+			Metadata: map[string]string{
 				"foo": "string",
-			}),
-			URL: helloworldtestingggg.F("https://example.com"),
+			},
+			URL: helloworldtestingggg.String("https://example.com"),
 		},
 	)
 	if err != nil {
@@ -118,12 +118,12 @@ func TestFileNewArchiveWithOptionalParams(t *testing.T) {
 		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Files.NewArchive(context.TODO(), helloworldtestingggg.FileNewArchiveParams{
-		Files: helloworldtestingggg.F([]io.Reader{io.Reader(bytes.NewBuffer([]byte("Example data")))}),
-		Manifest: helloworldtestingggg.F(helloworldtestingggg.FileNewArchiveParamsManifest{
-			Name:          helloworldtestingggg.F("name"),
-			Labels:        helloworldtestingggg.F([]string{"string"}),
-			PreservePaths: helloworldtestingggg.F(true),
-		}),
+		Files: []io.Reader{io.Reader(bytes.NewBuffer([]byte("Example data")))},
+		Manifest: helloworldtestingggg.FileNewArchiveParamsManifest{
+			Name:          "name",
+			Labels:        []string{"string"},
+			PreservePaths: helloworldtestingggg.Bool(true),
+		},
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
@@ -186,14 +186,14 @@ func TestFileUploadWithOptionalParams(t *testing.T) {
 		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Files.Upload(context.TODO(), helloworldtestingggg.FileUploadParams{
-		File:      helloworldtestingggg.F(io.Reader(bytes.NewBuffer([]byte("Example data")))),
-		ExpiresIn: helloworldtestingggg.F(int64(0)),
-		Metadata: helloworldtestingggg.F(map[string]string{
+		File:      io.Reader(bytes.NewBuffer([]byte("Example data"))),
+		ExpiresIn: helloworldtestingggg.Int(0),
+		Metadata: map[string]string{
 			"foo": "string",
-		}),
-		Path:   helloworldtestingggg.F("path"),
-		Public: helloworldtestingggg.F(true),
-		Tags:   helloworldtestingggg.F([]string{"string"}),
+		},
+		Path:   helloworldtestingggg.String("path"),
+		Public: helloworldtestingggg.Bool(true),
+		Tags:   []string{"string"},
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
@@ -223,8 +223,8 @@ func TestFileUploadDirectWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		io.Reader(bytes.NewBuffer([]byte("Example data"))),
 		helloworldtestingggg.FileUploadDirectParams{
-			Path:      helloworldtestingggg.F("path"),
-			XFileName: helloworldtestingggg.F("X-File-Name"),
+			Path:      helloworldtestingggg.String("path"),
+			XFileName: helloworldtestingggg.String("X-File-Name"),
 		},
 	)
 	if err != nil {

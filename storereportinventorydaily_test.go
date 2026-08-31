@@ -31,8 +31,10 @@ func TestStoreReportInventoryDailyGet(t *testing.T) {
 	)
 	_, err := client.Store.Reports.Inventory.Daily.Get(
 		context.TODO(),
-		"reportId",
 		time.Now(),
+		helloworldtestingggg.StoreReportInventoryDailyGetParams{
+			ReportID: "reportId",
+		},
 	)
 	if err != nil {
 		var apierr *helloworldtestingggg.Error

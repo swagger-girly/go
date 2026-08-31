@@ -4,19 +4,21 @@ package helloworldtestingggg
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
-	"reflect"
+	"net/url"
 	"slices"
 	"time"
 
 	"github.com/swagger-girly/go/internal/apijson"
-	"github.com/swagger-girly/go/internal/param"
 	"github.com/swagger-girly/go/internal/requestconfig"
 	"github.com/swagger-girly/go/option"
+	"github.com/swagger-girly/go/packages/param"
+	"github.com/swagger-girly/go/packages/respjson"
 	"github.com/swagger-girly/go/shared"
-	"github.com/tidwall/gjson"
+	"github.com/swagger-girly/go/shared/constant"
 )
 
 // Adoption policies and applications
@@ -28,24 +30,24 @@ import (
 // automatically. You should not instantiate this service directly, and instead use
 // the [NewAdoptionService] method instead.
 type AdoptionService struct {
-	Options []option.RequestOption
+	options []option.RequestOption
 	// Adoption policies and applications
-	Policies *AdoptionPolicyService
+	Policies AdoptionPolicyService
 }
 
 // NewAdoptionService generates a new service that applies the given options to
 // each request. These options are applied after the parent client's options (if
 // there is one), and before any request-specific options.
-func NewAdoptionService(opts ...option.RequestOption) (r *AdoptionService) {
-	r = &AdoptionService{}
-	r.Options = opts
+func NewAdoptionService(opts ...option.RequestOption) (r AdoptionService) {
+	r = AdoptionService{}
+	r.options = opts
 	r.Policies = NewAdoptionPolicyService(opts...)
 	return
 }
 
 // Submits an adoption application for an individual or an organization applicant.
 func (r *AdoptionService) New(ctx context.Context, body AdoptionNewParams, opts ...option.RequestOption) (res *Application, err error) {
-	opts = slices.Concat(r.Options, opts)
+	opts = slices.Concat(r.options, opts)
 	path := "adoptions/applications"
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodPost, path, body, &res, opts...)
 	return res, err
@@ -53,428 +55,336 @@ func (r *AdoptionService) New(ctx context.Context, body AdoptionNewParams, opts 
 
 // Returns a single adoption application.
 func (r *AdoptionService) Get(ctx context.Context, applicationID string, opts ...option.RequestOption) (res *Application, err error) {
-	opts = slices.Concat(r.Options, opts)
+	opts = slices.Concat(r.options, opts)
 	if applicationID == "" {
 		err = errors.New("missing required applicationId parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("adoptions/applications/%s", applicationID)
+	path := fmt.Sprintf("adoptions/applications/%s", url.PathEscape(applicationID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
 
 // Returns the decision for an application. The decision shape depends on the
 // outcome and carries no discriminator mapping.
-func (r *AdoptionService) GetDecision(ctx context.Context, applicationID string, opts ...option.RequestOption) (res *AdoptionGetDecisionResponse, err error) {
-	opts = slices.Concat(r.Options, opts)
+func (r *AdoptionService) GetDecision(ctx context.Context, applicationID string, opts ...option.RequestOption) (res *AdoptionGetDecisionResponseUnion, err error) {
+	opts = slices.Concat(r.options, opts)
 	if applicationID == "" {
 		err = errors.New("missing required applicationId parameter")
 		return nil, err
 	}
-	path := fmt.Sprintf("adoptions/applications/%s/decision", applicationID)
+	path := fmt.Sprintf("adoptions/applications/%s/decision", url.PathEscape(applicationID))
 	err = requestconfig.ExecuteNewRequest(ctx, http.MethodGet, path, nil, &res, opts...)
 	return res, err
 }
 
 type Application struct {
-	ID          string               `json:"id" api:"required"`
-	Applicant   ApplicationApplicant `json:"applicant" api:"required"`
-	Status      ApplicationStatus    `json:"status" api:"required"`
-	SubmittedAt time.Time            `json:"submittedAt" api:"required" format:"date-time"`
+	ID        string                    `json:"id" api:"required"`
+	Applicant ApplicationApplicantUnion `json:"applicant" api:"required"`
+	// Any of "received", "under_review", "approved", "rejected".
+	Status      ApplicationStatus `json:"status" api:"required"`
+	SubmittedAt time.Time         `json:"submittedAt" api:"required" format:"date-time"`
 	// The decision for an application; the shape depends on the outcome.
-	Decision        ApplicationDecision        `json:"decision"`
+	Decision        ApplicationDecisionUnion   `json:"decision"`
 	Fee             shared.Money               `json:"fee"`
 	History         []ApplicationHistory       `json:"history"`
 	LatestRejection ApplicationLatestRejection `json:"latestRejection"`
 	Pet             Pet                        `json:"pet"`
-	JSON            applicationJSON            `json:"-"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ID              respjson.Field
+		Applicant       respjson.Field
+		Status          respjson.Field
+		SubmittedAt     respjson.Field
+		Decision        respjson.Field
+		Fee             respjson.Field
+		History         respjson.Field
+		LatestRejection respjson.Field
+		Pet             respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
+	} `json:"-"`
 }
 
-// applicationJSON contains the JSON metadata for the struct [Application]
-type applicationJSON struct {
-	ID              apijson.Field
-	Applicant       apijson.Field
-	Status          apijson.Field
-	SubmittedAt     apijson.Field
-	Decision        apijson.Field
-	Fee             apijson.Field
-	History         apijson.Field
-	LatestRejection apijson.Field
-	Pet             apijson.Field
-	raw             string
-	ExtraFields     map[string]apijson.Field
-}
-
-func (r *Application) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r Application) RawJSON() string { return r.JSON.raw }
+func (r *Application) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r applicationJSON) RawJSON() string {
-	return r.raw
-}
-
-type ApplicationApplicant struct {
-	ApplicantType ApplicationApplicantApplicantType `json:"applicant_type" api:"required"`
-	Name          string                            `json:"name" api:"required"`
-	Address       shared.Address                    `json:"address"`
-	Age           int64                             `json:"age"`
-	Email         string                            `json:"email"`
-	// This field can have the runtime type of
-	// [ApplicationApplicantOrganizationApplicantShelter].
-	Shelter interface{}              `json:"shelter"`
-	TaxID   string                   `json:"taxId"`
-	JSON    applicationApplicantJSON `json:"-"`
-	union   ApplicationApplicantUnion
-}
-
-// applicationApplicantJSON contains the JSON metadata for the struct
-// [ApplicationApplicant]
-type applicationApplicantJSON struct {
-	ApplicantType apijson.Field
-	Name          apijson.Field
-	Address       apijson.Field
-	Age           apijson.Field
-	Email         apijson.Field
-	Shelter       apijson.Field
-	TaxID         apijson.Field
-	raw           string
-	ExtraFields   map[string]apijson.Field
-}
-
-func (r applicationApplicantJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r *ApplicationApplicant) UnmarshalJSON(data []byte) (err error) {
-	*r = ApplicationApplicant{}
-	err = apijson.UnmarshalRoot(data, &r.union)
-	if err != nil {
-		return err
-	}
-	return apijson.Port(r.union, &r)
-}
-
-// AsUnion returns a [ApplicationApplicantUnion] interface which you can cast to
-// the specific types for more type safety.
+// ApplicationApplicantUnion contains all possible properties and values from
+// [ApplicationApplicantIndividual], [ApplicationApplicantOrganization].
 //
-// Possible runtime types of the union are
-// [ApplicationApplicantIndividualApplicant],
-// [ApplicationApplicantOrganizationApplicant].
-func (r ApplicationApplicant) AsUnion() ApplicationApplicantUnion {
-	return r.union
+// Use the [ApplicationApplicantUnion.AsAny] method to switch on the variant.
+//
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type ApplicationApplicantUnion struct {
+	// Any of "individual", "organization".
+	ApplicantType string `json:"applicant_type"`
+	Name          string `json:"name"`
+	// This field is from variant [ApplicationApplicantIndividual].
+	Address shared.Address `json:"address"`
+	// This field is from variant [ApplicationApplicantIndividual].
+	Age int64 `json:"age"`
+	// This field is from variant [ApplicationApplicantIndividual].
+	Email string `json:"email"`
+	// This field is from variant [ApplicationApplicantOrganization].
+	Shelter ApplicationApplicantOrganizationShelter `json:"shelter"`
+	// This field is from variant [ApplicationApplicantOrganization].
+	TaxID string `json:"taxId"`
+	JSON  struct {
+		ApplicantType respjson.Field
+		Name          respjson.Field
+		Address       respjson.Field
+		Age           respjson.Field
+		Email         respjson.Field
+		Shelter       respjson.Field
+		TaxID         respjson.Field
+		raw           string
+	} `json:"-"`
 }
 
-// Union satisfied by [ApplicationApplicantIndividualApplicant] or
-// [ApplicationApplicantOrganizationApplicant].
-type ApplicationApplicantUnion interface {
-	implementsApplicationApplicant()
+// anyApplicationApplicant is implemented by each variant of
+// [ApplicationApplicantUnion] to add type safety for the return type of
+// [ApplicationApplicantUnion.AsAny]
+type anyApplicationApplicant interface {
+	implApplicationApplicantUnion()
 }
 
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*ApplicationApplicantUnion)(nil)).Elem(),
-		"applicant_type",
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ApplicationApplicantIndividualApplicant{}),
-			DiscriminatorValue: "individual",
-		},
-		apijson.UnionVariant{
-			TypeFilter:         gjson.JSON,
-			Type:               reflect.TypeOf(ApplicationApplicantOrganizationApplicant{}),
-			DiscriminatorValue: "organization",
-		},
-	)
-}
+func (ApplicationApplicantIndividual) implApplicationApplicantUnion()   {}
+func (ApplicationApplicantOrganization) implApplicationApplicantUnion() {}
 
-type ApplicationApplicantIndividualApplicant struct {
-	ApplicantType ApplicationApplicantIndividualApplicantApplicantType `json:"applicant_type" api:"required"`
-	Name          string                                               `json:"name" api:"required"`
-	Address       shared.Address                                       `json:"address"`
-	Age           int64                                                `json:"age"`
-	Email         string                                               `json:"email"`
-	JSON          applicationApplicantIndividualApplicantJSON          `json:"-"`
-}
-
-// applicationApplicantIndividualApplicantJSON contains the JSON metadata for the
-// struct [ApplicationApplicantIndividualApplicant]
-type applicationApplicantIndividualApplicantJSON struct {
-	ApplicantType apijson.Field
-	Name          apijson.Field
-	Address       apijson.Field
-	Age           apijson.Field
-	Email         apijson.Field
-	raw           string
-	ExtraFields   map[string]apijson.Field
-}
-
-func (r *ApplicationApplicantIndividualApplicant) UnmarshalJSON(data []byte) (err error) {
-	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r applicationApplicantIndividualApplicantJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r ApplicationApplicantIndividualApplicant) implementsApplicationApplicant() {}
-
-type ApplicationApplicantIndividualApplicantApplicantType string
-
-const (
-	ApplicationApplicantIndividualApplicantApplicantTypeIndividual ApplicationApplicantIndividualApplicantApplicantType = "individual"
-)
-
-func (r ApplicationApplicantIndividualApplicantApplicantType) IsKnown() bool {
-	switch r {
-	case ApplicationApplicantIndividualApplicantApplicantTypeIndividual:
-		return true
+// Use the following switch statement to find the correct variant
+//
+//	switch variant := ApplicationApplicantUnion.AsAny().(type) {
+//	case helloworldtestingggg.ApplicationApplicantIndividual:
+//	case helloworldtestingggg.ApplicationApplicantOrganization:
+//	default:
+//	  fmt.Errorf("no variant present")
+//	}
+func (u ApplicationApplicantUnion) AsAny() anyApplicationApplicant {
+	switch u.ApplicantType {
+	case "individual":
+		return u.AsIndividual()
+	case "organization":
+		return u.AsOrganization()
 	}
-	return false
+	return nil
 }
 
-type ApplicationApplicantOrganizationApplicant struct {
-	ApplicantType ApplicationApplicantOrganizationApplicantApplicantType `json:"applicant_type" api:"required"`
-	Name          string                                                 `json:"name" api:"required"`
-	Shelter       ApplicationApplicantOrganizationApplicantShelter       `json:"shelter"`
-	TaxID         string                                                 `json:"taxId"`
-	JSON          applicationApplicantOrganizationApplicantJSON          `json:"-"`
+func (u ApplicationApplicantUnion) AsIndividual() (v ApplicationApplicantIndividual) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
 }
 
-// applicationApplicantOrganizationApplicantJSON contains the JSON metadata for the
-// struct [ApplicationApplicantOrganizationApplicant]
-type applicationApplicantOrganizationApplicantJSON struct {
-	ApplicantType apijson.Field
-	Name          apijson.Field
-	Shelter       apijson.Field
-	TaxID         apijson.Field
-	raw           string
-	ExtraFields   map[string]apijson.Field
+func (u ApplicationApplicantUnion) AsOrganization() (v ApplicationApplicantOrganization) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
 }
 
-func (r *ApplicationApplicantOrganizationApplicant) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (u ApplicationApplicantUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *ApplicationApplicantUnion) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r applicationApplicantOrganizationApplicantJSON) RawJSON() string {
-	return r.raw
+type ApplicationApplicantIndividual struct {
+	ApplicantType constant.Individual `json:"applicant_type" default:"individual"`
+	Name          string              `json:"name" api:"required"`
+	Address       shared.Address      `json:"address"`
+	Age           int64               `json:"age"`
+	Email         string              `json:"email"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ApplicantType respjson.Field
+		Name          respjson.Field
+		Address       respjson.Field
+		Age           respjson.Field
+		Email         respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
+	} `json:"-"`
 }
 
-func (r ApplicationApplicantOrganizationApplicant) implementsApplicationApplicant() {}
-
-type ApplicationApplicantOrganizationApplicantApplicantType string
-
-const (
-	ApplicationApplicantOrganizationApplicantApplicantTypeOrganization ApplicationApplicantOrganizationApplicantApplicantType = "organization"
-)
-
-func (r ApplicationApplicantOrganizationApplicantApplicantType) IsKnown() bool {
-	switch r {
-	case ApplicationApplicantOrganizationApplicantApplicantTypeOrganization:
-		return true
-	}
-	return false
-}
-
-type ApplicationApplicantOrganizationApplicantShelter struct {
-	Name            string                                                   `json:"name" api:"required"`
-	Address         *shared.Address                                          `json:"address"`
-	Contact         ApplicationApplicantOrganizationApplicantShelterContact  `json:"contact"`
-	Location        ApplicationApplicantOrganizationApplicantShelterLocation `json:"location"`
-	RelatedAddress  *shared.Address                                          `json:"relatedAddress"`
-	RelatedCategory interface{}                                              `json:"relatedCategory"`
-	RelatedCustomer interface{}                                              `json:"relatedCustomer"`
-	RelatedMoney    *shared.Money                                            `json:"relatedMoney"`
-	RelatedOrder    interface{}                                              `json:"relatedOrder"`
-	RelatedPet      *Pet                                                     `json:"relatedPet"`
-	RelatedTag      interface{}                                              `json:"relatedTag"`
-	RelatedUser     interface{}                                              `json:"relatedUser"`
-	JSON            applicationApplicantOrganizationApplicantShelterJSON     `json:"-"`
-}
-
-// applicationApplicantOrganizationApplicantShelterJSON contains the JSON metadata
-// for the struct [ApplicationApplicantOrganizationApplicantShelter]
-type applicationApplicantOrganizationApplicantShelterJSON struct {
-	Name            apijson.Field
-	Address         apijson.Field
-	Contact         apijson.Field
-	Location        apijson.Field
-	RelatedAddress  apijson.Field
-	RelatedCategory apijson.Field
-	RelatedCustomer apijson.Field
-	RelatedMoney    apijson.Field
-	RelatedOrder    apijson.Field
-	RelatedPet      apijson.Field
-	RelatedTag      apijson.Field
-	RelatedUser     apijson.Field
-	raw             string
-	ExtraFields     map[string]apijson.Field
-}
-
-func (r *ApplicationApplicantOrganizationApplicantShelter) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r ApplicationApplicantIndividual) RawJSON() string { return r.JSON.raw }
+func (r *ApplicationApplicantIndividual) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r applicationApplicantOrganizationApplicantShelterJSON) RawJSON() string {
-	return r.raw
+type ApplicationApplicantOrganization struct {
+	ApplicantType constant.Organization                   `json:"applicant_type" default:"organization"`
+	Name          string                                  `json:"name" api:"required"`
+	Shelter       ApplicationApplicantOrganizationShelter `json:"shelter"`
+	TaxID         string                                  `json:"taxId"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ApplicantType respjson.Field
+		Name          respjson.Field
+		Shelter       respjson.Field
+		TaxID         respjson.Field
+		ExtraFields   map[string]respjson.Field
+		raw           string
+	} `json:"-"`
 }
 
-type ApplicationApplicantOrganizationApplicantShelterContact struct {
-	Primary ApplicationApplicantOrganizationApplicantShelterContactPrimary `json:"primary"`
-	JSON    applicationApplicantOrganizationApplicantShelterContactJSON    `json:"-"`
-}
-
-// applicationApplicantOrganizationApplicantShelterContactJSON contains the JSON
-// metadata for the struct
-// [ApplicationApplicantOrganizationApplicantShelterContact]
-type applicationApplicantOrganizationApplicantShelterContactJSON struct {
-	Primary     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ApplicationApplicantOrganizationApplicantShelterContact) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r ApplicationApplicantOrganization) RawJSON() string { return r.JSON.raw }
+func (r *ApplicationApplicantOrganization) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r applicationApplicantOrganizationApplicantShelterContactJSON) RawJSON() string {
-	return r.raw
+type ApplicationApplicantOrganizationShelter struct {
+	Name            string                                          `json:"name" api:"required"`
+	Address         *shared.Address                                 `json:"address"`
+	Contact         ApplicationApplicantOrganizationShelterContact  `json:"contact"`
+	Location        ApplicationApplicantOrganizationShelterLocation `json:"location"`
+	RelatedAddress  *shared.Address                                 `json:"relatedAddress"`
+	RelatedCategory any                                             `json:"relatedCategory"`
+	RelatedCustomer any                                             `json:"relatedCustomer"`
+	RelatedMoney    *shared.Money                                   `json:"relatedMoney"`
+	RelatedOrder    any                                             `json:"relatedOrder"`
+	RelatedPet      *Pet                                            `json:"relatedPet"`
+	RelatedTag      any                                             `json:"relatedTag"`
+	RelatedUser     any                                             `json:"relatedUser"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Name            respjson.Field
+		Address         respjson.Field
+		Contact         respjson.Field
+		Location        respjson.Field
+		RelatedAddress  respjson.Field
+		RelatedCategory respjson.Field
+		RelatedCustomer respjson.Field
+		RelatedMoney    respjson.Field
+		RelatedOrder    respjson.Field
+		RelatedPet      respjson.Field
+		RelatedTag      respjson.Field
+		RelatedUser     respjson.Field
+		ExtraFields     map[string]respjson.Field
+		raw             string
+	} `json:"-"`
 }
 
-type ApplicationApplicantOrganizationApplicantShelterContactPrimary struct {
-	Availability ApplicationApplicantOrganizationApplicantShelterContactPrimaryAvailability `json:"availability"`
-	Name         string                                                                     `json:"name"`
-	Phone        string                                                                     `json:"phone"`
-	JSON         applicationApplicantOrganizationApplicantShelterContactPrimaryJSON         `json:"-"`
-}
-
-// applicationApplicantOrganizationApplicantShelterContactPrimaryJSON contains the
-// JSON metadata for the struct
-// [ApplicationApplicantOrganizationApplicantShelterContactPrimary]
-type applicationApplicantOrganizationApplicantShelterContactPrimaryJSON struct {
-	Availability apijson.Field
-	Name         apijson.Field
-	Phone        apijson.Field
-	raw          string
-	ExtraFields  map[string]apijson.Field
-}
-
-func (r *ApplicationApplicantOrganizationApplicantShelterContactPrimary) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r ApplicationApplicantOrganizationShelter) RawJSON() string { return r.JSON.raw }
+func (r *ApplicationApplicantOrganizationShelter) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r applicationApplicantOrganizationApplicantShelterContactPrimaryJSON) RawJSON() string {
-	return r.raw
+type ApplicationApplicantOrganizationShelterContact struct {
+	Primary ApplicationApplicantOrganizationShelterContactPrimary `json:"primary"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Primary     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-type ApplicationApplicantOrganizationApplicantShelterContactPrimaryAvailability struct {
-	Weekday ApplicationApplicantOrganizationApplicantShelterContactPrimaryAvailabilityWeekday `json:"weekday"`
-	Weekend ApplicationApplicantOrganizationApplicantShelterContactPrimaryAvailabilityWeekend `json:"weekend" api:"nullable"`
-	JSON    applicationApplicantOrganizationApplicantShelterContactPrimaryAvailabilityJSON    `json:"-"`
-}
-
-// applicationApplicantOrganizationApplicantShelterContactPrimaryAvailabilityJSON
-// contains the JSON metadata for the struct
-// [ApplicationApplicantOrganizationApplicantShelterContactPrimaryAvailability]
-type applicationApplicantOrganizationApplicantShelterContactPrimaryAvailabilityJSON struct {
-	Weekday     apijson.Field
-	Weekend     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ApplicationApplicantOrganizationApplicantShelterContactPrimaryAvailability) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r ApplicationApplicantOrganizationShelterContact) RawJSON() string { return r.JSON.raw }
+func (r *ApplicationApplicantOrganizationShelterContact) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r applicationApplicantOrganizationApplicantShelterContactPrimaryAvailabilityJSON) RawJSON() string {
-	return r.raw
+type ApplicationApplicantOrganizationShelterContactPrimary struct {
+	Availability ApplicationApplicantOrganizationShelterContactPrimaryAvailability `json:"availability"`
+	Name         string                                                            `json:"name"`
+	Phone        string                                                            `json:"phone"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Availability respjson.Field
+		Name         respjson.Field
+		Phone        respjson.Field
+		ExtraFields  map[string]respjson.Field
+		raw          string
+	} `json:"-"`
 }
 
-type ApplicationApplicantOrganizationApplicantShelterContactPrimaryAvailabilityWeekday struct {
-	Close string                                                                                `json:"close"`
-	Open  string                                                                                `json:"open"`
-	JSON  applicationApplicantOrganizationApplicantShelterContactPrimaryAvailabilityWeekdayJSON `json:"-"`
-}
-
-// applicationApplicantOrganizationApplicantShelterContactPrimaryAvailabilityWeekdayJSON
-// contains the JSON metadata for the struct
-// [ApplicationApplicantOrganizationApplicantShelterContactPrimaryAvailabilityWeekday]
-type applicationApplicantOrganizationApplicantShelterContactPrimaryAvailabilityWeekdayJSON struct {
-	Close       apijson.Field
-	Open        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ApplicationApplicantOrganizationApplicantShelterContactPrimaryAvailabilityWeekday) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r ApplicationApplicantOrganizationShelterContactPrimary) RawJSON() string { return r.JSON.raw }
+func (r *ApplicationApplicantOrganizationShelterContactPrimary) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r applicationApplicantOrganizationApplicantShelterContactPrimaryAvailabilityWeekdayJSON) RawJSON() string {
-	return r.raw
+type ApplicationApplicantOrganizationShelterContactPrimaryAvailability struct {
+	Weekday ApplicationApplicantOrganizationShelterContactPrimaryAvailabilityWeekday `json:"weekday"`
+	Weekend ApplicationApplicantOrganizationShelterContactPrimaryAvailabilityWeekend `json:"weekend" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Weekday     respjson.Field
+		Weekend     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-type ApplicationApplicantOrganizationApplicantShelterContactPrimaryAvailabilityWeekend struct {
-	Close string                                                                                `json:"close"`
-	Open  string                                                                                `json:"open"`
-	JSON  applicationApplicantOrganizationApplicantShelterContactPrimaryAvailabilityWeekendJSON `json:"-"`
+// Returns the unmodified JSON received from the API
+func (r ApplicationApplicantOrganizationShelterContactPrimaryAvailability) RawJSON() string {
+	return r.JSON.raw
 }
-
-// applicationApplicantOrganizationApplicantShelterContactPrimaryAvailabilityWeekendJSON
-// contains the JSON metadata for the struct
-// [ApplicationApplicantOrganizationApplicantShelterContactPrimaryAvailabilityWeekend]
-type applicationApplicantOrganizationApplicantShelterContactPrimaryAvailabilityWeekendJSON struct {
-	Close       apijson.Field
-	Open        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ApplicationApplicantOrganizationApplicantShelterContactPrimaryAvailabilityWeekend) UnmarshalJSON(data []byte) (err error) {
+func (r *ApplicationApplicantOrganizationShelterContactPrimaryAvailability) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r applicationApplicantOrganizationApplicantShelterContactPrimaryAvailabilityWeekendJSON) RawJSON() string {
-	return r.raw
+type ApplicationApplicantOrganizationShelterContactPrimaryAvailabilityWeekday struct {
+	Close string `json:"close"`
+	Open  string `json:"open"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Close       respjson.Field
+		Open        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-type ApplicationApplicantOrganizationApplicantShelterLocation struct {
-	Latitude  float64                                                      `json:"latitude" api:"required"`
-	Longitude float64                                                      `json:"longitude" api:"required"`
-	JSON      applicationApplicantOrganizationApplicantShelterLocationJSON `json:"-"`
+// Returns the unmodified JSON received from the API
+func (r ApplicationApplicantOrganizationShelterContactPrimaryAvailabilityWeekday) RawJSON() string {
+	return r.JSON.raw
 }
-
-// applicationApplicantOrganizationApplicantShelterLocationJSON contains the JSON
-// metadata for the struct
-// [ApplicationApplicantOrganizationApplicantShelterLocation]
-type applicationApplicantOrganizationApplicantShelterLocationJSON struct {
-	Latitude    apijson.Field
-	Longitude   apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ApplicationApplicantOrganizationApplicantShelterLocation) UnmarshalJSON(data []byte) (err error) {
+func (r *ApplicationApplicantOrganizationShelterContactPrimaryAvailabilityWeekday) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r applicationApplicantOrganizationApplicantShelterLocationJSON) RawJSON() string {
-	return r.raw
+type ApplicationApplicantOrganizationShelterContactPrimaryAvailabilityWeekend struct {
+	Close string `json:"close"`
+	Open  string `json:"open"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Close       respjson.Field
+		Open        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-type ApplicationApplicantApplicantType string
+// Returns the unmodified JSON received from the API
+func (r ApplicationApplicantOrganizationShelterContactPrimaryAvailabilityWeekend) RawJSON() string {
+	return r.JSON.raw
+}
+func (r *ApplicationApplicantOrganizationShelterContactPrimaryAvailabilityWeekend) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
+}
 
-const (
-	ApplicationApplicantApplicantTypeIndividual   ApplicationApplicantApplicantType = "individual"
-	ApplicationApplicantApplicantTypeOrganization ApplicationApplicantApplicantType = "organization"
-)
+type ApplicationApplicantOrganizationShelterLocation struct {
+	Latitude  float64 `json:"latitude" api:"required"`
+	Longitude float64 `json:"longitude" api:"required"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Latitude    respjson.Field
+		Longitude   respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
+}
 
-func (r ApplicationApplicantApplicantType) IsKnown() bool {
-	switch r {
-	case ApplicationApplicantApplicantTypeIndividual, ApplicationApplicantApplicantTypeOrganization:
-		return true
-	}
-	return false
+// Returns the unmodified JSON received from the API
+func (r ApplicationApplicantOrganizationShelterLocation) RawJSON() string { return r.JSON.raw }
+func (r *ApplicationApplicantOrganizationShelterLocation) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type ApplicationStatus string
@@ -486,1051 +396,584 @@ const (
 	ApplicationStatusRejected    ApplicationStatus = "rejected"
 )
 
-func (r ApplicationStatus) IsKnown() bool {
-	switch r {
-	case ApplicationStatusReceived, ApplicationStatusUnderReview, ApplicationStatusApproved, ApplicationStatusRejected:
-		return true
-	}
-	return false
-}
-
-// The decision for an application; the shape depends on the outcome.
-type ApplicationDecision struct {
-	Outcome        ApplicationDecisionOutcome `json:"outcome" api:"required"`
-	AppealDeadline time.Time                  `json:"appealDeadline" api:"nullable" format:"date-time"`
-	ApprovedAt     time.Time                  `json:"approvedAt" format:"date-time"`
-	// This field can have the runtime type of [[]string].
-	Conditions interface{} `json:"conditions"`
-	// This field can have the runtime type of
-	// [ApplicationDecisionDecisionEscalatedEscalatedTo].
-	EscalatedTo interface{}                    `json:"escalatedTo"`
-	Reason      ApplicationDecisionReason      `json:"reason"`
-	ReviewAfter time.Time                      `json:"reviewAfter" format:"date-time"`
-	WithdrawnAt time.Time                      `json:"withdrawnAt" format:"date-time"`
-	WithdrawnBy ApplicationDecisionWithdrawnBy `json:"withdrawnBy"`
-	JSON        applicationDecisionJSON        `json:"-"`
-	union       ApplicationDecisionUnion
-}
-
-// applicationDecisionJSON contains the JSON metadata for the struct
-// [ApplicationDecision]
-type applicationDecisionJSON struct {
-	Outcome        apijson.Field
-	AppealDeadline apijson.Field
-	ApprovedAt     apijson.Field
-	Conditions     apijson.Field
-	EscalatedTo    apijson.Field
-	Reason         apijson.Field
-	ReviewAfter    apijson.Field
-	WithdrawnAt    apijson.Field
-	WithdrawnBy    apijson.Field
-	raw            string
-	ExtraFields    map[string]apijson.Field
-}
-
-func (r applicationDecisionJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r *ApplicationDecision) UnmarshalJSON(data []byte) (err error) {
-	*r = ApplicationDecision{}
-	err = apijson.UnmarshalRoot(data, &r.union)
-	if err != nil {
-		return err
-	}
-	return apijson.Port(r.union, &r)
-}
-
-// AsUnion returns a [ApplicationDecisionUnion] interface which you can cast to the
-// specific types for more type safety.
+// ApplicationDecisionUnion contains all possible properties and values from
+// [ApplicationDecisionDecisionApproved], [ApplicationDecisionDecisionRejected],
+// [ApplicationDecisionDecisionEscalated], [ApplicationDecisionDecisionWithdrawn].
 //
-// Possible runtime types of the union are [ApplicationDecisionDecisionApproved],
-// [ApplicationDecisionDecisionRejected], [ApplicationDecisionDecisionEscalated],
-// [ApplicationDecisionDecisionWithdrawn].
-func (r ApplicationDecision) AsUnion() ApplicationDecisionUnion {
-	return r.union
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type ApplicationDecisionUnion struct {
+	// This field is from variant [ApplicationDecisionDecisionApproved].
+	ApprovedAt time.Time `json:"approvedAt"`
+	Outcome    string    `json:"outcome"`
+	// This field is from variant [ApplicationDecisionDecisionApproved].
+	Conditions []string `json:"conditions"`
+	// This field is from variant [ApplicationDecisionDecisionRejected].
+	Reason string `json:"reason"`
+	// This field is from variant [ApplicationDecisionDecisionRejected].
+	AppealDeadline time.Time `json:"appealDeadline"`
+	// This field is from variant [ApplicationDecisionDecisionEscalated].
+	EscalatedTo ApplicationDecisionDecisionEscalatedEscalatedTo `json:"escalatedTo"`
+	// This field is from variant [ApplicationDecisionDecisionEscalated].
+	ReviewAfter time.Time `json:"reviewAfter"`
+	// This field is from variant [ApplicationDecisionDecisionWithdrawn].
+	WithdrawnBy string `json:"withdrawnBy"`
+	// This field is from variant [ApplicationDecisionDecisionWithdrawn].
+	WithdrawnAt time.Time `json:"withdrawnAt"`
+	JSON        struct {
+		ApprovedAt     respjson.Field
+		Outcome        respjson.Field
+		Conditions     respjson.Field
+		Reason         respjson.Field
+		AppealDeadline respjson.Field
+		EscalatedTo    respjson.Field
+		ReviewAfter    respjson.Field
+		WithdrawnBy    respjson.Field
+		WithdrawnAt    respjson.Field
+		raw            string
+	} `json:"-"`
 }
 
-// The decision for an application; the shape depends on the outcome.
-//
-// Union satisfied by [ApplicationDecisionDecisionApproved],
-// [ApplicationDecisionDecisionRejected], [ApplicationDecisionDecisionEscalated] or
-// [ApplicationDecisionDecisionWithdrawn].
-type ApplicationDecisionUnion interface {
-	implementsApplicationDecision()
+func (u ApplicationDecisionUnion) AsApplicationDecisionDecisionApproved() (v ApplicationDecisionDecisionApproved) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
 }
 
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*ApplicationDecisionUnion)(nil)).Elem(),
-		"",
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(ApplicationDecisionDecisionApproved{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(ApplicationDecisionDecisionRejected{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(ApplicationDecisionDecisionEscalated{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(ApplicationDecisionDecisionWithdrawn{}),
-		},
-	)
+func (u ApplicationDecisionUnion) AsApplicationDecisionDecisionRejected() (v ApplicationDecisionDecisionRejected) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ApplicationDecisionUnion) AsApplicationDecisionDecisionEscalated() (v ApplicationDecisionDecisionEscalated) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u ApplicationDecisionUnion) AsApplicationDecisionDecisionWithdrawn() (v ApplicationDecisionDecisionWithdrawn) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u ApplicationDecisionUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *ApplicationDecisionUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type ApplicationDecisionDecisionApproved struct {
-	ApprovedAt time.Time                                  `json:"approvedAt" api:"required" format:"date-time"`
-	Outcome    ApplicationDecisionDecisionApprovedOutcome `json:"outcome" api:"required"`
-	Conditions []string                                   `json:"conditions"`
-	JSON       applicationDecisionDecisionApprovedJSON    `json:"-"`
+	ApprovedAt time.Time         `json:"approvedAt" api:"required" format:"date-time"`
+	Outcome    constant.Approved `json:"outcome" default:"approved"`
+	Conditions []string          `json:"conditions"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ApprovedAt  respjson.Field
+		Outcome     respjson.Field
+		Conditions  respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-// applicationDecisionDecisionApprovedJSON contains the JSON metadata for the
-// struct [ApplicationDecisionDecisionApproved]
-type applicationDecisionDecisionApprovedJSON struct {
-	ApprovedAt  apijson.Field
-	Outcome     apijson.Field
-	Conditions  apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ApplicationDecisionDecisionApproved) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r ApplicationDecisionDecisionApproved) RawJSON() string { return r.JSON.raw }
+func (r *ApplicationDecisionDecisionApproved) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r applicationDecisionDecisionApprovedJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r ApplicationDecisionDecisionApproved) implementsApplicationDecision() {}
-
-type ApplicationDecisionDecisionApprovedOutcome string
-
-const (
-	ApplicationDecisionDecisionApprovedOutcomeApproved ApplicationDecisionDecisionApprovedOutcome = "approved"
-)
-
-func (r ApplicationDecisionDecisionApprovedOutcome) IsKnown() bool {
-	switch r {
-	case ApplicationDecisionDecisionApprovedOutcomeApproved:
-		return true
-	}
-	return false
 }
 
 type ApplicationDecisionDecisionRejected struct {
-	Outcome        ApplicationDecisionDecisionRejectedOutcome `json:"outcome" api:"required"`
-	Reason         ApplicationDecisionDecisionRejectedReason  `json:"reason" api:"required"`
-	AppealDeadline time.Time                                  `json:"appealDeadline" api:"nullable" format:"date-time"`
-	JSON           applicationDecisionDecisionRejectedJSON    `json:"-"`
+	Outcome constant.Rejected `json:"outcome" default:"rejected"`
+	// Any of "policy", "capacity", "incomplete".
+	Reason         string    `json:"reason" api:"required"`
+	AppealDeadline time.Time `json:"appealDeadline" api:"nullable" format:"date-time"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Outcome        respjson.Field
+		Reason         respjson.Field
+		AppealDeadline respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
 }
 
-// applicationDecisionDecisionRejectedJSON contains the JSON metadata for the
-// struct [ApplicationDecisionDecisionRejected]
-type applicationDecisionDecisionRejectedJSON struct {
-	Outcome        apijson.Field
-	Reason         apijson.Field
-	AppealDeadline apijson.Field
-	raw            string
-	ExtraFields    map[string]apijson.Field
-}
-
-func (r *ApplicationDecisionDecisionRejected) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r ApplicationDecisionDecisionRejected) RawJSON() string { return r.JSON.raw }
+func (r *ApplicationDecisionDecisionRejected) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r applicationDecisionDecisionRejectedJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r ApplicationDecisionDecisionRejected) implementsApplicationDecision() {}
-
-type ApplicationDecisionDecisionRejectedOutcome string
-
-const (
-	ApplicationDecisionDecisionRejectedOutcomeRejected ApplicationDecisionDecisionRejectedOutcome = "rejected"
-)
-
-func (r ApplicationDecisionDecisionRejectedOutcome) IsKnown() bool {
-	switch r {
-	case ApplicationDecisionDecisionRejectedOutcomeRejected:
-		return true
-	}
-	return false
-}
-
-type ApplicationDecisionDecisionRejectedReason string
-
-const (
-	ApplicationDecisionDecisionRejectedReasonPolicy     ApplicationDecisionDecisionRejectedReason = "policy"
-	ApplicationDecisionDecisionRejectedReasonCapacity   ApplicationDecisionDecisionRejectedReason = "capacity"
-	ApplicationDecisionDecisionRejectedReasonIncomplete ApplicationDecisionDecisionRejectedReason = "incomplete"
-)
-
-func (r ApplicationDecisionDecisionRejectedReason) IsKnown() bool {
-	switch r {
-	case ApplicationDecisionDecisionRejectedReasonPolicy, ApplicationDecisionDecisionRejectedReasonCapacity, ApplicationDecisionDecisionRejectedReasonIncomplete:
-		return true
-	}
-	return false
 }
 
 type ApplicationDecisionDecisionEscalated struct {
 	EscalatedTo ApplicationDecisionDecisionEscalatedEscalatedTo `json:"escalatedTo" api:"required"`
-	Outcome     ApplicationDecisionDecisionEscalatedOutcome     `json:"outcome" api:"required"`
+	Outcome     constant.Escalated                              `json:"outcome" default:"escalated"`
 	ReviewAfter time.Time                                       `json:"reviewAfter" format:"date-time"`
-	JSON        applicationDecisionDecisionEscalatedJSON        `json:"-"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		EscalatedTo respjson.Field
+		Outcome     respjson.Field
+		ReviewAfter respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-// applicationDecisionDecisionEscalatedJSON contains the JSON metadata for the
-// struct [ApplicationDecisionDecisionEscalated]
-type applicationDecisionDecisionEscalatedJSON struct {
-	EscalatedTo apijson.Field
-	Outcome     apijson.Field
-	ReviewAfter apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ApplicationDecisionDecisionEscalated) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r ApplicationDecisionDecisionEscalated) RawJSON() string { return r.JSON.raw }
+func (r *ApplicationDecisionDecisionEscalated) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
-
-func (r applicationDecisionDecisionEscalatedJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r ApplicationDecisionDecisionEscalated) implementsApplicationDecision() {}
 
 type ApplicationDecisionDecisionEscalatedEscalatedTo struct {
 	Team    string                                                 `json:"team" api:"required"`
 	Contact ApplicationDecisionDecisionEscalatedEscalatedToContact `json:"contact"`
-	JSON    applicationDecisionDecisionEscalatedEscalatedToJSON    `json:"-"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Team        respjson.Field
+		Contact     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-// applicationDecisionDecisionEscalatedEscalatedToJSON contains the JSON metadata
-// for the struct [ApplicationDecisionDecisionEscalatedEscalatedTo]
-type applicationDecisionDecisionEscalatedEscalatedToJSON struct {
-	Team        apijson.Field
-	Contact     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ApplicationDecisionDecisionEscalatedEscalatedTo) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r ApplicationDecisionDecisionEscalatedEscalatedTo) RawJSON() string { return r.JSON.raw }
+func (r *ApplicationDecisionDecisionEscalatedEscalatedTo) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r applicationDecisionDecisionEscalatedEscalatedToJSON) RawJSON() string {
-	return r.raw
 }
 
 type ApplicationDecisionDecisionEscalatedEscalatedToContact struct {
-	Email string                                                     `json:"email"`
-	Hours string                                                     `json:"hours"`
-	JSON  applicationDecisionDecisionEscalatedEscalatedToContactJSON `json:"-"`
+	Email string `json:"email"`
+	Hours string `json:"hours"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Email       respjson.Field
+		Hours       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-// applicationDecisionDecisionEscalatedEscalatedToContactJSON contains the JSON
-// metadata for the struct [ApplicationDecisionDecisionEscalatedEscalatedToContact]
-type applicationDecisionDecisionEscalatedEscalatedToContactJSON struct {
-	Email       apijson.Field
-	Hours       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ApplicationDecisionDecisionEscalatedEscalatedToContact) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r ApplicationDecisionDecisionEscalatedEscalatedToContact) RawJSON() string { return r.JSON.raw }
+func (r *ApplicationDecisionDecisionEscalatedEscalatedToContact) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r applicationDecisionDecisionEscalatedEscalatedToContactJSON) RawJSON() string {
-	return r.raw
-}
-
-type ApplicationDecisionDecisionEscalatedOutcome string
-
-const (
-	ApplicationDecisionDecisionEscalatedOutcomeEscalated ApplicationDecisionDecisionEscalatedOutcome = "escalated"
-)
-
-func (r ApplicationDecisionDecisionEscalatedOutcome) IsKnown() bool {
-	switch r {
-	case ApplicationDecisionDecisionEscalatedOutcomeEscalated:
-		return true
-	}
-	return false
 }
 
 // The applicant or shelter withdrew before a decision was finalized.
 type ApplicationDecisionDecisionWithdrawn struct {
-	Outcome     ApplicationDecisionDecisionWithdrawnOutcome     `json:"outcome" api:"required"`
-	WithdrawnBy ApplicationDecisionDecisionWithdrawnWithdrawnBy `json:"withdrawnBy" api:"required"`
-	WithdrawnAt time.Time                                       `json:"withdrawnAt" format:"date-time"`
-	JSON        applicationDecisionDecisionWithdrawnJSON        `json:"-"`
+	// Any of "withdrawn", "expired".
+	Outcome string `json:"outcome" api:"required"`
+	// Any of "applicant", "shelter", "system".
+	WithdrawnBy string    `json:"withdrawnBy" api:"required"`
+	WithdrawnAt time.Time `json:"withdrawnAt" format:"date-time"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Outcome     respjson.Field
+		WithdrawnBy respjson.Field
+		WithdrawnAt respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-// applicationDecisionDecisionWithdrawnJSON contains the JSON metadata for the
-// struct [ApplicationDecisionDecisionWithdrawn]
-type applicationDecisionDecisionWithdrawnJSON struct {
-	Outcome     apijson.Field
-	WithdrawnBy apijson.Field
-	WithdrawnAt apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ApplicationDecisionDecisionWithdrawn) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r ApplicationDecisionDecisionWithdrawn) RawJSON() string { return r.JSON.raw }
+func (r *ApplicationDecisionDecisionWithdrawn) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r applicationDecisionDecisionWithdrawnJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r ApplicationDecisionDecisionWithdrawn) implementsApplicationDecision() {}
-
-type ApplicationDecisionDecisionWithdrawnOutcome string
-
-const (
-	ApplicationDecisionDecisionWithdrawnOutcomeWithdrawn ApplicationDecisionDecisionWithdrawnOutcome = "withdrawn"
-	ApplicationDecisionDecisionWithdrawnOutcomeExpired   ApplicationDecisionDecisionWithdrawnOutcome = "expired"
-)
-
-func (r ApplicationDecisionDecisionWithdrawnOutcome) IsKnown() bool {
-	switch r {
-	case ApplicationDecisionDecisionWithdrawnOutcomeWithdrawn, ApplicationDecisionDecisionWithdrawnOutcomeExpired:
-		return true
-	}
-	return false
-}
-
-type ApplicationDecisionDecisionWithdrawnWithdrawnBy string
-
-const (
-	ApplicationDecisionDecisionWithdrawnWithdrawnByApplicant ApplicationDecisionDecisionWithdrawnWithdrawnBy = "applicant"
-	ApplicationDecisionDecisionWithdrawnWithdrawnByShelter   ApplicationDecisionDecisionWithdrawnWithdrawnBy = "shelter"
-	ApplicationDecisionDecisionWithdrawnWithdrawnBySystem    ApplicationDecisionDecisionWithdrawnWithdrawnBy = "system"
-)
-
-func (r ApplicationDecisionDecisionWithdrawnWithdrawnBy) IsKnown() bool {
-	switch r {
-	case ApplicationDecisionDecisionWithdrawnWithdrawnByApplicant, ApplicationDecisionDecisionWithdrawnWithdrawnByShelter, ApplicationDecisionDecisionWithdrawnWithdrawnBySystem:
-		return true
-	}
-	return false
-}
-
-type ApplicationDecisionOutcome string
-
-const (
-	ApplicationDecisionOutcomeApproved  ApplicationDecisionOutcome = "approved"
-	ApplicationDecisionOutcomeRejected  ApplicationDecisionOutcome = "rejected"
-	ApplicationDecisionOutcomeEscalated ApplicationDecisionOutcome = "escalated"
-	ApplicationDecisionOutcomeWithdrawn ApplicationDecisionOutcome = "withdrawn"
-	ApplicationDecisionOutcomeExpired   ApplicationDecisionOutcome = "expired"
-)
-
-func (r ApplicationDecisionOutcome) IsKnown() bool {
-	switch r {
-	case ApplicationDecisionOutcomeApproved, ApplicationDecisionOutcomeRejected, ApplicationDecisionOutcomeEscalated, ApplicationDecisionOutcomeWithdrawn, ApplicationDecisionOutcomeExpired:
-		return true
-	}
-	return false
-}
-
-type ApplicationDecisionReason string
-
-const (
-	ApplicationDecisionReasonPolicy     ApplicationDecisionReason = "policy"
-	ApplicationDecisionReasonCapacity   ApplicationDecisionReason = "capacity"
-	ApplicationDecisionReasonIncomplete ApplicationDecisionReason = "incomplete"
-)
-
-func (r ApplicationDecisionReason) IsKnown() bool {
-	switch r {
-	case ApplicationDecisionReasonPolicy, ApplicationDecisionReasonCapacity, ApplicationDecisionReasonIncomplete:
-		return true
-	}
-	return false
-}
-
-type ApplicationDecisionWithdrawnBy string
-
-const (
-	ApplicationDecisionWithdrawnByApplicant ApplicationDecisionWithdrawnBy = "applicant"
-	ApplicationDecisionWithdrawnByShelter   ApplicationDecisionWithdrawnBy = "shelter"
-	ApplicationDecisionWithdrawnBySystem    ApplicationDecisionWithdrawnBy = "system"
-)
-
-func (r ApplicationDecisionWithdrawnBy) IsKnown() bool {
-	switch r {
-	case ApplicationDecisionWithdrawnByApplicant, ApplicationDecisionWithdrawnByShelter, ApplicationDecisionWithdrawnBySystem:
-		return true
-	}
-	return false
 }
 
 type ApplicationHistory struct {
-	ChangedAt time.Time                `json:"changedAt" api:"required" format:"date-time"`
-	Status    ApplicationHistoryStatus `json:"status" api:"required"`
-	Note      string                   `json:"note" api:"nullable"`
-	JSON      applicationHistoryJSON   `json:"-"`
+	ChangedAt time.Time `json:"changedAt" api:"required" format:"date-time"`
+	// Any of "received", "under_review", "approved", "rejected".
+	Status string `json:"status" api:"required"`
+	Note   string `json:"note" api:"nullable"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ChangedAt   respjson.Field
+		Status      respjson.Field
+		Note        respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-// applicationHistoryJSON contains the JSON metadata for the struct
-// [ApplicationHistory]
-type applicationHistoryJSON struct {
-	ChangedAt   apijson.Field
-	Status      apijson.Field
-	Note        apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *ApplicationHistory) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r ApplicationHistory) RawJSON() string { return r.JSON.raw }
+func (r *ApplicationHistory) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r applicationHistoryJSON) RawJSON() string {
-	return r.raw
-}
-
-type ApplicationHistoryStatus string
-
-const (
-	ApplicationHistoryStatusReceived    ApplicationHistoryStatus = "received"
-	ApplicationHistoryStatusUnderReview ApplicationHistoryStatus = "under_review"
-	ApplicationHistoryStatusApproved    ApplicationHistoryStatus = "approved"
-	ApplicationHistoryStatusRejected    ApplicationHistoryStatus = "rejected"
-)
-
-func (r ApplicationHistoryStatus) IsKnown() bool {
-	switch r {
-	case ApplicationHistoryStatusReceived, ApplicationHistoryStatusUnderReview, ApplicationHistoryStatusApproved, ApplicationHistoryStatusRejected:
-		return true
-	}
-	return false
 }
 
 type ApplicationLatestRejection struct {
-	Outcome        ApplicationLatestRejectionOutcome `json:"outcome" api:"required"`
-	Reason         ApplicationLatestRejectionReason  `json:"reason" api:"required"`
-	AppealDeadline time.Time                         `json:"appealDeadline" api:"nullable" format:"date-time"`
-	JSON           applicationLatestRejectionJSON    `json:"-"`
+	Outcome constant.Rejected `json:"outcome" default:"rejected"`
+	// Any of "policy", "capacity", "incomplete".
+	Reason         string    `json:"reason" api:"required"`
+	AppealDeadline time.Time `json:"appealDeadline" api:"nullable" format:"date-time"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Outcome        respjson.Field
+		Reason         respjson.Field
+		AppealDeadline respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
 }
 
-// applicationLatestRejectionJSON contains the JSON metadata for the struct
-// [ApplicationLatestRejection]
-type applicationLatestRejectionJSON struct {
-	Outcome        apijson.Field
-	Reason         apijson.Field
-	AppealDeadline apijson.Field
-	raw            string
-	ExtraFields    map[string]apijson.Field
-}
-
-func (r *ApplicationLatestRejection) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r ApplicationLatestRejection) RawJSON() string { return r.JSON.raw }
+func (r *ApplicationLatestRejection) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r applicationLatestRejectionJSON) RawJSON() string {
-	return r.raw
-}
-
-type ApplicationLatestRejectionOutcome string
-
-const (
-	ApplicationLatestRejectionOutcomeRejected ApplicationLatestRejectionOutcome = "rejected"
-)
-
-func (r ApplicationLatestRejectionOutcome) IsKnown() bool {
-	switch r {
-	case ApplicationLatestRejectionOutcomeRejected:
-		return true
-	}
-	return false
-}
-
-type ApplicationLatestRejectionReason string
-
-const (
-	ApplicationLatestRejectionReasonPolicy     ApplicationLatestRejectionReason = "policy"
-	ApplicationLatestRejectionReasonCapacity   ApplicationLatestRejectionReason = "capacity"
-	ApplicationLatestRejectionReasonIncomplete ApplicationLatestRejectionReason = "incomplete"
-)
-
-func (r ApplicationLatestRejectionReason) IsKnown() bool {
-	switch r {
-	case ApplicationLatestRejectionReasonPolicy, ApplicationLatestRejectionReasonCapacity, ApplicationLatestRejectionReasonIncomplete:
-		return true
-	}
-	return false
-}
-
-// The decision for an application; the shape depends on the outcome.
-type AdoptionGetDecisionResponse struct {
-	Outcome        AdoptionGetDecisionResponseOutcome `json:"outcome" api:"required"`
-	AppealDeadline time.Time                          `json:"appealDeadline" api:"nullable" format:"date-time"`
-	ApprovedAt     time.Time                          `json:"approvedAt" format:"date-time"`
-	// This field can have the runtime type of [[]string].
-	Conditions interface{} `json:"conditions"`
-	// This field can have the runtime type of
-	// [AdoptionGetDecisionResponseDecisionEscalatedEscalatedTo].
-	EscalatedTo interface{}                            `json:"escalatedTo"`
-	Reason      AdoptionGetDecisionResponseReason      `json:"reason"`
-	ReviewAfter time.Time                              `json:"reviewAfter" format:"date-time"`
-	WithdrawnAt time.Time                              `json:"withdrawnAt" format:"date-time"`
-	WithdrawnBy AdoptionGetDecisionResponseWithdrawnBy `json:"withdrawnBy"`
-	JSON        adoptionGetDecisionResponseJSON        `json:"-"`
-	union       AdoptionGetDecisionResponseUnion
-}
-
-// adoptionGetDecisionResponseJSON contains the JSON metadata for the struct
-// [AdoptionGetDecisionResponse]
-type adoptionGetDecisionResponseJSON struct {
-	Outcome        apijson.Field
-	AppealDeadline apijson.Field
-	ApprovedAt     apijson.Field
-	Conditions     apijson.Field
-	EscalatedTo    apijson.Field
-	Reason         apijson.Field
-	ReviewAfter    apijson.Field
-	WithdrawnAt    apijson.Field
-	WithdrawnBy    apijson.Field
-	raw            string
-	ExtraFields    map[string]apijson.Field
-}
-
-func (r adoptionGetDecisionResponseJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r *AdoptionGetDecisionResponse) UnmarshalJSON(data []byte) (err error) {
-	*r = AdoptionGetDecisionResponse{}
-	err = apijson.UnmarshalRoot(data, &r.union)
-	if err != nil {
-		return err
-	}
-	return apijson.Port(r.union, &r)
-}
-
-// AsUnion returns a [AdoptionGetDecisionResponseUnion] interface which you can
-// cast to the specific types for more type safety.
-//
-// Possible runtime types of the union are
-// [AdoptionGetDecisionResponseDecisionApproved],
+// AdoptionGetDecisionResponseUnion contains all possible properties and values
+// from [AdoptionGetDecisionResponseDecisionApproved],
 // [AdoptionGetDecisionResponseDecisionRejected],
 // [AdoptionGetDecisionResponseDecisionEscalated],
 // [AdoptionGetDecisionResponseDecisionWithdrawn].
-func (r AdoptionGetDecisionResponse) AsUnion() AdoptionGetDecisionResponseUnion {
-	return r.union
-}
-
-// The decision for an application; the shape depends on the outcome.
 //
-// Union satisfied by [AdoptionGetDecisionResponseDecisionApproved],
-// [AdoptionGetDecisionResponseDecisionRejected],
-// [AdoptionGetDecisionResponseDecisionEscalated] or
-// [AdoptionGetDecisionResponseDecisionWithdrawn].
-type AdoptionGetDecisionResponseUnion interface {
-	implementsAdoptionGetDecisionResponse()
+// Use the methods beginning with 'As' to cast the union to one of its variants.
+type AdoptionGetDecisionResponseUnion struct {
+	// This field is from variant [AdoptionGetDecisionResponseDecisionApproved].
+	ApprovedAt time.Time `json:"approvedAt"`
+	Outcome    string    `json:"outcome"`
+	// This field is from variant [AdoptionGetDecisionResponseDecisionApproved].
+	Conditions []string `json:"conditions"`
+	// This field is from variant [AdoptionGetDecisionResponseDecisionRejected].
+	Reason string `json:"reason"`
+	// This field is from variant [AdoptionGetDecisionResponseDecisionRejected].
+	AppealDeadline time.Time `json:"appealDeadline"`
+	// This field is from variant [AdoptionGetDecisionResponseDecisionEscalated].
+	EscalatedTo AdoptionGetDecisionResponseDecisionEscalatedEscalatedTo `json:"escalatedTo"`
+	// This field is from variant [AdoptionGetDecisionResponseDecisionEscalated].
+	ReviewAfter time.Time `json:"reviewAfter"`
+	// This field is from variant [AdoptionGetDecisionResponseDecisionWithdrawn].
+	WithdrawnBy string `json:"withdrawnBy"`
+	// This field is from variant [AdoptionGetDecisionResponseDecisionWithdrawn].
+	WithdrawnAt time.Time `json:"withdrawnAt"`
+	JSON        struct {
+		ApprovedAt     respjson.Field
+		Outcome        respjson.Field
+		Conditions     respjson.Field
+		Reason         respjson.Field
+		AppealDeadline respjson.Field
+		EscalatedTo    respjson.Field
+		ReviewAfter    respjson.Field
+		WithdrawnBy    respjson.Field
+		WithdrawnAt    respjson.Field
+		raw            string
+	} `json:"-"`
 }
 
-func init() {
-	apijson.RegisterUnion(
-		reflect.TypeOf((*AdoptionGetDecisionResponseUnion)(nil)).Elem(),
-		"",
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(AdoptionGetDecisionResponseDecisionApproved{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(AdoptionGetDecisionResponseDecisionRejected{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(AdoptionGetDecisionResponseDecisionEscalated{}),
-		},
-		apijson.UnionVariant{
-			TypeFilter: gjson.JSON,
-			Type:       reflect.TypeOf(AdoptionGetDecisionResponseDecisionWithdrawn{}),
-		},
-	)
+func (u AdoptionGetDecisionResponseUnion) AsAdoptionGetDecisionResponseDecisionApproved() (v AdoptionGetDecisionResponseDecisionApproved) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdoptionGetDecisionResponseUnion) AsAdoptionGetDecisionResponseDecisionRejected() (v AdoptionGetDecisionResponseDecisionRejected) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdoptionGetDecisionResponseUnion) AsAdoptionGetDecisionResponseDecisionEscalated() (v AdoptionGetDecisionResponseDecisionEscalated) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+func (u AdoptionGetDecisionResponseUnion) AsAdoptionGetDecisionResponseDecisionWithdrawn() (v AdoptionGetDecisionResponseDecisionWithdrawn) {
+	apijson.UnmarshalRoot(json.RawMessage(u.JSON.raw), &v)
+	return
+}
+
+// Returns the unmodified JSON received from the API
+func (u AdoptionGetDecisionResponseUnion) RawJSON() string { return u.JSON.raw }
+
+func (r *AdoptionGetDecisionResponseUnion) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
 type AdoptionGetDecisionResponseDecisionApproved struct {
-	ApprovedAt time.Time                                          `json:"approvedAt" api:"required" format:"date-time"`
-	Outcome    AdoptionGetDecisionResponseDecisionApprovedOutcome `json:"outcome" api:"required"`
-	Conditions []string                                           `json:"conditions"`
-	JSON       adoptionGetDecisionResponseDecisionApprovedJSON    `json:"-"`
+	ApprovedAt time.Time         `json:"approvedAt" api:"required" format:"date-time"`
+	Outcome    constant.Approved `json:"outcome" default:"approved"`
+	Conditions []string          `json:"conditions"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		ApprovedAt  respjson.Field
+		Outcome     respjson.Field
+		Conditions  respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-// adoptionGetDecisionResponseDecisionApprovedJSON contains the JSON metadata for
-// the struct [AdoptionGetDecisionResponseDecisionApproved]
-type adoptionGetDecisionResponseDecisionApprovedJSON struct {
-	ApprovedAt  apijson.Field
-	Outcome     apijson.Field
-	Conditions  apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AdoptionGetDecisionResponseDecisionApproved) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AdoptionGetDecisionResponseDecisionApproved) RawJSON() string { return r.JSON.raw }
+func (r *AdoptionGetDecisionResponseDecisionApproved) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r adoptionGetDecisionResponseDecisionApprovedJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r AdoptionGetDecisionResponseDecisionApproved) implementsAdoptionGetDecisionResponse() {}
-
-type AdoptionGetDecisionResponseDecisionApprovedOutcome string
-
-const (
-	AdoptionGetDecisionResponseDecisionApprovedOutcomeApproved AdoptionGetDecisionResponseDecisionApprovedOutcome = "approved"
-)
-
-func (r AdoptionGetDecisionResponseDecisionApprovedOutcome) IsKnown() bool {
-	switch r {
-	case AdoptionGetDecisionResponseDecisionApprovedOutcomeApproved:
-		return true
-	}
-	return false
 }
 
 type AdoptionGetDecisionResponseDecisionRejected struct {
-	Outcome        AdoptionGetDecisionResponseDecisionRejectedOutcome `json:"outcome" api:"required"`
-	Reason         AdoptionGetDecisionResponseDecisionRejectedReason  `json:"reason" api:"required"`
-	AppealDeadline time.Time                                          `json:"appealDeadline" api:"nullable" format:"date-time"`
-	JSON           adoptionGetDecisionResponseDecisionRejectedJSON    `json:"-"`
+	Outcome constant.Rejected `json:"outcome" default:"rejected"`
+	// Any of "policy", "capacity", "incomplete".
+	Reason         string    `json:"reason" api:"required"`
+	AppealDeadline time.Time `json:"appealDeadline" api:"nullable" format:"date-time"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Outcome        respjson.Field
+		Reason         respjson.Field
+		AppealDeadline respjson.Field
+		ExtraFields    map[string]respjson.Field
+		raw            string
+	} `json:"-"`
 }
 
-// adoptionGetDecisionResponseDecisionRejectedJSON contains the JSON metadata for
-// the struct [AdoptionGetDecisionResponseDecisionRejected]
-type adoptionGetDecisionResponseDecisionRejectedJSON struct {
-	Outcome        apijson.Field
-	Reason         apijson.Field
-	AppealDeadline apijson.Field
-	raw            string
-	ExtraFields    map[string]apijson.Field
-}
-
-func (r *AdoptionGetDecisionResponseDecisionRejected) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AdoptionGetDecisionResponseDecisionRejected) RawJSON() string { return r.JSON.raw }
+func (r *AdoptionGetDecisionResponseDecisionRejected) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r adoptionGetDecisionResponseDecisionRejectedJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r AdoptionGetDecisionResponseDecisionRejected) implementsAdoptionGetDecisionResponse() {}
-
-type AdoptionGetDecisionResponseDecisionRejectedOutcome string
-
-const (
-	AdoptionGetDecisionResponseDecisionRejectedOutcomeRejected AdoptionGetDecisionResponseDecisionRejectedOutcome = "rejected"
-)
-
-func (r AdoptionGetDecisionResponseDecisionRejectedOutcome) IsKnown() bool {
-	switch r {
-	case AdoptionGetDecisionResponseDecisionRejectedOutcomeRejected:
-		return true
-	}
-	return false
-}
-
-type AdoptionGetDecisionResponseDecisionRejectedReason string
-
-const (
-	AdoptionGetDecisionResponseDecisionRejectedReasonPolicy     AdoptionGetDecisionResponseDecisionRejectedReason = "policy"
-	AdoptionGetDecisionResponseDecisionRejectedReasonCapacity   AdoptionGetDecisionResponseDecisionRejectedReason = "capacity"
-	AdoptionGetDecisionResponseDecisionRejectedReasonIncomplete AdoptionGetDecisionResponseDecisionRejectedReason = "incomplete"
-)
-
-func (r AdoptionGetDecisionResponseDecisionRejectedReason) IsKnown() bool {
-	switch r {
-	case AdoptionGetDecisionResponseDecisionRejectedReasonPolicy, AdoptionGetDecisionResponseDecisionRejectedReasonCapacity, AdoptionGetDecisionResponseDecisionRejectedReasonIncomplete:
-		return true
-	}
-	return false
 }
 
 type AdoptionGetDecisionResponseDecisionEscalated struct {
 	EscalatedTo AdoptionGetDecisionResponseDecisionEscalatedEscalatedTo `json:"escalatedTo" api:"required"`
-	Outcome     AdoptionGetDecisionResponseDecisionEscalatedOutcome     `json:"outcome" api:"required"`
+	Outcome     constant.Escalated                                      `json:"outcome" default:"escalated"`
 	ReviewAfter time.Time                                               `json:"reviewAfter" format:"date-time"`
-	JSON        adoptionGetDecisionResponseDecisionEscalatedJSON        `json:"-"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		EscalatedTo respjson.Field
+		Outcome     respjson.Field
+		ReviewAfter respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-// adoptionGetDecisionResponseDecisionEscalatedJSON contains the JSON metadata for
-// the struct [AdoptionGetDecisionResponseDecisionEscalated]
-type adoptionGetDecisionResponseDecisionEscalatedJSON struct {
-	EscalatedTo apijson.Field
-	Outcome     apijson.Field
-	ReviewAfter apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AdoptionGetDecisionResponseDecisionEscalated) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AdoptionGetDecisionResponseDecisionEscalated) RawJSON() string { return r.JSON.raw }
+func (r *AdoptionGetDecisionResponseDecisionEscalated) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
-
-func (r adoptionGetDecisionResponseDecisionEscalatedJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r AdoptionGetDecisionResponseDecisionEscalated) implementsAdoptionGetDecisionResponse() {}
 
 type AdoptionGetDecisionResponseDecisionEscalatedEscalatedTo struct {
 	Team    string                                                         `json:"team" api:"required"`
 	Contact AdoptionGetDecisionResponseDecisionEscalatedEscalatedToContact `json:"contact"`
-	JSON    adoptionGetDecisionResponseDecisionEscalatedEscalatedToJSON    `json:"-"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Team        respjson.Field
+		Contact     respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-// adoptionGetDecisionResponseDecisionEscalatedEscalatedToJSON contains the JSON
-// metadata for the struct
-// [AdoptionGetDecisionResponseDecisionEscalatedEscalatedTo]
-type adoptionGetDecisionResponseDecisionEscalatedEscalatedToJSON struct {
-	Team        apijson.Field
-	Contact     apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AdoptionGetDecisionResponseDecisionEscalatedEscalatedTo) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AdoptionGetDecisionResponseDecisionEscalatedEscalatedTo) RawJSON() string { return r.JSON.raw }
+func (r *AdoptionGetDecisionResponseDecisionEscalatedEscalatedTo) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r adoptionGetDecisionResponseDecisionEscalatedEscalatedToJSON) RawJSON() string {
-	return r.raw
 }
 
 type AdoptionGetDecisionResponseDecisionEscalatedEscalatedToContact struct {
-	Email string                                                             `json:"email"`
-	Hours string                                                             `json:"hours"`
-	JSON  adoptionGetDecisionResponseDecisionEscalatedEscalatedToContactJSON `json:"-"`
+	Email string `json:"email"`
+	Hours string `json:"hours"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Email       respjson.Field
+		Hours       respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-// adoptionGetDecisionResponseDecisionEscalatedEscalatedToContactJSON contains the
-// JSON metadata for the struct
-// [AdoptionGetDecisionResponseDecisionEscalatedEscalatedToContact]
-type adoptionGetDecisionResponseDecisionEscalatedEscalatedToContactJSON struct {
-	Email       apijson.Field
-	Hours       apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
+// Returns the unmodified JSON received from the API
+func (r AdoptionGetDecisionResponseDecisionEscalatedEscalatedToContact) RawJSON() string {
+	return r.JSON.raw
 }
-
-func (r *AdoptionGetDecisionResponseDecisionEscalatedEscalatedToContact) UnmarshalJSON(data []byte) (err error) {
+func (r *AdoptionGetDecisionResponseDecisionEscalatedEscalatedToContact) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
-}
-
-func (r adoptionGetDecisionResponseDecisionEscalatedEscalatedToContactJSON) RawJSON() string {
-	return r.raw
-}
-
-type AdoptionGetDecisionResponseDecisionEscalatedOutcome string
-
-const (
-	AdoptionGetDecisionResponseDecisionEscalatedOutcomeEscalated AdoptionGetDecisionResponseDecisionEscalatedOutcome = "escalated"
-)
-
-func (r AdoptionGetDecisionResponseDecisionEscalatedOutcome) IsKnown() bool {
-	switch r {
-	case AdoptionGetDecisionResponseDecisionEscalatedOutcomeEscalated:
-		return true
-	}
-	return false
 }
 
 // The applicant or shelter withdrew before a decision was finalized.
 type AdoptionGetDecisionResponseDecisionWithdrawn struct {
-	Outcome     AdoptionGetDecisionResponseDecisionWithdrawnOutcome     `json:"outcome" api:"required"`
-	WithdrawnBy AdoptionGetDecisionResponseDecisionWithdrawnWithdrawnBy `json:"withdrawnBy" api:"required"`
-	WithdrawnAt time.Time                                               `json:"withdrawnAt" format:"date-time"`
-	JSON        adoptionGetDecisionResponseDecisionWithdrawnJSON        `json:"-"`
+	// Any of "withdrawn", "expired".
+	Outcome string `json:"outcome" api:"required"`
+	// Any of "applicant", "shelter", "system".
+	WithdrawnBy string    `json:"withdrawnBy" api:"required"`
+	WithdrawnAt time.Time `json:"withdrawnAt" format:"date-time"`
+	// JSON contains metadata for fields, check presence with [respjson.Field.Valid].
+	JSON struct {
+		Outcome     respjson.Field
+		WithdrawnBy respjson.Field
+		WithdrawnAt respjson.Field
+		ExtraFields map[string]respjson.Field
+		raw         string
+	} `json:"-"`
 }
 
-// adoptionGetDecisionResponseDecisionWithdrawnJSON contains the JSON metadata for
-// the struct [AdoptionGetDecisionResponseDecisionWithdrawn]
-type adoptionGetDecisionResponseDecisionWithdrawnJSON struct {
-	Outcome     apijson.Field
-	WithdrawnBy apijson.Field
-	WithdrawnAt apijson.Field
-	raw         string
-	ExtraFields map[string]apijson.Field
-}
-
-func (r *AdoptionGetDecisionResponseDecisionWithdrawn) UnmarshalJSON(data []byte) (err error) {
+// Returns the unmodified JSON received from the API
+func (r AdoptionGetDecisionResponseDecisionWithdrawn) RawJSON() string { return r.JSON.raw }
+func (r *AdoptionGetDecisionResponseDecisionWithdrawn) UnmarshalJSON(data []byte) error {
 	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r adoptionGetDecisionResponseDecisionWithdrawnJSON) RawJSON() string {
-	return r.raw
-}
-
-func (r AdoptionGetDecisionResponseDecisionWithdrawn) implementsAdoptionGetDecisionResponse() {}
-
-type AdoptionGetDecisionResponseDecisionWithdrawnOutcome string
-
-const (
-	AdoptionGetDecisionResponseDecisionWithdrawnOutcomeWithdrawn AdoptionGetDecisionResponseDecisionWithdrawnOutcome = "withdrawn"
-	AdoptionGetDecisionResponseDecisionWithdrawnOutcomeExpired   AdoptionGetDecisionResponseDecisionWithdrawnOutcome = "expired"
-)
-
-func (r AdoptionGetDecisionResponseDecisionWithdrawnOutcome) IsKnown() bool {
-	switch r {
-	case AdoptionGetDecisionResponseDecisionWithdrawnOutcomeWithdrawn, AdoptionGetDecisionResponseDecisionWithdrawnOutcomeExpired:
-		return true
-	}
-	return false
-}
-
-type AdoptionGetDecisionResponseDecisionWithdrawnWithdrawnBy string
-
-const (
-	AdoptionGetDecisionResponseDecisionWithdrawnWithdrawnByApplicant AdoptionGetDecisionResponseDecisionWithdrawnWithdrawnBy = "applicant"
-	AdoptionGetDecisionResponseDecisionWithdrawnWithdrawnByShelter   AdoptionGetDecisionResponseDecisionWithdrawnWithdrawnBy = "shelter"
-	AdoptionGetDecisionResponseDecisionWithdrawnWithdrawnBySystem    AdoptionGetDecisionResponseDecisionWithdrawnWithdrawnBy = "system"
-)
-
-func (r AdoptionGetDecisionResponseDecisionWithdrawnWithdrawnBy) IsKnown() bool {
-	switch r {
-	case AdoptionGetDecisionResponseDecisionWithdrawnWithdrawnByApplicant, AdoptionGetDecisionResponseDecisionWithdrawnWithdrawnByShelter, AdoptionGetDecisionResponseDecisionWithdrawnWithdrawnBySystem:
-		return true
-	}
-	return false
-}
-
-type AdoptionGetDecisionResponseOutcome string
-
-const (
-	AdoptionGetDecisionResponseOutcomeApproved  AdoptionGetDecisionResponseOutcome = "approved"
-	AdoptionGetDecisionResponseOutcomeRejected  AdoptionGetDecisionResponseOutcome = "rejected"
-	AdoptionGetDecisionResponseOutcomeEscalated AdoptionGetDecisionResponseOutcome = "escalated"
-	AdoptionGetDecisionResponseOutcomeWithdrawn AdoptionGetDecisionResponseOutcome = "withdrawn"
-	AdoptionGetDecisionResponseOutcomeExpired   AdoptionGetDecisionResponseOutcome = "expired"
-)
-
-func (r AdoptionGetDecisionResponseOutcome) IsKnown() bool {
-	switch r {
-	case AdoptionGetDecisionResponseOutcomeApproved, AdoptionGetDecisionResponseOutcomeRejected, AdoptionGetDecisionResponseOutcomeEscalated, AdoptionGetDecisionResponseOutcomeWithdrawn, AdoptionGetDecisionResponseOutcomeExpired:
-		return true
-	}
-	return false
-}
-
-type AdoptionGetDecisionResponseReason string
-
-const (
-	AdoptionGetDecisionResponseReasonPolicy     AdoptionGetDecisionResponseReason = "policy"
-	AdoptionGetDecisionResponseReasonCapacity   AdoptionGetDecisionResponseReason = "capacity"
-	AdoptionGetDecisionResponseReasonIncomplete AdoptionGetDecisionResponseReason = "incomplete"
-)
-
-func (r AdoptionGetDecisionResponseReason) IsKnown() bool {
-	switch r {
-	case AdoptionGetDecisionResponseReasonPolicy, AdoptionGetDecisionResponseReasonCapacity, AdoptionGetDecisionResponseReasonIncomplete:
-		return true
-	}
-	return false
-}
-
-type AdoptionGetDecisionResponseWithdrawnBy string
-
-const (
-	AdoptionGetDecisionResponseWithdrawnByApplicant AdoptionGetDecisionResponseWithdrawnBy = "applicant"
-	AdoptionGetDecisionResponseWithdrawnByShelter   AdoptionGetDecisionResponseWithdrawnBy = "shelter"
-	AdoptionGetDecisionResponseWithdrawnBySystem    AdoptionGetDecisionResponseWithdrawnBy = "system"
-)
-
-func (r AdoptionGetDecisionResponseWithdrawnBy) IsKnown() bool {
-	switch r {
-	case AdoptionGetDecisionResponseWithdrawnByApplicant, AdoptionGetDecisionResponseWithdrawnByShelter, AdoptionGetDecisionResponseWithdrawnBySystem:
-		return true
-	}
-	return false
-}
-
 type AdoptionNewParams struct {
-	Body AdoptionNewParamsBodyUnion `json:"body" api:"required"`
+
+	//
+	// Request body variants
+	//
+
+	// This field is a request body variant, only one variant field can be set.
+	OfIndividual *AdoptionNewParamsBodyIndividual `json:",inline"`
+	// This field is a request body variant, only one variant field can be set.
+	OfOrganization *AdoptionNewParamsBodyOrganization `json:",inline"`
+
+	paramObj
 }
 
-func (r AdoptionNewParams) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r.Body)
+func (u AdoptionNewParams) MarshalJSON() ([]byte, error) {
+	return param.MarshalUnion(u, u.OfIndividual, u.OfOrganization)
+}
+func (r *AdoptionNewParams) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
-type AdoptionNewParamsBody struct {
-	ApplicantType param.Field[AdoptionNewParamsBodyApplicantType] `json:"applicant_type" api:"required"`
-	Name          param.Field[string]                             `json:"name" api:"required"`
-	Address       param.Field[shared.AddressParam]                `json:"address"`
-	Age           param.Field[int64]                              `json:"age"`
-	Email         param.Field[string]                             `json:"email"`
-	Shelter       param.Field[interface{}]                        `json:"shelter"`
-	TaxID         param.Field[string]                             `json:"taxId"`
+// The properties ApplicantType, Name are required.
+type AdoptionNewParamsBodyIndividual struct {
+	Name    string              `json:"name" api:"required"`
+	Age     param.Opt[int64]    `json:"age,omitzero"`
+	Email   param.Opt[string]   `json:"email,omitzero"`
+	Address shared.AddressParam `json:"address,omitzero"`
+	// This field can be elided, and will marshal its zero value as "individual".
+	ApplicantType constant.Individual `json:"applicant_type" default:"individual"`
+	paramObj
 }
 
-func (r AdoptionNewParamsBody) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+func (r AdoptionNewParamsBodyIndividual) MarshalJSON() (data []byte, err error) {
+	type shadow AdoptionNewParamsBodyIndividual
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AdoptionNewParamsBodyIndividual) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r AdoptionNewParamsBody) implementsAdoptionNewParamsBodyUnion() {}
-
-// Satisfied by [AdoptionNewParamsBodyIndividualApplicant],
-// [AdoptionNewParamsBodyOrganizationApplicant], [AdoptionNewParamsBody].
-type AdoptionNewParamsBodyUnion interface {
-	implementsAdoptionNewParamsBodyUnion()
+// The properties ApplicantType, Name are required.
+type AdoptionNewParamsBodyOrganization struct {
+	Name    string                                   `json:"name" api:"required"`
+	TaxID   param.Opt[string]                        `json:"taxId,omitzero"`
+	Shelter AdoptionNewParamsBodyOrganizationShelter `json:"shelter,omitzero"`
+	// This field can be elided, and will marshal its zero value as "organization".
+	ApplicantType constant.Organization `json:"applicant_type" default:"organization"`
+	paramObj
 }
 
-type AdoptionNewParamsBodyIndividualApplicant struct {
-	ApplicantType param.Field[AdoptionNewParamsBodyIndividualApplicantApplicantType] `json:"applicant_type" api:"required"`
-	Name          param.Field[string]                                                `json:"name" api:"required"`
-	Address       param.Field[shared.AddressParam]                                   `json:"address"`
-	Age           param.Field[int64]                                                 `json:"age"`
-	Email         param.Field[string]                                                `json:"email"`
+func (r AdoptionNewParamsBodyOrganization) MarshalJSON() (data []byte, err error) {
+	type shadow AdoptionNewParamsBodyOrganization
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AdoptionNewParamsBodyOrganization) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r AdoptionNewParamsBodyIndividualApplicant) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+// The property Name is required.
+type AdoptionNewParamsBodyOrganizationShelter struct {
+	Name            string                                           `json:"name" api:"required"`
+	Address         shared.AddressParam                              `json:"address,omitzero"`
+	Contact         AdoptionNewParamsBodyOrganizationShelterContact  `json:"contact,omitzero"`
+	Location        AdoptionNewParamsBodyOrganizationShelterLocation `json:"location,omitzero"`
+	RelatedAddress  shared.AddressParam                              `json:"relatedAddress,omitzero"`
+	RelatedCategory any                                              `json:"relatedCategory,omitzero"`
+	RelatedCustomer any                                              `json:"relatedCustomer,omitzero"`
+	RelatedMoney    shared.MoneyParam                                `json:"relatedMoney,omitzero"`
+	RelatedOrder    any                                              `json:"relatedOrder,omitzero"`
+	RelatedPet      PetParam                                         `json:"relatedPet,omitzero"`
+	RelatedTag      any                                              `json:"relatedTag,omitzero"`
+	RelatedUser     any                                              `json:"relatedUser,omitzero"`
+	paramObj
 }
 
-func (r AdoptionNewParamsBodyIndividualApplicant) implementsAdoptionNewParamsBodyUnion() {}
-
-type AdoptionNewParamsBodyIndividualApplicantApplicantType string
-
-const (
-	AdoptionNewParamsBodyIndividualApplicantApplicantTypeIndividual AdoptionNewParamsBodyIndividualApplicantApplicantType = "individual"
-)
-
-func (r AdoptionNewParamsBodyIndividualApplicantApplicantType) IsKnown() bool {
-	switch r {
-	case AdoptionNewParamsBodyIndividualApplicantApplicantTypeIndividual:
-		return true
-	}
-	return false
+func (r AdoptionNewParamsBodyOrganizationShelter) MarshalJSON() (data []byte, err error) {
+	type shadow AdoptionNewParamsBodyOrganizationShelter
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AdoptionNewParamsBodyOrganizationShelter) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
-type AdoptionNewParamsBodyOrganizationApplicant struct {
-	ApplicantType param.Field[AdoptionNewParamsBodyOrganizationApplicantApplicantType] `json:"applicant_type" api:"required"`
-	Name          param.Field[string]                                                  `json:"name" api:"required"`
-	Shelter       param.Field[AdoptionNewParamsBodyOrganizationApplicantShelter]       `json:"shelter"`
-	TaxID         param.Field[string]                                                  `json:"taxId"`
+type AdoptionNewParamsBodyOrganizationShelterContact struct {
+	Primary AdoptionNewParamsBodyOrganizationShelterContactPrimary `json:"primary,omitzero"`
+	paramObj
 }
 
-func (r AdoptionNewParamsBodyOrganizationApplicant) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+func (r AdoptionNewParamsBodyOrganizationShelterContact) MarshalJSON() (data []byte, err error) {
+	type shadow AdoptionNewParamsBodyOrganizationShelterContact
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AdoptionNewParamsBodyOrganizationShelterContact) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r AdoptionNewParamsBodyOrganizationApplicant) implementsAdoptionNewParamsBodyUnion() {}
-
-type AdoptionNewParamsBodyOrganizationApplicantApplicantType string
-
-const (
-	AdoptionNewParamsBodyOrganizationApplicantApplicantTypeOrganization AdoptionNewParamsBodyOrganizationApplicantApplicantType = "organization"
-)
-
-func (r AdoptionNewParamsBodyOrganizationApplicantApplicantType) IsKnown() bool {
-	switch r {
-	case AdoptionNewParamsBodyOrganizationApplicantApplicantTypeOrganization:
-		return true
-	}
-	return false
+type AdoptionNewParamsBodyOrganizationShelterContactPrimary struct {
+	Name         param.Opt[string]                                                  `json:"name,omitzero"`
+	Phone        param.Opt[string]                                                  `json:"phone,omitzero"`
+	Availability AdoptionNewParamsBodyOrganizationShelterContactPrimaryAvailability `json:"availability,omitzero"`
+	paramObj
 }
 
-type AdoptionNewParamsBodyOrganizationApplicantShelter struct {
-	Name            param.Field[string]                                                    `json:"name" api:"required"`
-	Address         param.Field[shared.AddressParam]                                       `json:"address"`
-	Contact         param.Field[AdoptionNewParamsBodyOrganizationApplicantShelterContact]  `json:"contact"`
-	Location        param.Field[AdoptionNewParamsBodyOrganizationApplicantShelterLocation] `json:"location"`
-	RelatedAddress  param.Field[shared.AddressParam]                                       `json:"relatedAddress"`
-	RelatedCategory param.Field[interface{}]                                               `json:"relatedCategory"`
-	RelatedCustomer param.Field[interface{}]                                               `json:"relatedCustomer"`
-	RelatedMoney    param.Field[shared.MoneyParam]                                         `json:"relatedMoney"`
-	RelatedOrder    param.Field[interface{}]                                               `json:"relatedOrder"`
-	RelatedPet      param.Field[PetParam]                                                  `json:"relatedPet"`
-	RelatedTag      param.Field[interface{}]                                               `json:"relatedTag"`
-	RelatedUser     param.Field[interface{}]                                               `json:"relatedUser"`
+func (r AdoptionNewParamsBodyOrganizationShelterContactPrimary) MarshalJSON() (data []byte, err error) {
+	type shadow AdoptionNewParamsBodyOrganizationShelterContactPrimary
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AdoptionNewParamsBodyOrganizationShelterContactPrimary) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r AdoptionNewParamsBodyOrganizationApplicantShelter) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+type AdoptionNewParamsBodyOrganizationShelterContactPrimaryAvailability struct {
+	Weekend AdoptionNewParamsBodyOrganizationShelterContactPrimaryAvailabilityWeekend `json:"weekend,omitzero"`
+	Weekday AdoptionNewParamsBodyOrganizationShelterContactPrimaryAvailabilityWeekday `json:"weekday,omitzero"`
+	paramObj
 }
 
-type AdoptionNewParamsBodyOrganizationApplicantShelterContact struct {
-	Primary param.Field[AdoptionNewParamsBodyOrganizationApplicantShelterContactPrimary] `json:"primary"`
+func (r AdoptionNewParamsBodyOrganizationShelterContactPrimaryAvailability) MarshalJSON() (data []byte, err error) {
+	type shadow AdoptionNewParamsBodyOrganizationShelterContactPrimaryAvailability
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AdoptionNewParamsBodyOrganizationShelterContactPrimaryAvailability) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r AdoptionNewParamsBodyOrganizationApplicantShelterContact) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+type AdoptionNewParamsBodyOrganizationShelterContactPrimaryAvailabilityWeekday struct {
+	Close param.Opt[string] `json:"close,omitzero"`
+	Open  param.Opt[string] `json:"open,omitzero"`
+	paramObj
 }
 
-type AdoptionNewParamsBodyOrganizationApplicantShelterContactPrimary struct {
-	Availability param.Field[AdoptionNewParamsBodyOrganizationApplicantShelterContactPrimaryAvailability] `json:"availability"`
-	Name         param.Field[string]                                                                      `json:"name"`
-	Phone        param.Field[string]                                                                      `json:"phone"`
+func (r AdoptionNewParamsBodyOrganizationShelterContactPrimaryAvailabilityWeekday) MarshalJSON() (data []byte, err error) {
+	type shadow AdoptionNewParamsBodyOrganizationShelterContactPrimaryAvailabilityWeekday
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AdoptionNewParamsBodyOrganizationShelterContactPrimaryAvailabilityWeekday) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r AdoptionNewParamsBodyOrganizationApplicantShelterContactPrimary) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+type AdoptionNewParamsBodyOrganizationShelterContactPrimaryAvailabilityWeekend struct {
+	Close param.Opt[string] `json:"close,omitzero"`
+	Open  param.Opt[string] `json:"open,omitzero"`
+	paramObj
 }
 
-type AdoptionNewParamsBodyOrganizationApplicantShelterContactPrimaryAvailability struct {
-	Weekday param.Field[AdoptionNewParamsBodyOrganizationApplicantShelterContactPrimaryAvailabilityWeekday] `json:"weekday"`
-	Weekend param.Field[AdoptionNewParamsBodyOrganizationApplicantShelterContactPrimaryAvailabilityWeekend] `json:"weekend"`
+func (r AdoptionNewParamsBodyOrganizationShelterContactPrimaryAvailabilityWeekend) MarshalJSON() (data []byte, err error) {
+	type shadow AdoptionNewParamsBodyOrganizationShelterContactPrimaryAvailabilityWeekend
+	return param.MarshalObject(r, (*shadow)(&r))
+}
+func (r *AdoptionNewParamsBodyOrganizationShelterContactPrimaryAvailabilityWeekend) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }
 
-func (r AdoptionNewParamsBodyOrganizationApplicantShelterContactPrimaryAvailability) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
+// The properties Latitude, Longitude are required.
+type AdoptionNewParamsBodyOrganizationShelterLocation struct {
+	Latitude  float64 `json:"latitude" api:"required"`
+	Longitude float64 `json:"longitude" api:"required"`
+	paramObj
 }
 
-type AdoptionNewParamsBodyOrganizationApplicantShelterContactPrimaryAvailabilityWeekday struct {
-	Close param.Field[string] `json:"close"`
-	Open  param.Field[string] `json:"open"`
+func (r AdoptionNewParamsBodyOrganizationShelterLocation) MarshalJSON() (data []byte, err error) {
+	type shadow AdoptionNewParamsBodyOrganizationShelterLocation
+	return param.MarshalObject(r, (*shadow)(&r))
 }
-
-func (r AdoptionNewParamsBodyOrganizationApplicantShelterContactPrimaryAvailabilityWeekday) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-type AdoptionNewParamsBodyOrganizationApplicantShelterContactPrimaryAvailabilityWeekend struct {
-	Close param.Field[string] `json:"close"`
-	Open  param.Field[string] `json:"open"`
-}
-
-func (r AdoptionNewParamsBodyOrganizationApplicantShelterContactPrimaryAvailabilityWeekend) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-type AdoptionNewParamsBodyOrganizationApplicantShelterLocation struct {
-	Latitude  param.Field[float64] `json:"latitude" api:"required"`
-	Longitude param.Field[float64] `json:"longitude" api:"required"`
-}
-
-func (r AdoptionNewParamsBodyOrganizationApplicantShelterLocation) MarshalJSON() (data []byte, err error) {
-	return apijson.MarshalRoot(r)
-}
-
-type AdoptionNewParamsBodyApplicantType string
-
-const (
-	AdoptionNewParamsBodyApplicantTypeIndividual   AdoptionNewParamsBodyApplicantType = "individual"
-	AdoptionNewParamsBodyApplicantTypeOrganization AdoptionNewParamsBodyApplicantType = "organization"
-)
-
-func (r AdoptionNewParamsBodyApplicantType) IsKnown() bool {
-	switch r {
-	case AdoptionNewParamsBodyApplicantTypeIndividual, AdoptionNewParamsBodyApplicantTypeOrganization:
-		return true
-	}
-	return false
+func (r *AdoptionNewParamsBodyOrganizationShelterLocation) UnmarshalJSON(data []byte) error {
+	return apijson.UnmarshalRoot(data, r)
 }

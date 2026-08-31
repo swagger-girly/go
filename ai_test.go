@@ -29,26 +29,26 @@ func TestAIAIQueryWithOptionalParams(t *testing.T) {
 		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.AI.AIQuery(context.TODO(), helloworldtestingggg.AIAIQueryParams{
-		DataToExtract: helloworldtestingggg.F([]helloworldtestingggg.AiaiQueryParamsDataToExtract{{
-			DatapointName: helloworldtestingggg.F("datapoint_name"),
-			DatapointType: helloworldtestingggg.F(helloworldtestingggg.AiaiQueryParamsDataToExtractDatapointTypeText),
-		}}),
-		Domain: helloworldtestingggg.F("domain"),
-		Authentication3DS: helloworldtestingggg.F(helloworldtestingggg.AiaiQueryParamsAuthentication3DS{
-			ChallengeRules: helloworldtestingggg.F([]helloworldtestingggg.AiaiQueryParamsAuthentication3DsChallengeRule{{
-				ChallengeKind: helloworldtestingggg.F("challenge_kind"),
-			}}),
-			FallbackCheck: helloworldtestingggg.F([]helloworldtestingggg.AiaiQueryParamsAuthentication3DsFallbackCheck{{
-				CheckName: helloworldtestingggg.F("check_name"),
-			}}),
-		}),
-		DatapointObjectSchema: helloworldtestingggg.F(map[string]helloworldtestingggg.AiaiQueryParamsDatapointObjectSchema{
-			"foo": helloworldtestingggg.AiaiQueryParamsDatapointObjectSchemaString,
-		}),
-		ExtractionRules: helloworldtestingggg.F([]helloworldtestingggg.AiaiQueryParamsExtractionRule{{
-			RuleName:     helloworldtestingggg.F("rule_name"),
-			RuleSeverity: helloworldtestingggg.F(helloworldtestingggg.AiaiQueryParamsExtractionRulesRuleSeverityLow),
-		}}),
+		DataToExtract: []helloworldtestingggg.AIAIQueryParamsDataToExtract{{
+			DatapointName: "datapoint_name",
+			DatapointType: "text",
+		}},
+		Domain: "domain",
+		Authentication3DS: helloworldtestingggg.AIAIQueryParamsAuthentication3DS{
+			ChallengeRules: []helloworldtestingggg.AIAIQueryParamsAuthentication3DSChallengeRule{{
+				ChallengeKind: helloworldtestingggg.String("challenge_kind"),
+			}},
+			FallbackCheck: []helloworldtestingggg.AIAIQueryParamsAuthentication3DSFallbackCheck{{
+				CheckName: helloworldtestingggg.String("check_name"),
+			}},
+		},
+		DatapointObjectSchema: map[string]string{
+			"foo": "string",
+		},
+		ExtractionRules: []helloworldtestingggg.AIAIQueryParamsExtractionRule{{
+			RuleName:     helloworldtestingggg.String("rule_name"),
+			RuleSeverity: "low",
+		}},
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
