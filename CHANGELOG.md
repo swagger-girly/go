@@ -1,5 +1,35 @@
 # Changelog
 
+## 0.1.0-alpha.2 (2026-08-31)
+
+Full Changelog: [v0.1.0-alpha.1...v0.1.0-alpha.2](https://github.com/swagger-girly/go/compare/v0.1.0-alpha.1...v0.1.0-alpha.2)
+
+### Features
+
+* **api:** add endpoints ([cc631b9](https://github.com/swagger-girly/go/commit/cc631b9f9234b292456b280172a9a12dbb00671a))
+* **api:** add list_leaderboard ([4aee34a](https://github.com/swagger-girly/go/commit/4aee34a23a41aa03eb8e236c9c77db9c0d595e77))
+* **api:** are more endpoints ([7a2334b](https://github.com/swagger-girly/go/commit/7a2334b449c136f19170bedeec71ed24a6032dd4))
+* **api:** bump go edition ([01aef1c](https://github.com/swagger-girly/go/commit/01aef1c3985553d0737b1d049fbe3eb166da9c29))
+* **api:** manual updates ([af72216](https://github.com/swagger-girly/go/commit/af72216e6eff9dfd678f31997ced12ab3c6f6183))
+* **api:** manual updates ([84aa345](https://github.com/swagger-girly/go/commit/84aa3459343bf1473b9f26b9dbe236a4d6068fac))
+* **api:** manual updates ([fcfb7aa](https://github.com/swagger-girly/go/commit/fcfb7aa04e1594843416522acb5aa048e0603e05))
+* **api:** manual updates ([5eeec5a](https://github.com/swagger-girly/go/commit/5eeec5aebc48b3b880665c87917ed29da48a16bb))
+* **api:** manual updates ([5a3c5d8](https://github.com/swagger-girly/go/commit/5a3c5d8bc0a95876c9e34817ec6832391965a880))
+* **api:** manual updates ([19095f3](https://github.com/swagger-girly/go/commit/19095f3438c76d5cfce14c5e48158737668c4f46))
+* **api:** manual updates ([b661e07](https://github.com/swagger-girly/go/commit/b661e0753e606904022bd56d17279a08e10afaf5))
+* **api:** manual updates ([c0620a9](https://github.com/swagger-girly/go/commit/c0620a9a2063c755c270e43653ad74424ed0e5e6))
+* **api:** manual updates ([bd5d75c](https://github.com/swagger-girly/go/commit/bd5d75cff7892c386a9f07a19f20b240ae1b8906))
+* **api:** manual updates ([181523d](https://github.com/swagger-girly/go/commit/181523daba10cac811132fda3b0f48b1ccbb1dbc))
+* **api:** manual updates ([2337af6](https://github.com/swagger-girly/go/commit/2337af69e07a6281acc7250fb18cf5cd20ff4347))
+* **api:** manual updates ([281a06f](https://github.com/swagger-girly/go/commit/281a06f30b009920f5f6fe4e0eb0f47cfc89ca58))
+* **api:** more endpoints ([00c1305](https://github.com/swagger-girly/go/commit/00c13051608812f2ed15cda6a64a0f96d642daea))
+* **api:** more webhooks ([9895643](https://github.com/swagger-girly/go/commit/9895643a14788a78fbc2a31cd90b51693c02d626))
+* **api:** name properties differently ([3b04881](https://github.com/swagger-girly/go/commit/3b0488117180c394665d3f248e9aac12317f04d3))
+* **api:** recursive schemas ([aa71410](https://github.com/swagger-girly/go/commit/aa71410475566e048615590f2840d1c82b68fd27))
+* **api:** remove the edition pin and add endpoint ([a51665f](https://github.com/swagger-girly/go/commit/a51665f66dc8ec80f8d21f11df74e34ddffe02d6))
+* **api:** update edition for go ([5819632](https://github.com/swagger-girly/go/commit/58196327eb9c25b3e3d25484fc663020b22d0409))
+* **stlc:** configurable CI runner and private-production-repo support in workflow templates ([c28104e](https://github.com/swagger-girly/go/commit/c28104eeb9b1cfcebe663062fdb7248c38a32019))
+
 ## 0.1.0-alpha.1 (2026-06-25)
 
 Full Changelog: [v0.0.1-alpha.0...v0.1.0-alpha.1](https://github.com/swagger-girly/go/compare/v0.0.1-alpha.0...v0.1.0-alpha.1)

@@ -24,16 +24,17 @@ func TestUsage(t *testing.T) {
 	client := helloworldtestingggg.NewClient(
 		option.WithBaseURL(baseURL),
 		option.WithAPIKey("My API Key"),
+		option.WithBasicAuthUsername("My Basic Auth Username"),
+		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	pet, err := client.Pet.Update(context.TODO(), helloworldtestingggg.PetUpdateParams{
 		Pet: helloworldtestingggg.PetParam{
-			Name:      helloworldtestingggg.F("doggie"),
-			PhotoURLs: helloworldtestingggg.F([]string{"string"}),
+			Name:      "doggie",
+			PhotoURLs: []string{"string"},
 		},
 	})
 	if err != nil {
-		t.Error(err)
-		return
+		t.Fatalf("err should be nil: %s", err.Error())
 	}
 	t.Logf("%+v\n", pet.ID)
 }

@@ -4,6 +4,7 @@ package option
 
 import (
 	"bytes"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"net/http"
@@ -168,7 +169,7 @@ func WithQueryDel(key string) RequestOption {
 // The key accepts a string as defined by the [sjson format].
 //
 // [sjson format]: https://github.com/tidwall/sjson
-func WithJSONSet(key string, value interface{}) RequestOption {
+func WithJSONSet(key string, value any) RequestOption {
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) (err error) {
 		var b []byte
 
@@ -271,5 +272,29 @@ func WithAPIKey(value string) RequestOption {
 	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
 		r.APIKey = value
 		return r.Apply(WithHeader("api_key", r.APIKey))
+	})
+}
+
+// WithBasicAuthUsername returns a RequestOption that sets the client setting "basic_auth_username".
+func WithBasicAuthUsername(value string) RequestOption {
+	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
+		r.BasicAuthUsername = value
+		return r.Apply(WithHeader("authorization", fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString([]byte(r.BasicAuthUsername+":"+r.BasicAuthPassword)))))
+	})
+}
+
+// WithBasicAuthPassword returns a RequestOption that sets the client setting "basic_auth_password".
+func WithBasicAuthPassword(value string) RequestOption {
+	return requestconfig.RequestOptionFunc(func(r *requestconfig.RequestConfig) error {
+		r.BasicAuthPassword = value
+		return r.Apply(WithHeader("authorization", fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString([]byte(r.BasicAuthUsername+":"+r.BasicAuthPassword)))))
+	})
+}
+
+// WithWebhookSecret returns a RequestOption that sets the client setting "webhook_secret".
+func WithWebhookSecret(value string) RequestOption {
+	return requestconfig.PreRequestOptionFunc(func(r *requestconfig.RequestConfig) error {
+		r.WebhookSecret = value
+		return nil
 	})
 }
