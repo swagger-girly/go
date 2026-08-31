@@ -30,81 +30,93 @@ func TestAdoptionPolicyNewWithOptionalParams(t *testing.T) {
 		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Adoptions.Policies.New(context.TODO(), helloworldtestingggg.AdoptionPolicyNewParams{
-		Name: helloworldtestingggg.F("name"),
-		Rules: helloworldtestingggg.F([]helloworldtestingggg.AdoptionRuleParam{{
-			Attribute: helloworldtestingggg.F(helloworldtestingggg.RuleAttributePetStatus),
-			Operation: helloworldtestingggg.F(helloworldtestingggg.AdoptionRuleOperationIsOneOf),
-			Value:     helloworldtestingggg.F[helloworldtestingggg.ConditionValueUnionParam](shared.UnionString("string")),
-		}}),
-		Escalation: helloworldtestingggg.F(helloworldtestingggg.AdoptionPolicyNewParamsEscalation{
-			Operator: helloworldtestingggg.F(helloworldtestingggg.AdoptionPolicyNewParamsEscalationOperatorAll),
-			Groups:   helloworldtestingggg.F([]interface{}{}),
-			Rules: helloworldtestingggg.F([]helloworldtestingggg.AdoptionRuleParam{{
-				Attribute: helloworldtestingggg.F(helloworldtestingggg.RuleAttributePetStatus),
-				Operation: helloworldtestingggg.F(helloworldtestingggg.AdoptionRuleOperationIsOneOf),
-				Value:     helloworldtestingggg.F[helloworldtestingggg.ConditionValueUnionParam](shared.UnionString("string")),
-			}}),
-		}),
-		FeeCap: helloworldtestingggg.F(shared.MoneyParam{
-			Amount:   helloworldtestingggg.F(int64(2500)),
-			Currency: helloworldtestingggg.F("USD"),
-			RelatedAddress: helloworldtestingggg.F(shared.AddressParam{
-				City: helloworldtestingggg.F("Palo Alto"),
-				Geo: helloworldtestingggg.F(shared.AddressGeoParam{
-					Latitude:  helloworldtestingggg.F(37.444300),
-					Longitude: helloworldtestingggg.F(-122.159800),
-				}),
-				RelatedCategory: helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedCustomer: helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedOrder:    helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedPet: helloworldtestingggg.F(helloworldtestingggg.PetParam{
-					Name:               helloworldtestingggg.F("doggie"),
-					PhotoURLs:          helloworldtestingggg.F([]string{"string"}),
-					ID:                 helloworldtestingggg.F(int64(10)),
-					AcquisitionChannel: helloworldtestingggg.F(helloworldtestingggg.PetAcquisitionChannelBreeder),
-					Category:           helloworldtestingggg.F[any](map[string]interface{}{}),
-					MicrochipID:        helloworldtestingggg.F[helloworldtestingggg.PetMicrochipIDUnionParam](shared.UnionString("string")),
-					RelatedCategory:    helloworldtestingggg.F[any](map[string]interface{}{}),
-					RelatedCustomer:    helloworldtestingggg.F[any](map[string]interface{}{}),
-					RelatedOrder:       helloworldtestingggg.F[any](map[string]interface{}{}),
-					RelatedShelter:     helloworldtestingggg.F[any](map[string]interface{}{}),
-					RelatedUser:        helloworldtestingggg.F[any](map[string]interface{}{}),
-					Status:             helloworldtestingggg.F(helloworldtestingggg.PetStatusAvailable),
-					Tags:               helloworldtestingggg.F([]interface{}{map[string]interface{}{}}),
-				}),
-				RelatedShelter: helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedTag:     helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedUser:    helloworldtestingggg.F[any](map[string]interface{}{}),
-				State:          helloworldtestingggg.F("CA"),
-				Street:         helloworldtestingggg.F("437 Lytton"),
-				Zip:            helloworldtestingggg.F("94301"),
-			}),
-			RelatedCategory: helloworldtestingggg.F[any](map[string]interface{}{}),
-			RelatedCustomer: helloworldtestingggg.F[any](map[string]interface{}{}),
-			RelatedOrder:    helloworldtestingggg.F[any](map[string]interface{}{}),
-			RelatedPet: helloworldtestingggg.F(helloworldtestingggg.PetParam{
-				Name:               helloworldtestingggg.F("doggie"),
-				PhotoURLs:          helloworldtestingggg.F([]string{"string"}),
-				ID:                 helloworldtestingggg.F(int64(10)),
-				AcquisitionChannel: helloworldtestingggg.F(helloworldtestingggg.PetAcquisitionChannelBreeder),
-				Category:           helloworldtestingggg.F[any](map[string]interface{}{}),
-				MicrochipID:        helloworldtestingggg.F[helloworldtestingggg.PetMicrochipIDUnionParam](shared.UnionString("string")),
-				RelatedCategory:    helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedCustomer:    helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedOrder:       helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedShelter:     helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedUser:        helloworldtestingggg.F[any](map[string]interface{}{}),
-				Status:             helloworldtestingggg.F(helloworldtestingggg.PetStatusAvailable),
-				Tags:               helloworldtestingggg.F([]interface{}{map[string]interface{}{}}),
-			}),
-			RelatedShelter: helloworldtestingggg.F[any](map[string]interface{}{}),
-			RelatedTag:     helloworldtestingggg.F[any](map[string]interface{}{}),
-			RelatedUser:    helloworldtestingggg.F[any](map[string]interface{}{}),
-		}),
-		NotificationTarget: helloworldtestingggg.F[helloworldtestingggg.AdoptionPolicyNewParamsNotificationTargetUnion](shared.UnionString("string")),
-		RegionalOverrides: helloworldtestingggg.F(map[string]helloworldtestingggg.ConditionValueUnionParam{
-			"foo": shared.UnionString("string"),
-		}),
+		Name: "name",
+		Rules: []helloworldtestingggg.AdoptionRuleParam{{
+			Attribute: helloworldtestingggg.RuleAttributePetStatus,
+			Operation: helloworldtestingggg.AdoptionRuleOperationIsOneOf,
+			Value: helloworldtestingggg.ConditionValueUnionParam{
+				OfString: helloworldtestingggg.String("string"),
+			},
+		}},
+		Escalation: helloworldtestingggg.AdoptionPolicyNewParamsEscalation{
+			Operator: "ALL",
+			Groups:   []any{},
+			Rules: []helloworldtestingggg.AdoptionRuleParam{{
+				Attribute: helloworldtestingggg.RuleAttributePetStatus,
+				Operation: helloworldtestingggg.AdoptionRuleOperationIsOneOf,
+				Value: helloworldtestingggg.ConditionValueUnionParam{
+					OfString: helloworldtestingggg.String("string"),
+				},
+			}},
+		},
+		FeeCap: shared.MoneyParam{
+			Amount:   2500,
+			Currency: "USD",
+			RelatedAddress: shared.AddressParam{
+				City: helloworldtestingggg.String("Palo Alto"),
+				Geo: shared.AddressGeoParam{
+					Latitude:  37.4443,
+					Longitude: -122.1598,
+				},
+				RelatedCategory: map[string]any{},
+				RelatedCustomer: map[string]any{},
+				RelatedOrder:    map[string]any{},
+				RelatedPet: helloworldtestingggg.PetParam{
+					Name:               "doggie",
+					PhotoURLs:          []string{"string"},
+					ID:                 helloworldtestingggg.Int(10),
+					AcquisitionChannel: helloworldtestingggg.PetAcquisitionChannelBreeder,
+					Category:           map[string]any{},
+					MicrochipID: helloworldtestingggg.PetMicrochipIDUnionParam{
+						OfString: helloworldtestingggg.String("string"),
+					},
+					RelatedCategory: map[string]any{},
+					RelatedCustomer: map[string]any{},
+					RelatedOrder:    map[string]any{},
+					RelatedShelter:  map[string]any{},
+					RelatedUser:     map[string]any{},
+					Status:          helloworldtestingggg.PetStatusAvailable,
+					Tags:            []any{map[string]any{}},
+				},
+				RelatedShelter: map[string]any{},
+				RelatedTag:     map[string]any{},
+				RelatedUser:    map[string]any{},
+				State:          helloworldtestingggg.String("CA"),
+				Street:         helloworldtestingggg.String("437 Lytton"),
+				Zip:            helloworldtestingggg.String("94301"),
+			},
+			RelatedCategory: map[string]any{},
+			RelatedCustomer: map[string]any{},
+			RelatedOrder:    map[string]any{},
+			RelatedPet: helloworldtestingggg.PetParam{
+				Name:               "doggie",
+				PhotoURLs:          []string{"string"},
+				ID:                 helloworldtestingggg.Int(10),
+				AcquisitionChannel: helloworldtestingggg.PetAcquisitionChannelBreeder,
+				Category:           map[string]any{},
+				MicrochipID: helloworldtestingggg.PetMicrochipIDUnionParam{
+					OfString: helloworldtestingggg.String("string"),
+				},
+				RelatedCategory: map[string]any{},
+				RelatedCustomer: map[string]any{},
+				RelatedOrder:    map[string]any{},
+				RelatedShelter:  map[string]any{},
+				RelatedUser:     map[string]any{},
+				Status:          helloworldtestingggg.PetStatusAvailable,
+				Tags:            []any{map[string]any{}},
+			},
+			RelatedShelter: map[string]any{},
+			RelatedTag:     map[string]any{},
+			RelatedUser:    map[string]any{},
+		},
+		NotificationTarget: helloworldtestingggg.AdoptionPolicyNewParamsNotificationTargetUnion{
+			OfString: helloworldtestingggg.String("string"),
+		},
+		RegionalOverrides: map[string]helloworldtestingggg.ConditionValueUnionParam{
+			"foo": {
+				OfString: helloworldtestingggg.String("string"),
+			},
+		},
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
@@ -159,18 +171,22 @@ func TestAdoptionPolicyUpdateWithOptionalParams(t *testing.T) {
 		context.TODO(),
 		"policyId",
 		helloworldtestingggg.AdoptionPolicyUpdateParams{
-			Body: helloworldtestingggg.AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdate{
-				Escalation: helloworldtestingggg.F(helloworldtestingggg.AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateEscalation{
-					Operator: helloworldtestingggg.F(helloworldtestingggg.AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateEscalationOperatorAll),
-					Groups:   helloworldtestingggg.F([]interface{}{}),
-					Rules: helloworldtestingggg.F([]helloworldtestingggg.AdoptionRuleParam{{
-						Attribute: helloworldtestingggg.F(helloworldtestingggg.RuleAttributePetStatus),
-						Operation: helloworldtestingggg.F(helloworldtestingggg.AdoptionRuleOperationIsOneOf),
-						Value:     helloworldtestingggg.F[helloworldtestingggg.ConditionValueUnionParam](shared.UnionString("string")),
-					}}),
-				}),
-				Name:               helloworldtestingggg.F("name"),
-				NotificationTarget: helloworldtestingggg.F[helloworldtestingggg.AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetUnion](shared.UnionString("string")),
+			OfAdoptionPolicyDetailsUpdate: &helloworldtestingggg.AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdate{
+				Escalation: helloworldtestingggg.AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateEscalation{
+					Operator: "ALL",
+					Groups:   []any{},
+					Rules: []helloworldtestingggg.AdoptionRuleParam{{
+						Attribute: helloworldtestingggg.RuleAttributePetStatus,
+						Operation: helloworldtestingggg.AdoptionRuleOperationIsOneOf,
+						Value: helloworldtestingggg.ConditionValueUnionParam{
+							OfString: helloworldtestingggg.String("string"),
+						},
+					}},
+				},
+				Name: helloworldtestingggg.String("name"),
+				NotificationTarget: helloworldtestingggg.AdoptionPolicyUpdateParamsBodyAdoptionPolicyDetailsUpdateNotificationTargetUnion{
+					OfString: helloworldtestingggg.String("string"),
+				},
 			},
 		},
 	)
@@ -199,8 +215,8 @@ func TestAdoptionPolicyListWithOptionalParams(t *testing.T) {
 		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Adoptions.Policies.List(context.TODO(), helloworldtestingggg.AdoptionPolicyListParams{
-		Cursor: helloworldtestingggg.F("cursor"),
-		Limit:  helloworldtestingggg.F(int64(0)),
+		Cursor: helloworldtestingggg.String("cursor"),
+		Limit:  helloworldtestingggg.Int(0),
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error

@@ -34,55 +34,57 @@ func TestPetNewWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Pet.New(context.TODO(), helloworldtestingggg.PetNewParams{
 		Pet: helloworldtestingggg.PetParam{
-			Name:               helloworldtestingggg.F("doggie"),
-			PhotoURLs:          helloworldtestingggg.F([]string{"string"}),
-			ID:                 helloworldtestingggg.F(int64(10)),
-			AcquisitionChannel: helloworldtestingggg.F(helloworldtestingggg.PetAcquisitionChannelBreeder),
-			Category:           helloworldtestingggg.F[any](map[string]interface{}{}),
-			MicrochipID:        helloworldtestingggg.F[helloworldtestingggg.PetMicrochipIDUnionParam](shared.UnionString("string")),
-			RelatedAddress: helloworldtestingggg.F(shared.AddressParam{
-				City: helloworldtestingggg.F("Palo Alto"),
-				Geo: helloworldtestingggg.F(shared.AddressGeoParam{
-					Latitude:  helloworldtestingggg.F(37.444300),
-					Longitude: helloworldtestingggg.F(-122.159800),
-				}),
-				RelatedCategory: helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedCustomer: helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedMoney: helloworldtestingggg.F(shared.MoneyParam{
-					Amount:          helloworldtestingggg.F(int64(2500)),
-					Currency:        helloworldtestingggg.F("USD"),
-					RelatedCategory: helloworldtestingggg.F[any](map[string]interface{}{}),
-					RelatedCustomer: helloworldtestingggg.F[any](map[string]interface{}{}),
-					RelatedOrder:    helloworldtestingggg.F[any](map[string]interface{}{}),
-					RelatedShelter:  helloworldtestingggg.F[any](map[string]interface{}{}),
-					RelatedTag:      helloworldtestingggg.F[any](map[string]interface{}{}),
-					RelatedUser:     helloworldtestingggg.F[any](map[string]interface{}{}),
-				}),
-				RelatedOrder:   helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedShelter: helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedTag:     helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedUser:    helloworldtestingggg.F[any](map[string]interface{}{}),
-				State:          helloworldtestingggg.F("CA"),
-				Street:         helloworldtestingggg.F("437 Lytton"),
-				Zip:            helloworldtestingggg.F("94301"),
-			}),
-			RelatedCategory: helloworldtestingggg.F[any](map[string]interface{}{}),
-			RelatedCustomer: helloworldtestingggg.F[any](map[string]interface{}{}),
-			RelatedMoney: helloworldtestingggg.F(shared.MoneyParam{
-				Amount:          helloworldtestingggg.F(int64(2500)),
-				Currency:        helloworldtestingggg.F("USD"),
-				RelatedCategory: helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedCustomer: helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedOrder:    helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedShelter:  helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedTag:      helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedUser:     helloworldtestingggg.F[any](map[string]interface{}{}),
-			}),
-			RelatedOrder:   helloworldtestingggg.F[any](map[string]interface{}{}),
-			RelatedShelter: helloworldtestingggg.F[any](map[string]interface{}{}),
-			RelatedUser:    helloworldtestingggg.F[any](map[string]interface{}{}),
-			Status:         helloworldtestingggg.F(helloworldtestingggg.PetStatusAvailable),
-			Tags:           helloworldtestingggg.F([]interface{}{map[string]interface{}{}}),
+			Name:               "doggie",
+			PhotoURLs:          []string{"string"},
+			ID:                 helloworldtestingggg.Int(10),
+			AcquisitionChannel: helloworldtestingggg.PetAcquisitionChannelBreeder,
+			Category:           map[string]any{},
+			MicrochipID: helloworldtestingggg.PetMicrochipIDUnionParam{
+				OfString: helloworldtestingggg.String("string"),
+			},
+			RelatedAddress: shared.AddressParam{
+				City: helloworldtestingggg.String("Palo Alto"),
+				Geo: shared.AddressGeoParam{
+					Latitude:  37.4443,
+					Longitude: -122.1598,
+				},
+				RelatedCategory: map[string]any{},
+				RelatedCustomer: map[string]any{},
+				RelatedMoney: shared.MoneyParam{
+					Amount:          2500,
+					Currency:        "USD",
+					RelatedCategory: map[string]any{},
+					RelatedCustomer: map[string]any{},
+					RelatedOrder:    map[string]any{},
+					RelatedShelter:  map[string]any{},
+					RelatedTag:      map[string]any{},
+					RelatedUser:     map[string]any{},
+				},
+				RelatedOrder:   map[string]any{},
+				RelatedShelter: map[string]any{},
+				RelatedTag:     map[string]any{},
+				RelatedUser:    map[string]any{},
+				State:          helloworldtestingggg.String("CA"),
+				Street:         helloworldtestingggg.String("437 Lytton"),
+				Zip:            helloworldtestingggg.String("94301"),
+			},
+			RelatedCategory: map[string]any{},
+			RelatedCustomer: map[string]any{},
+			RelatedMoney: shared.MoneyParam{
+				Amount:          2500,
+				Currency:        "USD",
+				RelatedCategory: map[string]any{},
+				RelatedCustomer: map[string]any{},
+				RelatedOrder:    map[string]any{},
+				RelatedShelter:  map[string]any{},
+				RelatedTag:      map[string]any{},
+				RelatedUser:     map[string]any{},
+			},
+			RelatedOrder:   map[string]any{},
+			RelatedShelter: map[string]any{},
+			RelatedUser:    map[string]any{},
+			Status:         helloworldtestingggg.PetStatusAvailable,
+			Tags:           []any{map[string]any{}},
 		},
 	})
 	if err != nil {
@@ -109,7 +111,7 @@ func TestPetGet(t *testing.T) {
 		option.WithBasicAuthUsername("My Basic Auth Username"),
 		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
-	_, err := client.Pet.Get(context.TODO(), int64(0))
+	_, err := client.Pet.Get(context.TODO(), 0)
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
 		if errors.As(err, &apierr) {
@@ -136,55 +138,57 @@ func TestPetUpdateWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Pet.Update(context.TODO(), helloworldtestingggg.PetUpdateParams{
 		Pet: helloworldtestingggg.PetParam{
-			Name:               helloworldtestingggg.F("doggie"),
-			PhotoURLs:          helloworldtestingggg.F([]string{"string"}),
-			ID:                 helloworldtestingggg.F(int64(10)),
-			AcquisitionChannel: helloworldtestingggg.F(helloworldtestingggg.PetAcquisitionChannelBreeder),
-			Category:           helloworldtestingggg.F[any](map[string]interface{}{}),
-			MicrochipID:        helloworldtestingggg.F[helloworldtestingggg.PetMicrochipIDUnionParam](shared.UnionString("string")),
-			RelatedAddress: helloworldtestingggg.F(shared.AddressParam{
-				City: helloworldtestingggg.F("Palo Alto"),
-				Geo: helloworldtestingggg.F(shared.AddressGeoParam{
-					Latitude:  helloworldtestingggg.F(37.444300),
-					Longitude: helloworldtestingggg.F(-122.159800),
-				}),
-				RelatedCategory: helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedCustomer: helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedMoney: helloworldtestingggg.F(shared.MoneyParam{
-					Amount:          helloworldtestingggg.F(int64(2500)),
-					Currency:        helloworldtestingggg.F("USD"),
-					RelatedCategory: helloworldtestingggg.F[any](map[string]interface{}{}),
-					RelatedCustomer: helloworldtestingggg.F[any](map[string]interface{}{}),
-					RelatedOrder:    helloworldtestingggg.F[any](map[string]interface{}{}),
-					RelatedShelter:  helloworldtestingggg.F[any](map[string]interface{}{}),
-					RelatedTag:      helloworldtestingggg.F[any](map[string]interface{}{}),
-					RelatedUser:     helloworldtestingggg.F[any](map[string]interface{}{}),
-				}),
-				RelatedOrder:   helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedShelter: helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedTag:     helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedUser:    helloworldtestingggg.F[any](map[string]interface{}{}),
-				State:          helloworldtestingggg.F("CA"),
-				Street:         helloworldtestingggg.F("437 Lytton"),
-				Zip:            helloworldtestingggg.F("94301"),
-			}),
-			RelatedCategory: helloworldtestingggg.F[any](map[string]interface{}{}),
-			RelatedCustomer: helloworldtestingggg.F[any](map[string]interface{}{}),
-			RelatedMoney: helloworldtestingggg.F(shared.MoneyParam{
-				Amount:          helloworldtestingggg.F(int64(2500)),
-				Currency:        helloworldtestingggg.F("USD"),
-				RelatedCategory: helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedCustomer: helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedOrder:    helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedShelter:  helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedTag:      helloworldtestingggg.F[any](map[string]interface{}{}),
-				RelatedUser:     helloworldtestingggg.F[any](map[string]interface{}{}),
-			}),
-			RelatedOrder:   helloworldtestingggg.F[any](map[string]interface{}{}),
-			RelatedShelter: helloworldtestingggg.F[any](map[string]interface{}{}),
-			RelatedUser:    helloworldtestingggg.F[any](map[string]interface{}{}),
-			Status:         helloworldtestingggg.F(helloworldtestingggg.PetStatusAvailable),
-			Tags:           helloworldtestingggg.F([]interface{}{map[string]interface{}{}}),
+			Name:               "doggie",
+			PhotoURLs:          []string{"string"},
+			ID:                 helloworldtestingggg.Int(10),
+			AcquisitionChannel: helloworldtestingggg.PetAcquisitionChannelBreeder,
+			Category:           map[string]any{},
+			MicrochipID: helloworldtestingggg.PetMicrochipIDUnionParam{
+				OfString: helloworldtestingggg.String("string"),
+			},
+			RelatedAddress: shared.AddressParam{
+				City: helloworldtestingggg.String("Palo Alto"),
+				Geo: shared.AddressGeoParam{
+					Latitude:  37.4443,
+					Longitude: -122.1598,
+				},
+				RelatedCategory: map[string]any{},
+				RelatedCustomer: map[string]any{},
+				RelatedMoney: shared.MoneyParam{
+					Amount:          2500,
+					Currency:        "USD",
+					RelatedCategory: map[string]any{},
+					RelatedCustomer: map[string]any{},
+					RelatedOrder:    map[string]any{},
+					RelatedShelter:  map[string]any{},
+					RelatedTag:      map[string]any{},
+					RelatedUser:     map[string]any{},
+				},
+				RelatedOrder:   map[string]any{},
+				RelatedShelter: map[string]any{},
+				RelatedTag:     map[string]any{},
+				RelatedUser:    map[string]any{},
+				State:          helloworldtestingggg.String("CA"),
+				Street:         helloworldtestingggg.String("437 Lytton"),
+				Zip:            helloworldtestingggg.String("94301"),
+			},
+			RelatedCategory: map[string]any{},
+			RelatedCustomer: map[string]any{},
+			RelatedMoney: shared.MoneyParam{
+				Amount:          2500,
+				Currency:        "USD",
+				RelatedCategory: map[string]any{},
+				RelatedCustomer: map[string]any{},
+				RelatedOrder:    map[string]any{},
+				RelatedShelter:  map[string]any{},
+				RelatedTag:      map[string]any{},
+				RelatedUser:     map[string]any{},
+			},
+			RelatedOrder:   map[string]any{},
+			RelatedShelter: map[string]any{},
+			RelatedUser:    map[string]any{},
+			Status:         helloworldtestingggg.PetStatusAvailable,
+			Tags:           []any{map[string]any{}},
 		},
 	})
 	if err != nil {
@@ -212,14 +216,14 @@ func TestPetListWithOptionalParams(t *testing.T) {
 		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Pet.List(context.TODO(), helloworldtestingggg.PetListParams{
-		CreatedAt: helloworldtestingggg.F(helloworldtestingggg.PetListParamsCreatedAt{
-			Gt:  helloworldtestingggg.F(time.Now()),
-			Gte: helloworldtestingggg.F(time.Now()),
-			Lt:  helloworldtestingggg.F(time.Now()),
-			Lte: helloworldtestingggg.F(time.Now()),
-		}),
-		Cursor: helloworldtestingggg.F("cursor"),
-		Limit:  helloworldtestingggg.F(int64(0)),
+		CreatedAt: helloworldtestingggg.PetListParamsCreatedAt{
+			Gt:  helloworldtestingggg.Time(time.Now()),
+			Gte: helloworldtestingggg.Time(time.Now()),
+			Lt:  helloworldtestingggg.Time(time.Now()),
+			Lte: helloworldtestingggg.Time(time.Now()),
+		},
+		Cursor: helloworldtestingggg.String("cursor"),
+		Limit:  helloworldtestingggg.Int(0),
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
@@ -245,7 +249,7 @@ func TestPetDelete(t *testing.T) {
 		option.WithBasicAuthUsername("My Basic Auth Username"),
 		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
-	err := client.Pet.Delete(context.TODO(), int64(0))
+	err := client.Pet.Delete(context.TODO(), 0)
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
 		if errors.As(err, &apierr) {
@@ -271,7 +275,7 @@ func TestPetFindByStatusWithOptionalParams(t *testing.T) {
 		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Pet.FindByStatus(context.TODO(), helloworldtestingggg.PetFindByStatusParams{
-		Status: helloworldtestingggg.F(helloworldtestingggg.PetFindByStatusParamsStatusAvailable),
+		Status: helloworldtestingggg.PetFindByStatusParamsStatusAvailable,
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
@@ -298,7 +302,7 @@ func TestPetFindByTagsWithOptionalParams(t *testing.T) {
 		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Pet.FindByTags(context.TODO(), helloworldtestingggg.PetFindByTagsParams{
-		Tags: helloworldtestingggg.F([]string{"string"}),
+		Tags: []string{"string"},
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
@@ -400,8 +404,8 @@ func TestPetListUnpaginatedWithOptionalParams(t *testing.T) {
 		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Pet.ListUnpaginated(context.TODO(), helloworldtestingggg.PetListUnpaginatedParams{
-		Cursor: helloworldtestingggg.F("cursor"),
-		Limit:  helloworldtestingggg.F(int64(0)),
+		Cursor: helloworldtestingggg.String("cursor"),
+		Limit:  helloworldtestingggg.Int(0),
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
@@ -427,7 +431,7 @@ func TestPetGetPremium(t *testing.T) {
 		option.WithBasicAuthUsername("My Basic Auth Username"),
 		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
-	_, err := client.Pet.GetPremium(context.TODO(), int64(0))
+	_, err := client.Pet.GetPremium(context.TODO(), 0)
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
 		if errors.As(err, &apierr) {
@@ -453,16 +457,16 @@ func TestPetSearchWithOptionalParams(t *testing.T) {
 		option.WithBasicAuthPassword("My Basic Auth Password"),
 	)
 	_, err := client.Pet.Search(context.TODO(), helloworldtestingggg.PetSearchParams{
-		Filters: helloworldtestingggg.F(helloworldtestingggg.PetSearchParamsFilters{
-			Color: helloworldtestingggg.F("color"),
-			Size:  helloworldtestingggg.F(int64(0)),
-		}),
-		MaxResults: helloworldtestingggg.F(int64(0)),
-		RawFilter:  helloworldtestingggg.F[any](map[string]interface{}{}),
-		TagFilters: helloworldtestingggg.F([]helloworldtestingggg.PetSearchParamsTagFilter{{
-			Key:   helloworldtestingggg.F("key"),
-			Match: helloworldtestingggg.F(helloworldtestingggg.PetSearchParamsTagFiltersMatchExact),
-		}}),
+		Filters: helloworldtestingggg.PetSearchParamsFilters{
+			Color: helloworldtestingggg.String("color"),
+			Size:  helloworldtestingggg.Int(0),
+		},
+		MaxResults: helloworldtestingggg.Int(0),
+		RawFilter:  map[string]any{},
+		TagFilters: []helloworldtestingggg.PetSearchParamsTagFilter{{
+			Key:   helloworldtestingggg.String("key"),
+			Match: "exact",
+		}},
 	})
 	if err != nil {
 		var apierr *helloworldtestingggg.Error
@@ -490,10 +494,10 @@ func TestPetUpdateWithFormWithOptionalParams(t *testing.T) {
 	)
 	err := client.Pet.UpdateWithForm(
 		context.TODO(),
-		int64(0),
+		0,
 		helloworldtestingggg.PetUpdateWithFormParams{
-			Name:   helloworldtestingggg.F("name"),
-			Status: helloworldtestingggg.F("status"),
+			Name:   helloworldtestingggg.String("name"),
+			Status: helloworldtestingggg.String("status"),
 		},
 	)
 	if err != nil {
@@ -522,10 +526,10 @@ func TestPetUploadImageWithOptionalParams(t *testing.T) {
 	)
 	_, err := client.Pet.UploadImage(
 		context.TODO(),
-		int64(0),
+		0,
 		io.Reader(bytes.NewBuffer([]byte("Example data"))),
 		helloworldtestingggg.PetUploadImageParams{
-			AdditionalMetadata: helloworldtestingggg.F("additionalMetadata"),
+			AdditionalMetadata: helloworldtestingggg.String("additionalMetadata"),
 		},
 	)
 	if err != nil {
